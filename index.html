@@ -387,6 +387,12 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .wdays{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
 .wday{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 .wday .val{font-family:var(--display);font-size:1.4rem;font-weight:550}
+
+.moonchip .mi{font-size:18px;line-height:1}
+.moon-big{font-size:1.6rem;vertical-align:-3px}
+.moon-fact p{margin:0}
+.moon-fact .romance{color:var(--ink);font-weight:600}
+.moon-fact.romantic{border-top-color:#E2B23A}
 /* icons */
 .ico{overflow:visible}
 .ico *{stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
@@ -835,6 +841,22 @@ document.addEventListener('click', e => {
   const z = zodiacNow();
   toast(state.lang === 'id' ? `${z[4]} Zodiak hari ini: ${z[2]} (${z[5]})` : `${z[4]} Today's sign: ${z[3]} (${z[6]})`, 4000);
 });
+Object.assign(STR.id, {
+  moonCard:'Bulan malam ini', moonNextFull:'Purnama berikutnya', moonNextHalf:'Bulan separuh berikutnya', moonFirst:'kuartal pertama', moonLast:'kuartal akhir',
+  moonAt:(d,h)=>`${d}, sekitar pukul ${h}`, moonRise:h=>`Bulan terbit sekitar pukul ${h}.`,
+  moonFullTonight:'🌕 Malam purnama! Waktu yang romantis untuk jalan berdua di bawah cahaya bulan.', moonFullSoon:n=>`🌔 Purnama ${n} hari lagi. Siapkan rencana malam yang romantis.`,
+  moonHalfTonight:'Malam ini bulan separuh, cantik dilihat saat langit cerah.',
+  moonSeeGood:'Langit cukup cerah malam ini, bulan kemungkinan terlihat jelas.', moonSeeMid:'Sebagian berawan, bulan mungkin sesekali tertutup awan.', moonSeeBad:'Langit banyak berawan atau hujan, bulan kemungkinan sulit terlihat.',
+  chipFull:'Purnama malam ini', chipFullSoon:n=>`Purnama ${n} hari lagi`, chipHalf:'Bulan separuh'
+});
+Object.assign(STR.en, {
+  moonCard:'Tonight’s moon', moonNextFull:'Next full moon', moonNextHalf:'Next half moon', moonFirst:'first quarter', moonLast:'last quarter',
+  moonAt:(d,h)=>`${d}, around ${h}`, moonRise:h=>`Moonrise around ${h}.`,
+  moonFullTonight:'🌕 Full moon tonight! A romantic night for a walk together under the moonlight.', moonFullSoon:n=>`🌔 Full moon in ${n} days. Time to plan a romantic evening.`,
+  moonHalfTonight:'Half moon tonight, lovely to watch when the sky is clear.',
+  moonSeeGood:'Mostly clear tonight, the moon should be easy to see.', moonSeeMid:'Partly cloudy, clouds may cover the moon at times.', moonSeeBad:'Cloudy or rainy tonight, the moon will be hard to see.',
+  chipFull:'Full moon tonight', chipFullSoon:n=>`Full moon in ${n} days`, chipHalf:'Half moon'
+});
 function greeting(){
   const h = new Date().getHours();
   const id = ['Selamat Tidur','Selamat Pagi','Selamat Siang','Selamat Sore','Selamat Malam'];
@@ -1143,7 +1165,7 @@ function render(animate){
   $('#heroArea').innerHTML = `
     <div class="hero">
       <div>
-        <div class="greet-row"><span class="greet" id="greet">${greeting()}</span><button type="button" class="zodiac" id="zodiac">${zodiacHtml()}</button></div>
+        <div class="greet-row"><span class="greet" id="greet">${greeting()}</span><button type="button" class="zodiac" id="zodiac">${zodiacHtml()}</button>${moonChipHtml()}</div>
         <h1 class="place">${esc(state.place.name)}
           <button class="star" id="star" type="button" aria-pressed="${fav}" aria-label="${esc(fav ? t('unsave') : t('save'))}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg>
@@ -1604,11 +1626,34 @@ function seaStatus(i, mi){
   if (wave >= 1.25 || w >= 28 || g >= 40) return 'ok';
   return 'good';
 }
-function moonPhase(){
-  const syn = 29.530588853, age = (((Date.now() - Date.UTC(2000, 0, 6, 18, 14)) / 86400000) % syn + syn) % syn;
-  const lit = Math.round((1 - Math.cos(2 * Math.PI * age / syn)) / 2 * 100);
-  const idx = age < 1.85 ? 0 : age < 5.54 ? 1 : age < 9.23 ? 2 : age < 12.92 ? 3 : age < 16.61 ? 4 : age < 20.3 ? 5 : age < 23.99 ? 6 : age < 27.68 ? 7 : 0;
-  return { idx, lit };
+// Sun–moon angle (elongation), accurate to well under an hour for phase times
+function elongation(ms){
+  const r = x => x * Math.PI / 180, n = x => ((x % 360) + 360) % 360;
+  const d = ms / 86400000 + 2440587.5 - 2451545.0;
+  const L = 218.316 + 13.176396 * d, M = r(134.963 + 13.064993 * d), D = r(297.850 + 12.190749 * d), Ms = r(357.529 + 0.98560028 * d);
+  const moon = L + 6.289 * Math.sin(M) + 1.274 * Math.sin(2 * D - M) + 0.658 * Math.sin(2 * D) + 0.214 * Math.sin(2 * M) - 0.186 * Math.sin(Ms) - 0.114 * Math.sin(2 * r(93.272 + 13.229350 * d));
+  const sun = 280.459 + 0.98564736 * d + 1.915 * Math.sin(Ms) + 0.020 * Math.sin(2 * Ms);
+  return n(moon - sun);
+}
+function moonPhase(ms = Date.now()){
+  const e = elongation(ms);
+  const lit = Math.round((1 - Math.cos(e * Math.PI / 180)) / 2 * 100);
+  const idx = e < 22.5 || e >= 337.5 ? 0 : Math.floor((e - 22.5) / 45) + 1;
+  return { idx: idx > 7 ? 0 : idx, lit, e };
+}
+// Next new, first-quarter, full and last-quarter moments within ~40 days
+function moonEvents(fromMs = Date.now()){
+  const out = [], step = 3600000;
+  let prev = elongation(fromMs);
+  for (let ms = fromMs + step; ms < fromMs + 40 * 86400000; ms += step){
+    const cur = elongation(ms);
+    [[0,'new'],[90,'first'],[180,'full'],[270,'last']].forEach(([tgt, kind]) => {
+      const a = (prev - tgt + 360) % 360, b = (cur - tgt + 360) % 360;
+      if (a > 300 && b < 60){ const f = (360 - a) / (360 - a + b); out.push({ kind, ms: ms - step + f * step }); }
+    });
+    prev = cur;
+  }
+  return out;
 }
 function modeNelayan(){
   const d = state.data, H = d.hourly, D = d.daily, i0 = state.i0, end = Math.min(H.time.length, i0 + 48);
@@ -1944,6 +1989,55 @@ function seasonBlock(){
     <p class="muted small">${t('ssnNote')}</p></div>`;
 }
 
+/* ================= Moon: full & half moon ================= */
+const MOON_EMOJI = ['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'];
+// days (in the place's calendar) from today until an event
+function daysUntil(ms){
+  const today = msToLocal(Date.now()).slice(0, 10), day = msToLocal(ms).slice(0, 10);
+  return Math.round((Date.parse(day + 'T00:00Z') - Date.parse(today + 'T00:00Z')) / 86400000);
+}
+function moonInfo(){
+  const ev = moonEvents(Date.now() - 12 * 3600000);
+  const full = ev.find(e => e.kind === 'full'), half = ev.find(e => (e.kind === 'first' || e.kind === 'last') && e.ms > Date.now() - 12 * 3600000);
+  const fullDays = full ? daysUntil(full.ms) : null, halfDays = half ? daysUntil(half.ms) : null;
+  return { ev, full, half, fullDays, halfDays };
+}
+function moonChipHtml(){
+  if (!state.data) return '';
+  const m = moonInfo();
+  if (m.fullDays === 0) return `<button type="button" class="zodiac moonchip" id="moonchip"><span class="mi">🌕</span>${t('chipFull')}</button>`;
+  if (m.fullDays != null && m.fullDays > 0 && m.fullDays <= 3) return `<button type="button" class="zodiac moonchip" id="moonchip"><span class="mi">🌔</span>${t('chipFullSoon', m.fullDays)}</button>`;
+  if (m.halfDays === 0) return `<button type="button" class="zodiac moonchip" id="moonchip"><span class="mi">${m.half.kind === 'first' ? '🌓' : '🌗'}</span>${t('chipHalf')}</button>`;
+  return '';
+}
+const moonDate = ms => { const sv = msToLocal(ms); return t('moonAt', new Date(sv.slice(0, 10) + 'T12:00:00Z').toLocaleDateString(locale(), { weekday:'long', day:'numeric', month:'long', timeZone:'UTC' }), clockStr(sv)); };
+function moonCard(){
+  const d = state.data, H = d.hourly, p = state.place, m = moonInfo(), ph = moonPhase();
+  let romance = '';
+  if (m.fullDays === 0) romance = t('moonFullTonight');
+  else if (m.fullDays > 0 && m.fullDays <= 3) romance = t('moonFullSoon', m.fullDays);
+  else if (m.halfDays === 0) romance = t('moonHalfTonight');
+  // can we see it tonight? average cloud and rain between 19.00 and 23.00 today
+  const today = msToLocal(Date.now()).slice(0, 10);
+  let cc = 0, n = 0, pp = 0;
+  H.time.forEach((x, i) => { const h = +x.slice(11, 13); if (x.slice(0, 10) === today && h >= 19 && h <= 23){ cc += H.cloud_cover[i] ?? 50; pp = Math.max(pp, H.precipitation_probability[i] ?? 0); n++; } });
+  const see = !n ? '' : pp >= 50 || cc / n > 75 ? t('moonSeeBad') : cc / n > 40 ? t('moonSeeMid') : t('moonSeeGood');
+  const rise = solunarEvents(Date.now() - 3600000, 24, p.lat, p.lon).find(e => e.kind === 'rise');
+  const halfName = m.half ? (m.half.kind === 'first' ? t('moonFirst') : t('moonLast')) : '';
+  return `<div class="fact moon-fact${m.fullDays === 0 ? ' romantic' : ''}"><h3>${t('moonCard')}</h3>
+    <div class="val"><span class="moon-big" aria-hidden="true">${MOON_EMOJI[ph.idx]}</span> ${t('moonNames')[ph.idx]}</div>
+    ${romance ? `<p class="romance">${esc(romance)}</p>` : ''}
+    <p>${esc(t('moonLit', ph.lit))}${rise ? ' ' + esc(t('moonRise', clockStr(msToLocal(rise.ms)))) : ''} ${esc(see)}</p>
+    ${m.full ? `<p><b>${t('moonNextFull')}:</b> ${esc(moonDate(m.full.ms))}</p>` : ''}
+    ${m.half ? `<p><b>${t('moonNextHalf')}</b> (${halfName}): ${esc(moonDate(m.half.ms))}</p>` : ''}
+  </div>`;
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#moonchip')) return;
+  const m = moonInfo();
+  toast(m.fullDays === 0 || (m.fullDays > 0 && m.fullDays <= 3) ? (m.fullDays === 0 ? t('moonFullTonight') : t('moonFullSoon', m.fullDays)) : t('moonHalfTonight'), 5000);
+});
+
 /* ================= Fun extras ================= */
 const offsetMs = () => ((state.data && state.data.utc_offset_seconds) || 0) * 1000;
 const localToMs = sv => Date.parse(sv.slice(0, 16) + ':00Z') - offsetMs();
@@ -2022,6 +2116,7 @@ function extrasUmum(){
   return `<div class="facts">
     <div class="fact"><h3>${t('pantun')}</h3><p class="pantun">${pt.map(esc).join('<br>')}</p></div>
     <div class="fact"><h3>${t('outfit')}</h3><div class="outfit">${items.map(([k, n]) => `<span><svg viewBox="0 0 24 24" aria-hidden="true">${OUTFIT_SVG[k]}</svg>${esc(n)}</span>`).join('')}</div><p>${esc(t('ofSay', joined))}</p></div>
+    ${safeExtra(moonCard)}
     <div class="fact"><h3>${t('mosq')}</h3><div class="val"><span class="lvl lvl${ml}">${t('mosqLv')[ml]}</span></div><p>${t('mosqNote')}</p></div>
   </div>`;
 }
@@ -2087,8 +2182,8 @@ function solunarEvents(fromMs, hours, lat, lon){
     const cur = moonPos(ms, lat, lon);
     if (prev.ha < 0 && cur.ha >= 0) ev.push({ type:'major', ms });
     if (prev.ha > 90 && cur.ha < -90) ev.push({ type:'major', ms });
-    if (prev.alt < 0.13 && cur.alt >= 0.13) ev.push({ type:'minor', ms });
-    if (prev.alt >= 0.13 && cur.alt < 0.13) ev.push({ type:'minor', ms });
+    if (prev.alt < 0.13 && cur.alt >= 0.13) ev.push({ type:'minor', kind:'rise', ms });
+    if (prev.alt >= 0.13 && cur.alt < 0.13) ev.push({ type:'minor', kind:'set', ms });
     prev = cur;
   }
   return ev;
