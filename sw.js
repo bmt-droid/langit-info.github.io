@@ -1,6 +1,6 @@
 // Langit service worker: makes the site installable and keeps it working offline.
 // When you change index.html, bump VERSION so phones pick up the new version quickly.
-const VERSION = 'langit-v7';
+const VERSION = 'langit-v8';
 const DATA = 'langit-data';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
