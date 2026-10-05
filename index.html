@@ -669,12 +669,12 @@ Object.assign(STR.en, {
   cdDew:'Morning dew: early greens are slower, and the ball spins less from wet grass.', cdCalm:'Steady weather: focus on tempo, you will barely need to adjust.'
 });
 Object.assign(STR.id, {
-  instTitle:'Pasang Langit di HP', instTitlePc:'Pasang Langit di komputer ini', instSub:'Buka lebih cepat dari layar utama, tetap bisa dilihat saat offline.', instGo:'Pasang', instLater:'Nanti', instFooter:'Pasang aplikasi Langit',
+  instTitle:'Pasang Langit di HP', instTitlePc:'Pasang Langit di komputer ini', instSubPc:'Buka langsung dari desktop atau taskbar, tetap bisa dilihat saat offline.', instSub:'Buka lebih cepat dari layar utama, tetap bisa dilihat saat offline.', instGo:'Pasang', instLater:'Nanti', instFooter:'Pasang aplikasi Langit',
   instIos:'Ketuk tombol Bagikan, lalu pilih "Tambah ke Layar Utama".', instIosGo:'Mengerti',
   offline:'Anda sedang offline. Menampilkan data terakhir yang tersimpan.', online:'Kembali online. Data diperbarui.'
 });
 Object.assign(STR.en, {
-  instTitle:'Install Langit on your phone', instTitlePc:'Install Langit on this computer', instSub:'Open it faster from your home screen, and still see it offline.', instGo:'Install', instLater:'Later', instFooter:'Install the Langit app',
+  instTitle:'Install Langit on your phone', instTitlePc:'Install Langit on this computer', instSubPc:'Open it straight from your desktop or taskbar, and still see it offline.', instSub:'Open it faster from your home screen, and still see it offline.', instGo:'Install', instLater:'Later', instFooter:'Install the Langit app',
   instIos:'Tap the Share button, then choose "Add to Home Screen".', instIosGo:'Got it',
   offline:"You're offline. Showing the last saved data.", online:'Back online. Data refreshed.'
 });
@@ -985,7 +985,9 @@ function render(animate){
   renderDaily(d);
   renderTiles(d);
   $('#sheet').classList.remove('loading', 'nodata');
-  document.title = `${tFmt(c.temperature_2m)} ${label}, ${state.place.name} — Langit`;
+  // installed app: Chrome already puts "Langit" in front of the title, so don't repeat it
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  document.title = standalone ? `${tFmt(c.temperature_2m)} ${label}, ${state.place.name}` : `${tFmt(c.temperature_2m)} ${label}, ${state.place.name} — Langit`;
 }
 
 function countUp(el, target){
@@ -1999,7 +2001,7 @@ function showInstall(force){
   const ios = isIOS() && !installEvt;
   if (!installEvt && !ios) return;
   $('#installTitle').textContent = isPhone() ? t('instTitle') : t('instTitlePc');
-  $('#installSub').textContent = ios ? t('instIos') : t('instSub');
+  $('#installSub').textContent = ios ? t('instIos') : isPhone() ? t('instSub') : t('instSubPc');
   $('#installGo').textContent = ios ? t('instIosGo') : t('instGo');
   $('#installLater').textContent = t('instLater');
   $('#installLater').hidden = ios;
@@ -2026,7 +2028,7 @@ function renderInstallLink(){
   const can = !isStandalone() && (installEvt || isIOS());
   if (!can){ if (a) a.remove(); return; }
   if (!a){ a = document.createElement('button'); a.type = 'button'; a.className = 'install-link'; a.onclick = () => showInstall(true); f.appendChild(a); }
-  a.textContent = '📲 ' + t('instFooter');
+  a.textContent = (isPhone() ? '📲 ' : '💻 ') + t('instFooter');
 }
 if (isIOS() && !isStandalone()) setTimeout(() => showInstall(false), 20000);
 if ('serviceWorker' in navigator && location.protocol === 'https:'){
