@@ -1,0 +1,26 @@
+{
+  "name": "Langit — Cuaca Indonesia",
+  "short_name": "Langit",
+  "description": "Prakiraan cuaca Indonesia dengan mode Jemuran, Petani, Nelayan, Wisata dan Golf. Data Open-Meteo dan BMKG.",
+  "lang": "id",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A57C2",
+  "theme_color": "#0A57C2",
+  "categories": ["weather", "lifestyle", "utilities"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Jemuran", "short_name": "Jemuran", "description": "Aman jemur cucian?", "url": "./#jemuran", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Saat tepat mancing", "short_name": "Mancing", "description": "Kondisi laut dan waktu mancing", "url": "./#nelayan", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Petani", "short_name": "Petani", "description": "Panduan lahan hari ini", "url": "./#petani", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Golf", "short_name": "Golf", "description": "Tee time dan angin", "url": "./#golf", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}

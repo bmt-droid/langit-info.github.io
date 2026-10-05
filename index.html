@@ -5,6 +5,13 @@
 <meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#3E8FD8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Langit">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="Langit: prakiraan cuaca Indonesia per jam, mode jemuran, petani, nelayan dan wisata. Data Open-Meteo dan BMKG.">
 <title>Langit — Cuaca Indonesia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -298,6 +305,21 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 @keyframes fogmove{from{transform:translateX(-4%)}to{transform:translateX(4%)}}
 .hero-icon svg{animation:float 5s ease-in-out infinite alternate}
 @keyframes float{from{transform:translateY(4px)}to{transform:translateY(-8px)}}
+
+/* install banner */
+.install{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;width:min(94vw,520px);
+  display:grid;grid-template-columns:48px 1fr;gap:10px 14px;align-items:center;padding:14px 16px;border-radius:20px;background:var(--paper);color:var(--ink);
+  border:1px solid var(--line);box-shadow:0 18px 44px rgba(5,15,30,.32)}
+.install[hidden]{display:none}
+.install img{border-radius:12px}
+.install-txt{display:flex;flex-direction:column;gap:2px;font-size:.92rem}
+.install-txt span{color:var(--muted)}
+.install-btns{grid-column:1 / -1;display:flex;justify-content:flex-end;gap:8px}
+.install-btns button{border:0;border-radius:999px;padding:10px 18px;font-weight:700}
+.install-later{background:var(--soft)}
+.install-go{background:#0A57C2;color:#fff}
+.install-link{margin-top:10px;border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 14px;font-weight:600;color:var(--ink)}
+@media (display-mode: standalone){ .install, .install-link{display:none!important} }
 /* icons */
 .ico{overflow:visible}
 .ico *{stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
@@ -380,6 +402,11 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
     <footer id="footer"></footer>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <div class="install" id="install" role="dialog" aria-labelledby="installTitle" hidden>
+    <img src="icon-192.png" alt="" width="48" height="48">
+    <div class="install-txt"><strong id="installTitle"></strong><span id="installSub"></span></div>
+    <div class="install-btns"><button type="button" class="install-later" id="installLater"></button><button type="button" class="install-go" id="installGo"></button></div>
+  </div>
 </main>
 
 <script>
@@ -640,6 +667,16 @@ Object.assign(STR.en, {
   caddie:'Caddie tip', cdWind:'Strong wind: hit it lower (knockdown), grip down a little and swing smoothly.', cdWet:'Wet greens: putt more firmly because the ball stops sooner, and fly approaches right at the flag.',
   cdHot:'Very hot: bring a wet towel, drink every 2–3 holes and wait in the shade.', cdHigh:'High altitude: the ball flies further, so consider less club for approaches.',
   cdDew:'Morning dew: early greens are slower, and the ball spins less from wet grass.', cdCalm:'Steady weather: focus on tempo, you will barely need to adjust.'
+});
+Object.assign(STR.id, {
+  instTitle:'Pasang Langit di HP', instSub:'Buka lebih cepat dari layar utama, tetap bisa dilihat saat offline.', instGo:'Pasang', instLater:'Nanti', instFooter:'Pasang aplikasi Langit',
+  instIos:'Ketuk tombol Bagikan, lalu pilih "Tambah ke Layar Utama".', instIosGo:'Mengerti',
+  offline:'Anda sedang offline. Menampilkan data terakhir yang tersimpan.', online:'Kembali online. Data diperbarui.'
+});
+Object.assign(STR.en, {
+  instTitle:'Install Langit on your phone', instSub:'Open it faster from your home screen, and still see it offline.', instGo:'Install', instLater:'Later', instFooter:'Install the Langit app',
+  instIos:'Tap the Share button, then choose "Add to Home Screen".', instIosGo:'Got it',
+  offline:"You're offline. Showing the last saved data.", online:'Back online. Data refreshed.'
 });
 function greeting(){
   const h = new Date().getHours();
@@ -1934,6 +1971,7 @@ function applyStatic(){
   $('#h-hourly').textContent = t('h48'); $('#h-daily').textContent = t('d10'); $('#h-now').textContent = t('cond');
   $('#hourly').setAttribute('aria-label', t('hourlyLabel'));
   $('#footer').innerHTML = `<p class="credits">${t('footer')}</p><p class="copy">&copy; ${new Date().getFullYear()} BMT | Berkat Maha Tinggi</p>`;
+  if (typeof renderInstallLink === 'function') renderInstallLink();
   document.querySelectorAll('#langSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === state.lang));
   document.querySelectorAll('#unitSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.u === state.units));
 }
@@ -1948,6 +1986,53 @@ document.querySelectorAll('#unitSeg button').forEach(b => b.onclick = () => {
   if (state.data) render(false);
 });
 window.addEventListener('hashchange', () => { const m = location.hash.slice(1); if (MODES.includes(m) && m !== state.mode) setMode(m); });
+
+
+/* ================= Installable app (PWA) ================= */
+let installEvt = null;
+const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function showInstall(force){
+  if (isStandalone()) return;
+  if (!force && (store.get('skyline.installLater', 0) > Date.now())) return;
+  const ios = isIOS() && !installEvt;
+  if (!installEvt && !ios) return;
+  $('#installTitle').textContent = t('instTitle');
+  $('#installSub').textContent = ios ? t('instIos') : t('instSub');
+  $('#installGo').textContent = ios ? t('instIosGo') : t('instGo');
+  $('#installLater').textContent = t('instLater');
+  $('#installLater').hidden = ios;
+  $('#install').hidden = false;
+}
+function hideInstall(snoozeDays){
+  $('#install').hidden = true;
+  if (snoozeDays) store.set('skyline.installLater', Date.now() + snoozeDays * 86400000);
+}
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); installEvt = e;
+  renderInstallLink();
+  setTimeout(() => showInstall(false), 15000);
+});
+window.addEventListener('appinstalled', () => { installEvt = null; hideInstall(0); renderInstallLink(); });
+$('#installGo').onclick = async () => {
+  if (installEvt){ installEvt.prompt(); const r = await installEvt.userChoice.catch(() => null); installEvt = null; hideInstall(r && r.outcome === 'accepted' ? 0 : 7); renderInstallLink(); }
+  else hideInstall(30);
+};
+$('#installLater').onclick = () => hideInstall(7);
+function renderInstallLink(){
+  const f = $('#footer'); if (!f) return;
+  let a = f.querySelector('.install-link');
+  const can = !isStandalone() && (installEvt || isIOS());
+  if (!can){ if (a) a.remove(); return; }
+  if (!a){ a = document.createElement('button'); a.type = 'button'; a.className = 'install-link'; a.onclick = () => showInstall(true); f.appendChild(a); }
+  a.textContent = '📲 ' + t('instFooter');
+}
+if (isIOS() && !isStandalone()) setTimeout(() => showInstall(false), 20000);
+if ('serviceWorker' in navigator && location.protocol === 'https:'){
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+window.addEventListener('offline', () => toast(t('offline'), 6000));
+window.addEventListener('online', () => { toast(t('online'), 3000); if (state.place) loadPlace(state.place, { quiet:true }); });
 
 /* ================= Boot ================= */
 applyStatic();
