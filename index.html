@@ -193,7 +193,14 @@ h2{font-family:var(--display);font-size:1.2rem;font-weight:650;letter-spacing:-.
 .sun svg,.wind svg{display:block;width:100%;height:auto}
 .sun text,.wind text{fill:var(--muted);font-family:var(--body);font-size:12px}
 .wind-row{display:flex;align-items:center;gap:16px}
-.wind-row svg{width:104px;flex:none}
+.wind-row svg{width:92px;flex:none}
+.wind-txt{min-width:0}
+.wind-txt .big{white-space:nowrap}
+.wind-txt .big small{display:inline-block}
+.shakemap{display:block;padding:0;border:0;background:none;cursor:zoom-in;text-align:left}
+.lightbox{position:fixed;inset:0;z-index:80;background:rgba(5,12,24,.86);display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
+.lightbox img{max-width:100%;max-height:100%;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.lightbox button{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:16px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:1.2rem}
 .alert{color:var(--bad);font-weight:600}
 
 /* ---------- Mode panels ---------- */
@@ -549,7 +556,7 @@ id: {
   wave:'Gelombang', waveCats:['Tenang','Rendah','Sedang','Tinggi','Sangat tinggi','Ekstrem'], period:s=>`Periode ${s} detik`, waveFrom:d=>`dari ${d}`, waveMax:(a,b)=>`Maksimum hari ini ${a}, besok ${b}.`,
   moon:'Fase bulan', moonNames:['Bulan baru','Sabit awal','Kuartal pertama','Cembung awal','Purnama','Cembung akhir','Kuartal akhir','Sabit akhir'],
   moonLit:p=>`${p}% permukaan bulan terang.`, moonDark:'Malam gelap, cocok untuk bagan dan memancing dengan lampu.', moonBright:'Malam terang, ikan cenderung menyebar.',
-  nlOfficial:'Selalu cek peringatan resmi BMKG Maritim sebelum berangkat.', nlOfficialLink:'Buka BMKG Maritim',
+  nlOfficial:'Selalu perhatikan peringatan resmi BMKG Maritim (aplikasi InfoBMKG atau @bmkgmaritim) sebelum berangkat.', nlOfficialLink:'Buka BMKG Maritim',
   tsunami:'Gempa terbaru berpotensi tsunami. Ikuti arahan BMKG dan BPBD.', nlStrip:'Kondisi laut per jam', nlLegend:['Aman','Hati-hati','Bahaya'],
   sunTimes:'Terbit dan terbenam', sunTimesV:(a,b)=>`${a} dan ${b}`,
   // Wisata
@@ -641,7 +648,7 @@ en: {
   wave:'Waves', waveCats:['Calm','Slight','Moderate','Rough','Very rough','Extreme'], period:s=>`${s} s period`, waveFrom:d=>`from the ${d}`, waveMax:(a,b)=>`Max today ${a}, tomorrow ${b}.`,
   moon:'Moon phase', moonNames:['New moon','Waxing crescent','First quarter','Waxing gibbous','Full moon','Waning gibbous','Last quarter','Waning crescent'],
   moonLit:p=>`${p}% illuminated.`, moonDark:'Dark night, good for light fishing and bagan nets.', moonBright:'Bright night, fish tend to scatter.',
-  nlOfficial:'Always check the official BMKG marine warnings before leaving.', nlOfficialLink:'Open BMKG Maritim',
+  nlOfficial:'Always follow the official BMKG marine warnings (InfoBMKG app or @bmkgmaritim) before heading out.', nlOfficialLink:'Open BMKG Maritim',
   tsunami:'The latest earthquake may cause a tsunami. Follow BMKG and BPBD instructions.', nlStrip:'Sea conditions by hour', nlLegend:['Safe','Caution','Danger'],
   sunTimes:'Sunrise and sunset', sunTimesV:(a,b)=>`${a} and ${b}`,
   wsToday:"Today's plan", wsTomorrow:"Tomorrow's plan", periods:['Morning','Midday','Afternoon','Evening'],
@@ -781,14 +788,14 @@ Object.assign(STR.id, {
   marShips:['Perahu nelayan','Kapal tongkang','Kapal feri','Kapal besar (kargo/pesiar)'],
   marRule:(kt,m)=>`Waspada jika angin ≥ ${kt} knot atau gelombang ≥ ${m} m`, marBasis:'Ambang batas mengikuti kategori risiko pelayaran BMKG. Angin dan gelombang adalah prakiraan model untuk titik ini.',
   mar3:'Gelombang maksimum 3 hari', marCur:'Arus laut', marCurV:(sp,d)=>`${sp} ke arah ${d}`, marSst:'Suhu permukaan laut', marWindKt:(k,s)=>`${k} knot (${s})`,
-  marOfficial:'Prakiraan resmi per wilayah perairan dan pelabuhan tersedia di BMKG Maritim.'
+  marOfficial:'Prakiraan resmi per wilayah perairan dan pelabuhan diterbitkan oleh BMKG Maritim.'
 });
 Object.assign(STR.en, {
   mar:'Marine info', marShip:'Shipping safety', marNow:'Now', mar24:'Next 24 hours', marSafe:'Safe', marRisk:'At risk',
   marShips:['Fishing boat','Barge','Ferry','Large ship (cargo/cruise)'],
   marRule:(kt,m)=>`Caution if wind ≥ ${kt} knots or waves ≥ ${m} m`, marBasis:"Thresholds follow BMKG's shipping risk categories. Wind and waves are model forecasts for this point.",
   mar3:'3-day maximum waves', marCur:'Ocean current', marCurV:(sp,d)=>`${sp} towards the ${d}`, marSst:'Sea surface temperature', marWindKt:(k,s)=>`${k} knots (${s})`,
-  marOfficial:'Official forecasts for each sea area and port are available from BMKG Maritim.'
+  marOfficial:'Official forecasts for each sea area and port are issued by BMKG Maritim.'
 });
 function greeting(){
   const h = new Date().getHours();
@@ -1252,7 +1259,7 @@ function renderTiles(d){
       <text x="60" y="118" text-anchor="middle">${dial[2]}</text><text x="6" y="64" text-anchor="middle">${dial[3]}</text>
       <g transform="rotate(${wd + 180} 60 60)"><line x1="60" y1="88" x2="60" y2="36" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/><path d="M60 26 l9 14 h-18z" fill="var(--ink)"/></g>
     </svg>
-    <div><div class="big">${speed(c.wind_speed_10m)}</div><div>${esc(t('windFrom', dir8(wd)))}</div></div></div>
+    <div class="wind-txt"><div class="big">${speed(c.wind_speed_10m).replace(/^(\S+)\s(.+)$/, '$1<small>$2</small>')}</div><div>${esc(t('windFrom', dir8(wd)))}</div></div></div>
     <div class="note">${esc(t('gusts', speed(c.wind_gusts_10m)))}</div></div>`);
 
   // UV
@@ -1568,7 +1575,7 @@ function moonPhase(){
 function modeNelayan(){
   const d = state.data, H = d.hourly, D = d.daily, i0 = state.i0, end = Math.min(H.time.length, i0 + 48);
   const mi = marineIndex();
-  const official = `<p class="official">${t('nlOfficial')} <a href="https://maritim.bmkg.go.id/" target="_blank" rel="noopener">${t('nlOfficialLink')}</a></p>`;
+  const official = `<p class="official">${t('nlOfficial')}</p>`;
   const valid = mi && H.time.slice(i0, end).some(x => mi[x] != null && state.marine.hourly.wave_height[mi[x]] != null);
   const mp = moonPhase();
   const moonFact = fact(t('moon'), t('moonNames')[mp.idx], esc(`${t('moonLit', mp.lit)} ${mp.lit < 30 ? t('moonDark') : mp.lit > 75 ? t('moonBright') : ''}`));
@@ -1777,7 +1784,7 @@ function renderQuakeSection(){
       <div class="qm-head"><span class="mag s-${magLvl(m)}">M${esc(L.Magnitude)}</span><div><b>${esc(L.Wilayah)}</b><br><small>${esc(quakeAgo(L))}, ${esc(t('qDepth', L.Kedalaman || '–'))}${km != null ? '. ' + esc(t('qFrom', kmDist(km))) : ''}</small></div></div>
       <p class="${tsunamiRisk(L) ? 'alert' : 'muted'}">${esc(L.Potensi || '')}</p>
       ${L.Dirasakan ? `<p>${esc(t('qFeltBy', L.Dirasakan))}</p>` : ''}
-      ${shake ? `<a class="shakemap" href="${direct}" target="_blank" rel="noopener"><img src="${direct}" ${proxy ? `onerror="this.onerror=null;this.src='${proxy}'"` : ''} loading="lazy" alt="${esc(t('qShake'))}"></a><p class="muted small">${t('qShake')}. ${t('qShakeNote')}</p>` : ''}
+      ${shake ? `<button type="button" class="shakemap" aria-label="${esc(t('qShake'))}"><img src="${direct}" ${proxy ? `onerror="this.onerror=null;this.src='${proxy}'"` : ''} loading="lazy" alt="${esc(t('qShake'))}"></button><p class="muted small">${t('qShake')}. ${t('qShakeNote')}</p>` : ''}
     </div>`;
   }
   html += '<div class="quake-side">';
@@ -1790,8 +1797,19 @@ function renderQuakeSection(){
   if (nq) html += `<div class="fact"><h3>${t('qNearest')}</h3><div class="val">M${esc(nq.q.Magnitude)}</div><p>${esc(nq.q.Wilayah)}. ${esc(t('qFrom', kmDist(nq.km)))}, ${esc(quakeAgo(nq.q))}.</p></div>`;
   html += '</div></div>';
   html += `<details class="mmi"><summary>${t('qMmi')}</summary><ul>${t('qMmiList').map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>
-    <p class="official">${t('qOfficial')} <a href="https://www.bmkg.go.id/" target="_blank" rel="noopener">${t('qOpen')}</a></p>`;
+    <p class="official">${t('qOfficial')}</p>`;
   $('#quakeBody').innerHTML = html;
+  const sbtn = $('#quakeBody .shakemap');
+  if (sbtn) sbtn.onclick = () => {
+    const img = sbtn.querySelector('img');
+    const box = document.createElement('div');
+    box.className = 'lightbox'; box.setAttribute('role', 'dialog');
+    box.innerHTML = `<img src="${img.currentSrc || img.src}" alt=""><button type="button" aria-label="Tutup">✕</button>`;
+    const close = () => { box.remove(); document.removeEventListener('keydown', esc_); };
+    const esc_ = e => { if (e.key === 'Escape') close(); };
+    box.onclick = close; document.addEventListener('keydown', esc_);
+    document.body.appendChild(box);
+  };
   sec.hidden = false;
 }
 
@@ -2066,7 +2084,7 @@ function maritimeBlock(){
     <p class="muted small">${t('marBasis')}</p>
     ${days ? `<h3>${t('mar3')}</h3><div class="wdays">${days}</div>` : ''}
     <div class="facts">${fact(t('wind'), esc(t('marWindKt', Math.round(k0), speed(H.wind_speed_10m[i0]))), '')}${sea}</div>
-    <p class="official">${t('marOfficial')} <a href="https://maritim.bmkg.go.id/" target="_blank" rel="noopener">${t('nlOfficialLink')}</a></p>
+    <p class="official">${t('marOfficial')}</p>
   </div>`;
 }
 function extrasNelayan(){
