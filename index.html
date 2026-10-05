@@ -402,6 +402,14 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .hol-list li{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
 .hi-ic{font-size:1.45rem;line-height:1.2}
 .holiday-fact p{margin:0}
+
+button.greet{border:0;background:none;padding:0;color:inherit;cursor:pointer;text-align:left}
+.greet .nm{font-weight:700}
+.nm-add{font-size:.8em;opacity:.7;margin-left:2px}
+.namebox{grid-template-columns:40px 1fr}
+.namebox .nb-ic{font-size:1.8rem;text-align:center}
+.namebox input{grid-column:1 / -1;width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font-size:1rem}
+.namebox input:focus{outline:2px solid var(--focus);outline-offset:1px}
 /* icons */
 .ico{overflow:visible}
 .ico *{stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
@@ -866,6 +874,42 @@ Object.assign(STR.en, {
   moonSeeGood:'Mostly clear tonight, the moon should be easy to see.', moonSeeMid:'Partly cloudy, clouds may cover the moon at times.', moonSeeBad:'Cloudy or rainy tonight, the moon will be hard to see.',
   chipFull:'Full moon tonight', chipFullSoon:n=>`Full moon in ${n} days`, chipHalf:'Half moon'
 });
+// Visitor's name, stored only on this device (no login, nothing sent anywhere)
+Object.assign(STR.id, {
+  nmTitle:'Mau disapa dengan nama?', nmSub:'Nama hanya disimpan di perangkat ini, tidak dikirim ke mana pun.', nmPh:'Nama panggilan', nmSave:'Simpan', nmDel:'Hapus nama', nmEdit:'Ubah nama sapaan', nmHi:n=>`Halo, ${n}! 👋`
+});
+Object.assign(STR.en, {
+  nmTitle:'Want a personal greeting?', nmSub:'Your name is saved only on this device and never sent anywhere.', nmPh:'Your first name', nmSave:'Save', nmDel:'Remove name', nmEdit:'Change your greeting name', nmHi:n=>`Hi, ${n}! 👋`
+});
+const userName = () => (store.get('skyline.name', '') || '').trim();
+function greetHtml(){
+  const n = userName();
+  return n ? `${greeting()}, <b class="nm">${esc(n)}</b> 👋` : `${greeting()} <span class="nm-add" aria-hidden="true">✏️</span>`;
+}
+function openNameBox(){
+  if ($('#nameBox')) return;
+  const n = userName();
+  const box = document.createElement('div');
+  box.className = 'install namebox'; box.id = 'nameBox'; box.setAttribute('role', 'dialog');
+  box.innerHTML = `<div class="nb-ic">👋</div>
+    <div class="install-txt"><strong>${t('nmTitle')}</strong><span>${t('nmSub')}</span></div>
+    <input id="nameInput" type="text" maxlength="20" autocomplete="given-name" placeholder="${esc(t('nmPh'))}" value="${esc(n)}">
+    <div class="install-btns">${n ? `<button type="button" class="install-later" id="nameDel">${t('nmDel')}</button>` : `<button type="button" class="install-later" id="nameCancel">${t('instLater')}</button>`}<button type="button" class="install-go" id="nameSave">${t('nmSave')}</button></div>`;
+  document.body.appendChild(box);
+  const inp = $('#nameInput'); setTimeout(() => inp.focus(), 50);
+  const close = () => box.remove();
+  const save = () => {
+    const v = inp.value.replace(/[<>]/g, '').trim().slice(0, 20);
+    store.set('skyline.name', v);
+    const g = $('#greet'); if (g) g.innerHTML = greetHtml();
+    close(); if (v) toast(t('nmHi', v), 3000);
+  };
+  $('#nameSave').onclick = save;
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') close(); });
+  if ($('#nameDel')) $('#nameDel').onclick = () => { store.set('skyline.name', ''); const g = $('#greet'); if (g) g.innerHTML = greetHtml(); close(); };
+  if ($('#nameCancel')) $('#nameCancel').onclick = close;
+}
+document.addEventListener('click', e => { if (e.target.closest('#greet')) openNameBox(); });
 function greeting(){
   const h = new Date().getHours();
   const id = ['Selamat Tidur','Selamat Pagi','Selamat Siang','Selamat Sore','Selamat Malam'];
@@ -1174,7 +1218,7 @@ function render(animate){
   $('#heroArea').innerHTML = `
     <div class="hero">
       <div>
-        <div class="greet-row"><span class="greet" id="greet">${greeting()}</span>${holidayChipHtml()}<button type="button" class="zodiac" id="zodiac">${zodiacHtml()}</button>${moonChipHtml()}</div>
+        <div class="greet-row"><button type="button" class="greet" id="greet" aria-label="${esc(t('nmEdit'))}">${greetHtml()}</button>${holidayChipHtml()}<button type="button" class="zodiac" id="zodiac">${zodiacHtml()}</button>${moonChipHtml()}</div>
         <h1 class="place">${esc(state.place.name)}
           <button class="star" id="star" type="button" aria-pressed="${fav}" aria-label="${esc(fav ? t('unsave') : t('save'))}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg>
@@ -2619,7 +2663,7 @@ applyStatic();
 renderModes();
 loadPlace(store.get('skyline.last', null) || DEFAULT_PLACE);
 setInterval(() => { if (!document.hidden && state.place) loadPlace(state.place, { quiet:true }); }, 15 * 60 * 1000);
-setInterval(() => { const g = $('#greet'); if (g) g.textContent = greeting(); const z = $('#zodiac'); if (z) z.innerHTML = zodiacHtml(); }, 60 * 1000);
+setInterval(() => { const g = $('#greet'); if (g) g.innerHTML = greetHtml(); const z = $('#zodiac'); if (z) z.innerHTML = zodiacHtml(); }, 60 * 1000);
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && state.data && Date.now() - (state.lastRefresh || 0) > 10 * 60 * 1000) loadPlace(state.place, { quiet:true });
 });
