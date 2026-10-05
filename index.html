@@ -108,12 +108,18 @@ a{color:inherit}
 @media (max-width:420px){ #locate span{display:none} }
 
 .hero{position:relative;display:grid;grid-template-columns:1fr auto;gap:12px 20px;align-items:start;margin-top:40px}
-.greet{font-family:var(--display);font-weight:500;font-size:1.05rem;opacity:.9;margin-bottom:6px;letter-spacing:-.005em}
+.greet{font-family:var(--display);font-weight:500;font-size:1.05rem;opacity:.9;letter-spacing:-.005em}
+.greet-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-bottom:8px}
+.zodiac{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--glass-line);background:var(--glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-radius:999px;padding:5px 12px 5px 6px;font-weight:700;font-size:.92rem;line-height:1;color:inherit}
+.zodiac .zi{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#8E5CC7,#5B6FE0);color:#fff;font-size:15px;line-height:1}
 .place{display:flex;align-items:center;gap:6px;margin:0;font-family:var(--display);font-weight:600;font-size:clamp(1.6rem,3.6vw,2.3rem);line-height:1.1;letter-spacing:-.02em}
 .star{border:0;background:transparent;padding:6px;border-radius:50%;display:inline-flex}
 .star svg{width:22px;height:22px}
 .star[aria-pressed="true"] path{fill:currentColor}
-.sub{opacity:.8;margin-top:4px}
+.sub{margin-top:6px;display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline}
+.sub .region{opacity:.82}
+.sub .when{font-weight:700;font-size:1.08rem;letter-spacing:-.005em}
 .temp{
   font-family:var(--display);font-weight:300;font-variation-settings:"opsz" 96;
   font-size:clamp(7rem,24vw,14rem);line-height:.84;letter-spacing:-.065em;margin:22px 0 10px -.05em;
@@ -797,6 +803,38 @@ Object.assign(STR.en, {
   mar3:'3-day maximum waves', marCur:'Ocean current', marCurV:(sp,d)=>`${sp} towards the ${d}`, marSst:'Sea surface temperature', marWindKt:(k,s)=>`${k} knots (${s})`,
   marOfficial:'Official forecasts for each sea area and port are issued by BMKG Maritim.'
 });
+// Zodiac sign for the visitor's own date
+const ZODIAC = [
+  // [start month, start day, name ID, name EN, symbol, range ID, range EN]
+  [1,20,'Aquarius','Aquarius','♒','20 Januari – 18 Februari','20 January – 18 February'],
+  [2,19,'Pisces','Pisces','♓','19 Februari – 20 Maret','19 February – 20 March'],
+  [3,21,'Aries','Aries','♈','21 Maret – 19 April','21 March – 19 April'],
+  [4,20,'Taurus','Taurus','♉','20 April – 20 Mei','20 April – 20 May'],
+  [5,21,'Gemini','Gemini','♊','21 Mei – 20 Juni','21 May – 20 June'],
+  [6,21,'Cancer','Cancer','♋','21 Juni – 22 Juli','21 June – 22 July'],
+  [7,23,'Leo','Leo','♌','23 Juli – 22 Agustus','23 July – 22 August'],
+  [8,23,'Virgo','Virgo','♍','23 Agustus – 22 September','23 August – 22 September'],
+  [9,23,'Libra','Libra','♎','23 September – 22 Oktober','23 September – 22 October'],
+  [10,23,'Scorpio','Scorpio','♏','23 Oktober – 21 November','23 October – 21 November'],
+  [11,22,'Sagitarius','Sagittarius','♐','22 November – 21 Desember','22 November – 21 December'],
+  [12,22,'Capricorn','Capricorn','♑','22 Desember – 19 Januari','22 December – 19 January']
+];
+function zodiacNow(){
+  const d = new Date(), m = d.getMonth() + 1, day = d.getDate();
+  let z = ZODIAC[11];
+  for (const s of ZODIAC) if (m > s[0] || (m === s[0] && day >= s[1])) z = s;
+  if (m === 1 && day < 20) z = ZODIAC[11];
+  return z;
+}
+function zodiacHtml(){
+  const z = zodiacNow();
+  return `<span class="zi" aria-hidden="true">${z[4]}&#xFE0E;</span>${state.lang === 'id' ? z[2] : z[3]}`;
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#zodiac')) return;
+  const z = zodiacNow();
+  toast(state.lang === 'id' ? `${z[4]} Zodiak hari ini: ${z[2]} (${z[5]})` : `${z[4]} Today's sign: ${z[3]} (${z[6]})`, 4000);
+});
 function greeting(){
   const h = new Date().getHours();
   const id = ['Selamat Tidur','Selamat Pagi','Selamat Siang','Selamat Sore','Selamat Malam'];
@@ -1105,13 +1143,13 @@ function render(animate){
   $('#heroArea').innerHTML = `
     <div class="hero">
       <div>
-        <div class="greet" id="greet">${greeting()}</div>
+        <div class="greet-row"><span class="greet" id="greet">${greeting()}</span><button type="button" class="zodiac" id="zodiac">${zodiacHtml()}</button></div>
         <h1 class="place">${esc(state.place.name)}
           <button class="star" id="star" type="button" aria-pressed="${fav}" aria-label="${esc(fav ? t('unsave') : t('save'))}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg>
           </button>
         </h1>
-        <div class="sub">${state.place.region ? esc(state.place.region) + ', ' : ''}${now.day} ${clock(now.h, now.m)}</div>
+        <div class="sub">${state.place.region ? `<span class="region">${esc(state.place.region)}</span>` : ''}<span class="when">${now.day} ${clock(now.h, now.m)}</span></div>
         <div class="temp" aria-label="${tFmt(c.temperature_2m)}"><span id="tnum">${Math.round(T(c.temperature_2m))}</span><span class="deg">°</span></div>
         <div class="cond">${label}</div>
         <div class="meta"><span>${t('feels')} ${tFmt(c.apparent_temperature)}</span><span>${t('high')} ${tFmt(D.temperature_2m_max[0])}</span><span>${t('low')} ${tFmt(D.temperature_2m_min[0])}</span></div>
@@ -2370,7 +2408,7 @@ applyStatic();
 renderModes();
 loadPlace(store.get('skyline.last', null) || DEFAULT_PLACE);
 setInterval(() => { if (!document.hidden && state.place) loadPlace(state.place, { quiet:true }); }, 15 * 60 * 1000);
-setInterval(() => { const g = $('#greet'); if (g) g.textContent = greeting(); }, 60 * 1000);
+setInterval(() => { const g = $('#greet'); if (g) g.textContent = greeting(); const z = $('#zodiac'); if (z) z.innerHTML = zodiacHtml(); }, 60 * 1000);
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && state.data && Date.now() - (state.lastRefresh || 0) > 10 * 60 * 1000) loadPlace(state.place, { quiet:true });
 });
