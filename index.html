@@ -320,6 +320,60 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .install-go{background:#0A57C2;color:#fff}
 .install-link{margin-top:10px;border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 14px;font-weight:600;color:var(--ink)}
 @media (display-mode: standalone){ .install, .install-link{display:none!important} }
+
+/* gempa section */
+.quake-sec[hidden]{display:none}
+.quake-grid{display:grid;gap:24px}
+@media (min-width:900px){.quake-grid{grid-template-columns:1.1fr .9fr;align-items:start}}
+.quake-main,.quake-side{display:flex;flex-direction:column;gap:10px;min-width:0}
+.quake-sec h3,.airport h3,.season h3{margin:0;font-size:.92rem;font-weight:600;color:var(--muted)}
+.qm-head{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+.mag{display:inline-flex;align-items:center;justify-content:center;min-width:72px;height:56px;padding:0 10px;border-radius:16px;color:#fff;font-family:var(--display);font-size:1.5rem;font-weight:650}
+.mag.sm{min-width:54px;height:38px;font-size:1rem;border-radius:12px}
+.quake-main p,.quake-side p{margin:0}
+.muted{color:var(--muted)} .small{font-size:.85rem}
+.shakemap img{display:block;width:100%;max-width:560px;border-radius:14px;border:1px solid var(--line);background:var(--soft)}
+.felt{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.felt li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.felt-more summary,.mmi summary,.metar summary{cursor:pointer;font-weight:600;color:var(--rain);margin-top:6px}
+.felt-more ul{margin-top:12px}
+.mmi{margin-top:18px}
+.mmi ul{margin:8px 0 0;padding-left:20px;color:var(--muted);display:grid;gap:4px}
+/* airport */
+.airport{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:16px}
+.metar{border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;gap:10px}
+.metar-head{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+.plane{font-size:1.6rem}
+.lvl-chip{justify-self:start;color:#fff;font-weight:700;font-size:.85rem;padding:5px 12px;border-radius:999px}
+.metar dl{display:grid;grid-template-columns:minmax(110px,auto) 1fr;gap:6px 14px;margin:0}
+.metar dt{color:var(--muted);font-size:.9rem}
+.metar dd{margin:0;font-weight:500}
+.metar code{display:block;margin-top:8px;padding:10px;border-radius:10px;background:var(--soft);font-size:.82rem;overflow-wrap:anywhere}
+/* season */
+.season{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:16px}
+.ssn-rows{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ssn-rows li{display:grid;grid-template-columns:3.6rem 1fr 8.5rem;gap:10px;align-items:center}
+.ssn-m{font-weight:600}
+.ssn-bar{position:relative;height:10px;border-radius:5px;background:var(--soft)}
+.ssn-bar::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1.5px;background:var(--muted);opacity:.5}
+.ssn-bar i{position:absolute;top:0;bottom:0;border-radius:5px}
+.ssn-bar i.wet{background:var(--rain)} .ssn-bar i.dry{background:var(--poor)} .ssn-bar i.norm{background:var(--good)}
+.ssn-v{font-weight:600;font-size:.9rem} .ssn-v.wet{color:var(--rain)} .ssn-v.dry{color:var(--poor)} .ssn-v.norm{color:var(--good)}
+.ssn-v small{color:var(--muted);font-weight:500}
+.season p{margin:0}
+
+/* maritime */
+.maritime{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:16px}
+.maritime h3{margin:0;font-size:.92rem;font-weight:600;color:var(--muted)}
+.ship-wrap{overflow-x:auto}
+.ships{width:100%;border-collapse:collapse;min-width:420px}
+.ships th,.ships td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.ships thead th{font-size:.85rem;color:var(--muted);font-weight:600}
+.ships tbody th{font-weight:600}
+.ships tbody th small{display:block;font-weight:400;color:var(--muted);font-size:.8rem;margin-top:2px}
+.wdays{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.wday{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.wday .val{font-family:var(--display);font-size:1.4rem;font-weight:550}
 /* icons */
 .ico{overflow:visible}
 .ico *{stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
@@ -399,6 +453,10 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
         <div class="tiles" id="tiles"></div>
       </section>
     </div>
+    <section id="quakeSec" class="quake-sec" hidden aria-labelledby="h-quake">
+      <h2 id="h-quake"></h2>
+      <div id="quakeBody"></div>
+    </section>
     <footer id="footer"></footer>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -678,6 +736,60 @@ Object.assign(STR.en, {
   instIos:'Tap the Share button, then choose "Add to Home Screen".', instIosGo:'Got it',
   offline:"You're offline. Showing the last saved data.", online:'Back online. Data refreshed.'
 });
+Object.assign(STR.id, {
+  qSec:'Gempa dan guncangan tanah (BMKG)', qLatest:'Gempa terbaru', qFelt:'Gempa dirasakan terbaru', qFeltBy:v=>`Dirasakan: ${v}`, qFrom:km=>`${km} dari lokasi Anda`,
+  qNearest:'Gempa M5+ terdekat dalam daftar BMKG', qShake:'Peta guncangan (shakemap)', qShakeNote:'Ketuk untuk memperbesar. Warna menunjukkan seberapa kuat guncangan di tiap daerah.',
+  qMore:'Lihat semua', qLess:'Tampilkan lebih sedikit', qDepth:d=>`kedalaman ${d}`,
+  qMmi:'Apa arti skala MMI?', qMmiList:['I–II: hampir tidak terasa, hanya oleh beberapa orang dalam keadaan diam.','III: terasa di dalam rumah, seperti truk berlalu.','IV: dirasakan banyak orang, jendela dan pintu berderik.','V: dirasakan hampir semua orang, benda kecil bisa jatuh.','VI ke atas: menakutkan, bisa menimbulkan kerusakan ringan hingga berat.'],
+  qOfficial:'Sumber resmi: BMKG. Ikuti arahan BMKG dan BPBD saat terjadi gempa.', qOpen:'Buka BMKG',
+  ap:'Cuaca bandara', apReport:(h,m)=>`Laporan pukul ${h} (${m})`, apMinAgo:m=>m<60?`${m} menit lalu`:`${Math.round(m/60)} jam lalu`, apKm:km=>`${km} dari sini`,
+  apWind:'Angin', apCalm:'Tenang', apVrb:'arah berubah-ubah', apVis:'Jarak pandang', apCloud:'Awan', apWx:'Cuaca', apTemp:'Suhu / titik embun', apPress:'Tekanan (QNH)',
+  apCavok:'Cerah, tanpa awan rendah (CAVOK)', apNoCloud:'Tidak ada awan signifikan', apNoWx:'Tidak ada hujan atau kabut', apAt:(c,ft,m)=>`${c} di ${ft} kaki (${m} m)`,
+  apCover:{FEW:'Sedikit awan',SCT:'Awan tersebar',BKN:'Awan banyak',OVC:'Tertutup awan',VV:'Langit tertutup'}, apCb:' (awan badai Cumulonimbus)', apTcu:' (awan menjulang)',
+  apCat:{VFR:'Kondisi terbang baik',MVFR:'Kondisi terbang cukup',IFR:'Kondisi terbang terbatas',LIFR:'Kondisi terbang sangat terbatas'},
+  apRaw:'Lihat kode METAR asli', apNote:'Laporan cuaca resmi bandara (METAR), diukur langsung di landasan. Untuk jadwal penerbangan, ikuti info maskapai dan bandara.',
+  apNone:'Tidak ada bandara besar dalam radius 300 km.', apErr:'Laporan cuaca bandara belum bisa dimuat. Coba lagi nanti.',
+  wxw:{'TS':'badai petir','RA':'hujan','SHRA':'hujan lokal','TSRA':'hujan disertai petir','DZ':'gerimis','HZ':'udara berkabut asap (haze)','BR':'kabut tipis','FG':'kabut tebal','FU':'asap','SH':'hujan lokal','VCSH':'hujan di sekitar bandara','VCTS':'badai petir di sekitar bandara','DU':'debu','SQ':'angin kencang mendadak'}, wxLight:'ringan', wxHeavy:'lebat',
+  ssn:'Prediksi musim 6 bulan', ssnWet:'Lebih basah', ssnDry:'Lebih kering', ssnNorm:'Normal', ssnPct:p=>`${p > 0 ? '+' : ''}${p}%`,
+  ssnSum:(w,dr,n)=>w > dr ? `${w} dari ${n} bulan ke depan diperkirakan lebih basah dari normal.` : dr > w ? `${dr} dari ${n} bulan ke depan diperkirakan lebih kering dari normal.` : 'Curah hujan bulan-bulan ke depan diperkirakan mendekati normal.',
+  ssnTipWet:'Siapkan saluran drainase dan pertimbangkan varietas yang tahan genangan.', ssnTipDry:'Siapkan irigasi atau tampungan air, dan pertimbangkan varietas yang tahan kering.', ssnTipNorm:'Pola tanam biasa kemungkinan cocok. Tetap pantau prakiraan mingguan.',
+  ssnTemp:v=>`Suhu 3 bulan ke depan rata-rata ${v} dibanding normal.`, ssnNote:'Prakiraan jangka panjang ECMWF SEAS5 untuk area sekitar 36 km. Gunakan sebagai gambaran kecenderungan, bukan kepastian. Untuk prakiraan musim resmi, lihat BMKG.',
+  ssnErr:'Prediksi musim belum tersedia untuk lokasi ini.'
+});
+Object.assign(STR.en, {
+  qSec:'Earthquakes and ground shaking (BMKG)', qLatest:'Latest earthquake', qFelt:'Recently felt earthquakes', qFeltBy:v=>`Felt: ${v}`, qFrom:km=>`${km} from you`,
+  qNearest:'Nearest M5+ quake in the BMKG list', qShake:'Shaking map (shakemap)', qShakeNote:'Tap to enlarge. Colours show how strongly each area shook.',
+  qMore:'Show all', qLess:'Show less', qDepth:d=>`depth ${d}`,
+  qMmi:'What does the MMI scale mean?', qMmiList:['I–II: barely felt, only by a few people at rest.','III: felt indoors, like a passing truck.','IV: felt by many people, windows and doors rattle.','V: felt by nearly everyone, small objects may fall.','VI and above: frightening, can cause light to heavy damage.'],
+  qOfficial:'Official source: BMKG. Follow BMKG and BPBD instructions during an earthquake.', qOpen:'Open BMKG',
+  ap:'Airport weather', apReport:(h,m)=>`Report at ${h} (${m})`, apMinAgo:m=>m<60?`${m} min ago`:`${Math.round(m/60)} h ago`, apKm:km=>`${km} away`,
+  apWind:'Wind', apCalm:'Calm', apVrb:'variable direction', apVis:'Visibility', apCloud:'Clouds', apWx:'Weather', apTemp:'Temperature / dew point', apPress:'Pressure (QNH)',
+  apCavok:'Clear, no low clouds (CAVOK)', apNoCloud:'No significant clouds', apNoWx:'No rain or fog', apAt:(c,ft,m)=>`${c} at ${ft} ft (${m} m)`,
+  apCover:{FEW:'Few clouds',SCT:'Scattered clouds',BKN:'Broken clouds',OVC:'Overcast',VV:'Sky obscured'}, apCb:' (Cumulonimbus storm clouds)', apTcu:' (towering clouds)',
+  apCat:{VFR:'Good flying conditions',MVFR:'Fair flying conditions',IFR:'Limited flying conditions',LIFR:'Very limited flying conditions'},
+  apRaw:'Show the original METAR code', apNote:'Official airport weather report (METAR), measured at the runway. For flight schedules, follow your airline and the airport.',
+  apNone:'No major airport within 300 km.', apErr:"Airport weather couldn't be loaded. Try again later.",
+  wxw:{'TS':'thunderstorm','RA':'rain','SHRA':'showers','TSRA':'thunderstorm with rain','DZ':'drizzle','HZ':'haze','BR':'mist','FG':'fog','FU':'smoke','SH':'showers','VCSH':'showers near the airport','VCTS':'thunderstorm near the airport','DU':'dust','SQ':'squalls'}, wxLight:'light', wxHeavy:'heavy',
+  ssn:'6-month seasonal outlook', ssnWet:'Wetter', ssnDry:'Drier', ssnNorm:'Normal', ssnPct:p=>`${p > 0 ? '+' : ''}${p}%`,
+  ssnSum:(w,dr,n)=>w > dr ? `${w} of the next ${n} months look wetter than normal.` : dr > w ? `${dr} of the next ${n} months look drier than normal.` : 'Rainfall over the coming months looks close to normal.',
+  ssnTipWet:'Prepare drainage and consider flood-tolerant varieties.', ssnTipDry:'Prepare irrigation or water storage, and consider drought-tolerant varieties.', ssnTipNorm:'Your usual planting pattern will probably suit. Keep checking the weekly forecast.',
+  ssnTemp:v=>`Temperatures over the next 3 months average ${v} compared with normal.`, ssnNote:'Long-range ECMWF SEAS5 outlook for an area of about 36 km. Treat it as a trend, not a certainty. For official seasonal outlooks, see BMKG.',
+  ssnErr:'No seasonal outlook available for this place yet.'
+});
+Object.assign(STR.id, {
+  mar:'Info maritim', marShip:'Keselamatan pelayaran', marNow:'Sekarang', mar24:'24 jam ke depan', marSafe:'Aman', marRisk:'Berisiko',
+  marShips:['Perahu nelayan','Kapal tongkang','Kapal feri','Kapal besar (kargo/pesiar)'],
+  marRule:(kt,m)=>`Waspada jika angin ≥ ${kt} knot atau gelombang ≥ ${m} m`, marBasis:'Ambang batas mengikuti kategori risiko pelayaran BMKG. Angin dan gelombang adalah prakiraan model untuk titik ini.',
+  mar3:'Gelombang maksimum 3 hari', marCur:'Arus laut', marCurV:(sp,d)=>`${sp} ke arah ${d}`, marSst:'Suhu permukaan laut', marWindKt:(k,s)=>`${k} knot (${s})`,
+  marOfficial:'Prakiraan resmi per wilayah perairan dan pelabuhan tersedia di BMKG Maritim.'
+});
+Object.assign(STR.en, {
+  mar:'Marine info', marShip:'Shipping safety', marNow:'Now', mar24:'Next 24 hours', marSafe:'Safe', marRisk:'At risk',
+  marShips:['Fishing boat','Barge','Ferry','Large ship (cargo/cruise)'],
+  marRule:(kt,m)=>`Caution if wind ≥ ${kt} knots or waves ≥ ${m} m`, marBasis:"Thresholds follow BMKG's shipping risk categories. Wind and waves are model forecasts for this point.",
+  mar3:'3-day maximum waves', marCur:'Ocean current', marCurV:(sp,d)=>`${sp} towards the ${d}`, marSst:'Sea surface temperature', marWindKt:(k,s)=>`${k} knots (${s})`,
+  marOfficial:'Official forecasts for each sea area and port are available from BMKG Maritim.'
+});
 function greeting(){
   const h = new Date().getHours();
   const id = ['Selamat Tidur','Selamat Pagi','Selamat Siang','Selamat Sore','Selamat Malam'];
@@ -855,7 +967,7 @@ async function getJSON(url){
 async function loadPlace(place, opts = {}){
   const changed = !state.place || placeKey(state.place) !== placeKey(place);
   state.place = place;
-  if (changed){ state.marine = null; state.farm = null; state.extraError = false; }
+  if (changed){ state.marine = null; state.farm = null; state.metar = null; state.season = null; state.sea = null; state.extraError = false; }
   if (!opts.quiet){
     $('#sheet').classList.add('loading');
     if (!state.data) $('#heroArea').innerHTML = `<p class="status">${esc(t('loading', place.name))}</p>`;
@@ -891,7 +1003,10 @@ async function ensureExtras(){
   const key = placeKey(state.place), p = state.place;
   const needMarine = (state.mode === 'nelayan' || state.mode === 'wisata') && !state.marine;
   const needFarm = (state.mode === 'petani' || state.mode === 'golf') && !state.farm;
-  if (!needMarine && !needFarm){ renderMode(); return; }
+  const needMetar = state.mode === 'wisata' && !state.metar;
+  const needSeason = state.mode === 'petani' && !state.season;
+  const needSea = state.mode === 'nelayan' && !state.sea;
+  if (!needMarine && !needFarm && !needMetar && !needSeason && !needSea){ renderMode(); return; }
   renderMode(true);
   try{
     if (needMarine){
@@ -904,19 +1019,41 @@ async function ensureExtras(){
       if (placeKey(state.place) === key) state.farm = f;
     }
   }catch(e){ state.extraError = true; }
+  if (needMetar){
+    const near = nearestAirports(p, 2, 300);
+    let res = { none: !near.length };
+    if (near.length && BMKG_PROXY){
+      const list = await getJSON(BMKG_PROXY.replace(/\/+$/, '') + '/metar?ids=' + near.map(x => x.a[0]).join(',')).catch(() => null);
+      res = Array.isArray(list) ? { near, list } : { error: true, near };
+    } else if (near.length) res = { error: true, near };
+    if (placeKey(state.place) === key) state.metar = res;
+  }
+  if (needSea){
+    const sea = await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${p.lat}&longitude=${p.lon}&timezone=auto&forecast_days=1&hourly=ocean_current_velocity,ocean_current_direction,sea_surface_temperature`).catch(() => ({ error: true }));
+    if (placeKey(state.place) === key) state.sea = sea;
+  }
+  if (needSeason){
+    const sres = await getJSON(`https://seasonal-api.open-meteo.com/v1/seasonal?latitude=${p.lat}&longitude=${p.lon}&timezone=auto&monthly=precipitation_mean,precipitation_anomaly,temperature_2m_anomaly`).catch(() => ({ error: true }));
+    if (placeKey(state.place) === key) state.season = sres;
+  }
   renderMode();
 }
 
 const inIndonesia = p => p.lat > -11.5 && p.lat < 6.5 && p.lon > 94.5 && p.lon < 141.5;
 async function loadQuakes(){
-  if (!inIndonesia(state.place)) return;
-  if (state.quakes && Date.now() - state.quakes.at < 10*60*1000) return;
-  try{
-    const j = await getJSON(BMKG_PROXY ? BMKG_PROXY.replace(/\/+$/, '') + '/gempa-terkini' : 'https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json');
-    const list = (j.Infogempa && j.Infogempa.gempa) || [];
-    state.quakes = { at: Date.now(), list: Array.isArray(list) ? list : [list] };
-    if (state.data) { renderTiles(state.data); if (state.mode === 'nelayan') renderMode(); }
-  }catch(e){ /* BMKG feed unavailable from this browser: hide the panel */ }
+  if (!inIndonesia(state.place)){ renderQuakeSection(); return; }
+  if (state.quakes && Date.now() - state.quakes.at < 10*60*1000){ renderQuakeSection(); return; }
+  const base = BMKG_PROXY ? BMKG_PROXY.replace(/\/+$/, '') : '';
+  const url = (route, file) => base ? base + route : 'https://data.bmkg.go.id/DataMKG/TEWS/' + file;
+  const [a, b, c] = await Promise.all([
+    getJSON(url('/gempa-terkini', 'gempaterkini.json')).catch(() => null),
+    getJSON(url('/gempa-terbaru', 'autogempa.json')).catch(() => null),
+    getJSON(url('/gempa-dirasakan', 'gempadirasakan.json')).catch(() => null)
+  ]);
+  const arr = j => { const g = j && j.Infogempa && j.Infogempa.gempa; return !g ? [] : Array.isArray(g) ? g : [g]; };
+  if (!a && !b && !c) return; // BMKG unreachable from this browser: keep the section hidden
+  state.quakes = { at: Date.now(), list: arr(a), latest: arr(b)[0] || null, felt: arr(c) };
+  if (state.data){ renderQuakeSection(); if (state.mode === 'nelayan') renderMode(); }
 }
 function haversine(a, b, c, d){
   const R = 6371, r = x => x * Math.PI / 180;
@@ -984,6 +1121,7 @@ function render(animate){
   renderHourly(d, i0);
   renderDaily(d);
   renderTiles(d);
+  renderQuakeSection();
   $('#sheet').classList.remove('loading', 'nodata');
   // installed app: Chrome already puts "Langit" in front of the title, so don't repeat it
   const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
@@ -1072,17 +1210,6 @@ const aqIdx = a => a <= 50 ? 0 : a <= 100 ? 1 : a <= 150 ? 2 : a <= 200 ? 3 : a 
 
 function renderTiles(d){
   const c = d.current, D = d.daily, now = localNow(), tiles = [];
-
-  // Earthquake (BMKG), only for Indonesian locations
-  const nq = inIndonesia(state.place) ? nearestQuake() : null;
-  if (nq){
-    const q = nq.q, hrs = q.DateTime ? Math.max(0, Math.round((Date.now() - new Date(q.DateTime).getTime()) / 3600000)) : null;
-    tiles.push(`<div class="tile wide"><h3>${t('quake')}</h3>
-      <div class="big">M${esc(q.Magnitude)}<small>${esc(q.Kedalaman ? t('quakeDepth', q.Kedalaman) : '')}</small></div>
-      <div class="lead">${esc(q.Wilayah)}</div>
-      ${tsunamiRisk(q) ? `<div class="alert">${esc(t('tsunami'))}</div>` : ''}
-      <div class="note">${esc(t('quakeNear', kmDist(nq.km)))} ${hrs != null ? esc(t('ago', hrs)) + '.' : esc(`${q.Tanggal || ''} ${q.Jam || ''}`)}</div></div>`);
-  }
 
   // Next 2 hours
   const M = d.minutely_15;
@@ -1194,7 +1321,7 @@ function renderMode(loading){
   const el = $('#modePanel');
   if (!state.data){ el.hidden = true; el.innerHTML = ''; return; }
   el.hidden = false;
-  const waiting = ((state.mode === 'nelayan' || state.mode === 'wisata') && !state.marine) || ((state.mode === 'petani' || state.mode === 'golf') && !state.farm && !state.extraError);
+  const waiting = ((state.mode === 'nelayan' || state.mode === 'wisata') && !state.marine) || (state.mode === 'wisata' && !state.metar) || (state.mode === 'petani' && !state.season) || (state.mode === 'nelayan' && !state.sea) || ((state.mode === 'petani' || state.mode === 'golf') && !state.farm && !state.extraError);
   if (loading || waiting){ el.innerHTML = `<p class="muted">${t('loadingExtra')}</p>`; return; }
   try{
     el.innerHTML = ({ umum: modeUmum, jemuran: modeJemuran, petani: modePetani, nelayan: modeNelayan, wisata: modeWisata, golf: modeGolf })[state.mode]()
@@ -1629,11 +1756,143 @@ function modeGolf(){
     </div>`;
 }
 
+/* ================= Gempa section, airport weather, seasonal outlook ================= */
+const magLvl = m => m >= 6 ? 'bad' : m >= 5 ? 'poor' : m >= 4 ? 'ok' : 'good';
+const quakeKm = q => { const [la, lo] = String(q.Coordinates || '').split(',').map(Number); return isNaN(la) || isNaN(lo) ? null : haversine(state.place.lat, state.place.lon, la, lo); };
+const quakeAgo = q => q.DateTime ? t('ago', Math.max(0, Math.round((Date.now() - new Date(q.DateTime).getTime()) / 3600000))) : `${q.Tanggal || ''} ${q.Jam || ''}`;
+function renderQuakeSection(){
+  const sec = $('#quakeSec'); if (!sec) return;
+  const Q = state.quakes;
+  if (!state.place || !inIndonesia(state.place) || !Q || (!Q.latest && !Q.felt.length && !Q.list.length)){ sec.hidden = true; return; }
+  $('#h-quake').textContent = t('qSec');
+  const base = BMKG_PROXY ? BMKG_PROXY.replace(/\/+$/, '') : '';
+  let html = '<div class="quake-grid">';
+  const L = Q.latest;
+  if (L){
+    const km = quakeKm(L), m = parseFloat(L.Magnitude);
+    const shake = L.Shakemap && /^[\w.-]+\.jpg$/.test(L.Shakemap) ? L.Shakemap : null;
+    const direct = shake ? 'https://data.bmkg.go.id/DataMKG/TEWS/' + shake : '';
+    const proxy = shake && base ? `${base}/shakemap/${shake}` : '';
+    html += `<div class="quake-main"><h3>${t('qLatest')}</h3>
+      <div class="qm-head"><span class="mag s-${magLvl(m)}">M${esc(L.Magnitude)}</span><div><b>${esc(L.Wilayah)}</b><br><small>${esc(quakeAgo(L))}, ${esc(t('qDepth', L.Kedalaman || '–'))}${km != null ? '. ' + esc(t('qFrom', kmDist(km))) : ''}</small></div></div>
+      <p class="${tsunamiRisk(L) ? 'alert' : 'muted'}">${esc(L.Potensi || '')}</p>
+      ${L.Dirasakan ? `<p>${esc(t('qFeltBy', L.Dirasakan))}</p>` : ''}
+      ${shake ? `<a class="shakemap" href="${direct}" target="_blank" rel="noopener"><img src="${direct}" ${proxy ? `onerror="this.onerror=null;this.src='${proxy}'"` : ''} loading="lazy" alt="${esc(t('qShake'))}"></a><p class="muted small">${t('qShake')}. ${t('qShakeNote')}</p>` : ''}
+    </div>`;
+  }
+  html += '<div class="quake-side">';
+  if (Q.felt.length){
+    const item = q => { const km = quakeKm(q), m = parseFloat(q.Magnitude); return `<li><span class="mag sm s-${magLvl(m)}">M${esc(q.Magnitude)}</span><span><b>${esc(q.Wilayah)}</b><br><small>${esc(t('qFeltBy', q.Dirasakan || '–'))}</small><br><small class="muted">${esc(quakeAgo(q))}${km != null ? ', ' + esc(t('qFrom', kmDist(km))) : ''}</small></span></li>`; };
+    html += `<h3>${t('qFelt')}</h3><ul class="felt">${Q.felt.slice(0, 5).map(item).join('')}</ul>`;
+    if (Q.felt.length > 5) html += `<details class="felt-more"><summary>${t('qMore')}</summary><ul class="felt">${Q.felt.slice(5).map(item).join('')}</ul></details>`;
+  }
+  const nq = nearestQuake();
+  if (nq) html += `<div class="fact"><h3>${t('qNearest')}</h3><div class="val">M${esc(nq.q.Magnitude)}</div><p>${esc(nq.q.Wilayah)}. ${esc(t('qFrom', kmDist(nq.km)))}, ${esc(quakeAgo(nq.q))}.</p></div>`;
+  html += '</div></div>';
+  html += `<details class="mmi"><summary>${t('qMmi')}</summary><ul>${t('qMmiList').map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>
+    <p class="official">${t('qOfficial')} <a href="https://www.bmkg.go.id/" target="_blank" rel="noopener">${t('qOpen')}</a></p>`;
+  $('#quakeBody').innerHTML = html;
+  sec.hidden = false;
+}
+
+// Major Indonesian airports: ICAO, name, lat, lon
+const AIRPORTS = [
+  ['WIII','Soekarno-Hatta, Tangerang',-6.1256,106.6559],['WIHH','Halim Perdanakusuma, Jakarta',-6.2666,106.891],['WICC','Husein Sastranegara, Bandung',-6.9006,107.5763],
+  ['WICA','Kertajati, Majalengka',-6.648,108.166],['WAHS','Ahmad Yani, Semarang',-6.9727,110.3754],['WAHI','Yogyakarta International',-7.9047,110.0573],
+  ['WARR','Juanda, Surabaya',-7.3798,112.7868],['WADD','I Gusti Ngurah Rai, Bali',-8.7482,115.1672],['WADL','Lombok International',-8.7573,116.2767],
+  ['WATO','Komodo, Labuan Bajo',-8.4866,119.889],['WATT','El Tari, Kupang',-10.1716,123.6711],['WITT','Sultan Iskandar Muda, Banda Aceh',5.5236,95.4204],
+  ['WIMM','Kualanamu, Deli Serdang',3.6422,98.8853],['WIEE','Minangkabau, Padang',-0.7869,100.2806],['WIBB','Sultan Syarif Kasim II, Pekanbaru',0.4608,101.4445],
+  ['WIDD','Hang Nadim, Batam',1.121,104.119],['WIJJ','Sultan Thaha, Jambi',-1.638,103.644],['WIPP','Sultan Mahmud Badaruddin II, Palembang',-2.8983,104.6999],
+  ['WIGG','Fatmawati Soekarno, Bengkulu',-3.8637,102.339],['WILL','Radin Inten II, Lampung',-5.2423,105.1788],['WIOO','Supadio, Pontianak',-0.1507,109.4039],
+  ['WAGG','Tjilik Riwut, Palangka Raya',-2.2251,113.9426],['WAOO','Syamsudin Noor, Banjarmasin',-3.4424,114.7625],['WALL','Sultan Aji Muhammad Sulaiman, Balikpapan',-1.2683,116.8944],
+  ['WAAA','Sultan Hasanuddin, Makassar',-5.0617,119.554],['WAFF','Mutiara SIS Al-Jufrie, Palu',-0.9185,119.9097],['WAWW','Haluoleo, Kendari',-4.0816,122.4182],
+  ['WAMG','Djalaluddin, Gorontalo',0.6371,122.8496],['WAMM','Sam Ratulangi, Manado',1.5493,124.9259],['WAEE','Sultan Babullah, Ternate',0.8314,127.3811],
+  ['WAPP','Pattimura, Ambon',-3.7103,128.0891],['WASS','Domine Eduard Osok, Sorong',-0.8945,131.2873],['WABB','Frans Kaisiepo, Biak',-1.19,136.108],
+  ['WAJJ','Sentani, Jayapura',-2.5769,140.5164],['WAKK','Mopah, Merauke',-8.5203,140.4183]
+];
+function nearestAirports(p, n, maxKm){
+  return AIRPORTS.map(a => ({ a, km: haversine(p.lat, p.lon, a[2], a[3]) })).filter(x => x.km <= maxKm).sort((x, y) => x.km - y.km).slice(0, n);
+}
+function decodeWx(str){
+  if (!str) return t('apNoWx');
+  const W = t('wxw');
+  return str.split(/\s+/).map(tok => {
+    const inten = tok[0] === '-' ? t('wxLight') : tok[0] === '+' ? t('wxHeavy') : '';
+    const core = tok.replace(/^[-+]/, '');
+    let txt = W[core];
+    if (!txt){ const parts = core.match(/VC|TS|SH|RA|DZ|HZ|BR|FG|FU|DU|SQ/g) || []; txt = parts.map(x => x === 'VC' ? '' : W[x]).filter(Boolean).join(' + ') || core; }
+    return inten ? (state.lang === 'id' ? `${txt} ${inten}` : `${inten} ${txt}`) : txt;
+  }).join(', ');
+}
+function metarCard(m, ap, km){
+  const raw = m.rawOb || '';
+  const kt = +m.wspd || 0, gust = +m.wgst || 0;
+  const wind = kt === 0 ? t('apCalm') : `${speed(kt * 1.852)} (${kt} kt), ${m.wdir === 'VRB' ? t('apVrb') : t('windFrom', dir8(+m.wdir)).toLowerCase()}${gust ? `, ${t('gusts', speed(gust * 1.852)).replace(/\.$/, '')}` : ''}`;
+  let vis;
+  if (/CAVOK/.test(raw)) vis = '≥ 10 km';
+  else { const v = String(m.visib ?? ''); const n = v.includes('/') ? v.split(' ').reduce((s, x) => s + (x.includes('/') ? x.split('/')[0] / x.split('/')[1] : +x), 0) : parseFloat(v); vis = isNaN(n) ? '–' : v.endsWith('+') || n >= 6 ? '≥ 10 km' : `${(n * 1.609).toFixed(1).replace('.', state.lang === 'id' ? ',' : '.')} km`; }
+  const C = t('apCover');
+  let clouds = /CAVOK/.test(raw) ? t('apCavok') : (m.clouds || []).filter(c => C[c.cover]).map(c => t('apAt', C[c.cover], (c.base ?? 0).toLocaleString(locale()), Math.round((c.base ?? 0) * 0.3048).toLocaleString(locale()))).join('; ') || t('apNoCloud');
+  if (/\d{3}CB/.test(raw)) clouds += t('apCb'); else if (/\d{3}TCU/.test(raw)) clouds += t('apTcu');
+  const cat = m.fltCat && t('apCat')[m.fltCat];
+  const catCls = { VFR:'good', MVFR:'ok', IFR:'poor', LIFR:'bad' }[m.fltCat] || 'ok';
+  const obs = m.obsTime ? +m.obsTime * 1000 : null, ago = obs ? Math.max(0, Math.round((Date.now() - obs) / 60000)) : null;
+  return `<div class="metar">
+    <div class="metar-head"><span class="plane">✈️</span><div><b>${esc(ap[1])}</b> <small class="muted">${ap[0]}</small><br><small class="muted">${esc(t('apKm', kmDist(km)))}${obs ? ' · ' + esc(t('apReport', clockStr(msToLocal(obs)), t('apMinAgo', ago))) : ''}</small></div></div>
+    ${cat ? `<span class="lvl-chip s-${catCls}">${esc(cat)} (${m.fltCat})</span>` : ''}
+    <dl>
+      <dt>${t('apWind')}</dt><dd>${esc(wind)}</dd>
+      <dt>${t('apVis')}</dt><dd>${esc(vis)}</dd>
+      <dt>${t('apCloud')}</dt><dd>${esc(clouds)}</dd>
+      <dt>${t('apWx')}</dt><dd>${esc(decodeWx(m.wxString))}</dd>
+      ${m.temp != null ? `<dt>${t('apTemp')}</dt><dd>${tFmt(m.temp)} / ${m.dewp != null ? tFmt(m.dewp) : '–'}</dd>` : ''}
+      ${m.altim != null ? `<dt>${t('apPress')}</dt><dd>${press(m.altim)}</dd>` : ''}
+    </dl>
+    <details><summary>${t('apRaw')}</summary><code>${esc(raw)}</code></details>
+  </div>`;
+}
+function airportBlock(){
+  const M = state.metar;
+  if (!M || !inIndonesia(state.place)) return '';
+  let inner;
+  if (M.none) inner = `<p class="muted">${t('apNone')}</p>`;
+  else if (M.error || !M.list.length) inner = `<p class="muted">${t('apErr')}</p>`;
+  else inner = M.near.map(x => { const m = M.list.find(r => r.icaoId === x.a[0]); return m ? metarCard(m, x.a, x.km) : ''; }).join('') || `<p class="muted">${t('apErr')}</p>`;
+  return `<div class="airport"><h3>${t('ap')}</h3>${inner}<p class="muted small">${t('apNote')}</p></div>`;
+}
+function seasonBlock(){
+  const S = state.season;
+  if (!S) return '';
+  const mo = S.monthly || {};
+  const key = re => Object.keys(mo).find(k => re.test(k));
+  const kMean = key(/^precipitation_mean/), kAn = key(/^precipitation_anomaly/), kT = key(/^temperature_2m_anomaly/);
+  if (S.error || !mo.time || !kMean || !kAn) return `<div class="fact"><h3>${t('ssn')}</h3><p>${t('ssnErr')}</p></div>`;
+  const rows = [];
+  mo.time.forEach((tm, i) => {
+    const mean = mo[kMean][i], an = mo[kAn][i]; if (mean == null || an == null) return;
+    const normal = mean - an; if (!(normal > 0.05)) return;
+    const pct = Math.round(an / normal * 100);
+    rows.push({ tm, pct, cls: pct >= 20 ? 'wet' : pct <= -20 ? 'dry' : 'norm' });
+  });
+  const six = rows.slice(0, 6);
+  if (!six.length) return `<div class="fact"><h3>${t('ssn')}</h3><p>${t('ssnErr')}</p></div>`;
+  const w = six.filter(r => r.cls === 'wet').length, dr = six.filter(r => r.cls === 'dry').length;
+  const first3 = six.slice(0, 3), tip = first3.filter(r => r.cls === 'wet').length >= 2 ? t('ssnTipWet') : first3.filter(r => r.cls === 'dry').length >= 2 ? t('ssnTipDry') : t('ssnTipNorm');
+  let tempTxt = '';
+  if (kT){ const v = mo[kT].slice(0, 3).filter(x => x != null); if (v.length){ const a = v.reduce((s, x) => s + x, 0) / v.length; const d = metric() ? a : a * 9 / 5; tempTxt = t('ssnTemp', `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1).replace('.', state.lang === 'id' ? ',' : '.')}°`); } }
+  const mName = tm => new Date(tm.slice(0, 10) + 'T12:00:00Z').toLocaleDateString(locale(), { month:'short', year: tm.slice(5, 7) === '01' ? '2-digit' : undefined, timeZone:'UTC' });
+  const lbl = { wet: t('ssnWet'), dry: t('ssnDry'), norm: t('ssnNorm') };
+  return `<div class="season"><h3>${t('ssn')}</h3>
+    <ul class="ssn-rows">${six.map(r => `<li><span class="ssn-m">${esc(mName(r.tm))}</span><span class="ssn-bar"><i class="${r.cls}" style="${r.pct >= 0 ? 'left:50%' : `right:50%`};width:${Math.min(50, Math.abs(r.pct) / 2)}%"></i></span><span class="ssn-v ${r.cls}">${lbl[r.cls]} <small>${t('ssnPct', r.pct)}</small></span></li>`).join('')}</ul>
+    <p><b>${esc(t('ssnSum', w, dr, six.length))}</b> ${esc(tip)}${tempTxt ? ' ' + esc(tempTxt) : ''}</p>
+    <p class="muted small">${t('ssnNote')}</p></div>`;
+}
+
 /* ================= Fun extras ================= */
 const offsetMs = () => ((state.data && state.data.utc_offset_seconds) || 0) * 1000;
 const localToMs = sv => Date.parse(sv.slice(0, 16) + ':00Z') - offsetMs();
 const msToLocal = ms => new Date(ms + offsetMs()).toISOString().slice(0, 16);
-const safeExtra = fn => { try{ return fn(); }catch(e){ return ''; } };
+const safeExtra = fn => { try{ return fn(); }catch(e){ console.warn('Langit extra failed', e); return ''; } };
 
 // countdown chips update themselves every 30 seconds
 function tickCountdowns(){
@@ -1747,7 +2006,7 @@ function extrasPetani(){
     const msg = past <= 2 && next >= 4 ? t('fmSeasonStart') : past >= 4 && next <= 1 ? t('fmSeasonEnd') : past >= 4 && next >= 4 ? t('fmSeasonWet') : past <= 2 && next <= 2 ? t('fmSeasonDry') : t('fmSeasonMix');
     season = `<div class="fact"><h3>${t('fmSeason')}</h3><p>${esc(msg)} ${esc(t('fmSeasonDays', past, next))}</p><p>${t('fmSeasonOfficial')}</p></div>`;
   }
-  return `<div class="facts">
+  return safeExtra(seasonBlock) + `<div class="facts">
     <div class="fact"><h3>${t('fmDisease')}</h3><div class="val"><span class="lvl lvl${dl}">${t('fmDiseaseLv')[dl]}</span></div><p>${esc(t('fmDiseaseHours', wetH))} ${t('fmDiseaseTip')[dl]}</p></div>
     ${season}
   </div>`;
@@ -1777,6 +2036,38 @@ function solunarEvents(fromMs, hours, lat, lon){
     prev = cur;
   }
   return ev;
+}
+// BMKG-style marine info: shipping safety by vessel type, 3-day waves, currents, sea temperature
+function maritimeBlock(){
+  const d = state.data, H = d.hourly, i0 = state.i0, M = state.marine;
+  if (!M || M.inland || !M.hourly) return '';
+  const mi = {}; M.hourly.time.forEach((x, i) => mi[x] = i);
+  const waveAt = i => { const m = mi[H.time[i]]; return m != null ? M.hourly.wave_height[m] : null; };
+  const w0 = waveAt(i0); if (w0 == null) return '';
+  let wMax = 0, kMax = 0;
+  for (let i = i0; i < Math.min(H.time.length, i0 + 24); i++){ const w = waveAt(i); if (w != null) wMax = Math.max(wMax, w); kMax = Math.max(kMax, (H.wind_speed_10m[i] || 0) / 1.852, (H.wind_gusts_10m[i] || 0) / 1.852 * 0.8); }
+  const k0 = (H.wind_speed_10m[i0] || 0) / 1.852;
+  const SHIPS = [[15, 1.25], [16, 1.5], [21, 2.5], [27, 4]];
+  const chip = risk => `<span class="lvl-chip s-${risk ? 'bad' : 'good'}">${risk ? t('marRisk') : t('marSafe')}</span>`;
+  const rows = SHIPS.map(([kt, m], k) => `<tr><th>${t('marShips')[k]}<small>${esc(t('marRule', kt, String(m).replace('.', state.lang === 'id' ? ',' : '.')))}</small></th><td>${chip(k0 >= kt || w0 >= m)}</td><td>${chip(kMax >= kt || wMax >= m)}</td></tr>`).join('');
+  const dm = M.daily && M.daily.wave_height_max ? M.daily.wave_height_max.slice(0, 3) : [];
+  const days = dm.map((v, k) => v == null ? '' : `<div class="wday"><b>${esc(k === 0 ? t('today') : k === 1 ? t('tomorrow') : (M.daily.time && M.daily.time[k] ? weekday(M.daily.time[k], true) : d.daily.time[k] ? weekday(d.daily.time[k], true) : ''))}</b><span class="val">${meters(v)}</span><span class="lvl-chip s-${['good','good','ok','poor','bad','bad'][waveCat(v)]}">${t('waveCats')[waveCat(v)]}</span></div>`).join('');
+  let sea = '';
+  const S = state.sea;
+  if (S && !S.error && S.hourly){
+    const j = S.hourly.time.findIndex(x => x.slice(0, 13) === H.time[i0].slice(0, 13)), k = j < 0 ? 0 : j;
+    const cv = S.hourly.ocean_current_velocity ? S.hourly.ocean_current_velocity[k] : null, cd = S.hourly.ocean_current_direction ? S.hourly.ocean_current_direction[k] : null;
+    const sst = S.hourly.sea_surface_temperature ? S.hourly.sea_surface_temperature[k] : null;
+    if (cv != null && cd != null) sea += fact(t('marCur'), esc(t('marCurV', speed(cv), dir8(cd))), '');
+    if (sst != null) sea += fact(t('marSst'), tFmt(sst), '');
+  }
+  return `<div class="maritime"><h3>${t('mar')}</h3>
+    <div class="ship-wrap"><table class="ships"><thead><tr><th>${t('marShip')}</th><th>${t('marNow')}</th><th>${t('mar24')}</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="muted small">${t('marBasis')}</p>
+    ${days ? `<h3>${t('mar3')}</h3><div class="wdays">${days}</div>` : ''}
+    <div class="facts">${fact(t('wind'), esc(t('marWindKt', Math.round(k0), speed(H.wind_speed_10m[i0]))), '')}${sea}</div>
+    <p class="official">${t('marOfficial')} <a href="https://maritim.bmkg.go.id/" target="_blank" rel="noopener">${t('nlOfficialLink')}</a></p>
+  </div>`;
 }
 function extrasNelayan(){
   const d = state.data, H = d.hourly, D = d.daily, p = state.place;
@@ -1824,7 +2115,7 @@ function extrasNelayan(){
   const tagTxt = w => [...w.tags].map(x => t('fishTags')[x]).join(', ');
   const coastal = state.marine && !state.marine.inland && state.marine.hourly && state.marine.hourly.wave_height.some(v => v != null);
   const solTimes = type => ev.filter(e => e.type === type && e.ms >= now).map(e => clockStr(msToLocal(e.ms))).join(', ') || '–';
-  return `<div class="fish">
+  return safeExtra(maritimeBlock) + `<div class="fish">
     <div class="fish-head"><svg viewBox="0 0 64 40" aria-hidden="true"><path d="M6 20c8-12 26-14 38-4l12-8v24l-12-8C32 34 14 32 6 20z" fill="#3FA7D6"/><path d="M14 20c6-6 16-8 24-4" stroke="#BFE6F7" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="16" cy="18" r="2.4" fill="#16212C"/><path d="M30 12l4-6 4 7z" fill="#2E86B8"/></svg>
       <div><h3>${t('fish')}</h3>
       ${best ? `<p class="fish-best">${esc(t('fishBest', lbl(best)))} ${stars(best.score)}</p>` : `<p class="fish-best">${t('fishNone')}</p>`}
@@ -1859,7 +2150,7 @@ function extrasWisata(){
     const sc = nearSun && p >= 25 && p <= 75 && c >= 25 && c <= 85 && r >= 100 ? (p >= 40 ? 2 : 1) : 0;
     if (sc > rbScore){ rbScore = sc; rb = H.time[i]; }
   }
-  return `<div class="facts">
+  return safeExtra(airportBlock) + `<div class="facts">
     ${fact(t('golden'), esc(golden), esc(t('goldenNote', blue[0], blue[1])))}
     <div class="fact"><h3>${t('stars')}</h3><div class="val score">${st}<small>/10</small></div><div class="meter stars"><i style="width:${st * 10}%"></i></div><p>${t('starsLv')[sl]}. ${esc(t('starsNote', bestH ? hourStr(bestH) : ''))}${lit > 60 ? ' ' + t('starsMoon') : ''}</p></div>
     <div class="fact"><h3>${t('rainbow')}</h3><div class="val"><span class="lvl lvl${rbScore}">${t('rainbowLv')[rbScore]}</span></div><p>${esc(rb ? t('rainbowAt', hourStr(rb)) : t('rainbowNone'))}</p></div>
