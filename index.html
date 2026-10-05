@@ -669,12 +669,12 @@ Object.assign(STR.en, {
   cdDew:'Morning dew: early greens are slower, and the ball spins less from wet grass.', cdCalm:'Steady weather: focus on tempo, you will barely need to adjust.'
 });
 Object.assign(STR.id, {
-  instTitle:'Pasang Langit di HP', instSub:'Buka lebih cepat dari layar utama, tetap bisa dilihat saat offline.', instGo:'Pasang', instLater:'Nanti', instFooter:'Pasang aplikasi Langit',
+  instTitle:'Pasang Langit di HP', instTitlePc:'Pasang Langit di komputer ini', instSub:'Buka lebih cepat dari layar utama, tetap bisa dilihat saat offline.', instGo:'Pasang', instLater:'Nanti', instFooter:'Pasang aplikasi Langit',
   instIos:'Ketuk tombol Bagikan, lalu pilih "Tambah ke Layar Utama".', instIosGo:'Mengerti',
   offline:'Anda sedang offline. Menampilkan data terakhir yang tersimpan.', online:'Kembali online. Data diperbarui.'
 });
 Object.assign(STR.en, {
-  instTitle:'Install Langit on your phone', instSub:'Open it faster from your home screen, and still see it offline.', instGo:'Install', instLater:'Later', instFooter:'Install the Langit app',
+  instTitle:'Install Langit on your phone', instTitlePc:'Install Langit on this computer', instSub:'Open it faster from your home screen, and still see it offline.', instGo:'Install', instLater:'Later', instFooter:'Install the Langit app',
   instIos:'Tap the Share button, then choose "Add to Home Screen".', instIosGo:'Got it',
   offline:"You're offline. Showing the last saved data.", online:'Back online. Data refreshed.'
 });
@@ -1991,13 +1991,14 @@ window.addEventListener('hashchange', () => { const m = location.hash.slice(1); 
 /* ================= Installable app (PWA) ================= */
 let installEvt = null;
 const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isPhone = () => /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent) || (window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 1024);
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 function showInstall(force){
   if (isStandalone()) return;
   if (!force && (store.get('skyline.installLater', 0) > Date.now())) return;
   const ios = isIOS() && !installEvt;
   if (!installEvt && !ios) return;
-  $('#installTitle').textContent = t('instTitle');
+  $('#installTitle').textContent = isPhone() ? t('instTitle') : t('instTitlePc');
   $('#installSub').textContent = ios ? t('instIos') : t('instSub');
   $('#installGo').textContent = ios ? t('instIosGo') : t('instGo');
   $('#installLater').textContent = t('instLater');
@@ -2011,7 +2012,7 @@ function hideInstall(snoozeDays){
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault(); installEvt = e;
   renderInstallLink();
-  setTimeout(() => showInstall(false), 15000);
+  if (isPhone()) setTimeout(() => showInstall(false), 15000);
 });
 window.addEventListener('appinstalled', () => { installEvt = null; hideInstall(0); renderInstallLink(); });
 $('#installGo').onclick = async () => {
