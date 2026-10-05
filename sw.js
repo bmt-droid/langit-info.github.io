@@ -1,6 +1,6 @@
 // Langit service worker: makes the site installable and keeps it working offline.
 // When you change index.html, bump VERSION so phones pick up the new version quickly.
-const VERSION = 'langit-v4';
+const VERSION = 'langit-v5';
 const DATA = 'langit-data';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
@@ -29,7 +29,7 @@ self.addEventListener('fetch', e => {
   // The page itself: always try the network first so updates show, fall back to the saved copy offline
   if (req.mode === 'navigate'){
     e.respondWith(
-      fetch(req).then(res => {
+      fetch(req, { cache: 'no-cache' }).then(res => {
         const copy = res.clone();
         caches.open(VERSION).then(c => c.put('./index.html', copy));
         return res;
