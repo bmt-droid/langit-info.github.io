@@ -396,6 +396,12 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .moon-fact p{margin:0}
 .moon-fact .romance{color:var(--ink);font-weight:600}
 .moon-fact.romantic{border-top-color:#E2B23A}
+
+.holchip{background:linear-gradient(135deg,rgba(255,255,255,.38),rgba(255,255,255,.18))}
+.hol-list{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:10px}
+.hol-list li{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
+.hi-ic{font-size:1.45rem;line-height:1.2}
+.holiday-fact p{margin:0}
 /* icons */
 .ico{overflow:visible}
 .ico *{stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
@@ -1168,7 +1174,7 @@ function render(animate){
   $('#heroArea').innerHTML = `
     <div class="hero">
       <div>
-        <div class="greet-row"><span class="greet" id="greet">${greeting()}</span><button type="button" class="zodiac" id="zodiac">${zodiacHtml()}</button>${moonChipHtml()}</div>
+        <div class="greet-row"><span class="greet" id="greet">${greeting()}</span>${holidayChipHtml()}<button type="button" class="zodiac" id="zodiac">${zodiacHtml()}</button>${moonChipHtml()}</div>
         <h1 class="place">${esc(state.place.name)}
           <button class="star" id="star" type="button" aria-pressed="${fav}" aria-label="${esc(fav ? t('unsave') : t('save'))}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg>
@@ -1992,6 +1998,112 @@ function seasonBlock(){
     <p class="muted small">${t('ssnNote')}</p></div>`;
 }
 
+/* ================= Holidays (SKB 3 Menteri 2026 & 2027) ================= */
+// [key, short name ID, full name ID, short EN, full EN, icon]
+const HOL_KIND = {
+  tahunbaru:['Tahun Baru','Tahun Baru Masehi','New Year','New Year’s Day','🎉'],
+  isra:['Isra Mikraj','Isra Mikraj Nabi Muhammad saw.','Isra Mi’raj','Isra Mi’raj of the Prophet Muhammad','🕌'],
+  imlek:['Imlek','Tahun Baru Imlek','Chinese New Year','Chinese New Year (Imlek)','🧧'],
+  nyepi:['Nyepi','Hari Suci Nyepi','Nyepi','Nyepi, Balinese Day of Silence','🕯️'],
+  idulfitri:['Idul Fitri','Hari Raya Idul Fitri','Eid al-Fitr','Eid al-Fitr (Idul Fitri)','🌙'],
+  wafat:['Wafat Yesus Kristus','Wafat Yesus Kristus','Good Friday','Good Friday','✝️'],
+  paskah:['Paskah','Kebangkitan Yesus Kristus (Paskah)','Easter','Easter Sunday','🐣'],
+  buruh:['Hari Buruh','Hari Buruh Internasional','Labour Day','International Labour Day','🛠️'],
+  kenaikan:['Kenaikan Yesus Kristus','Kenaikan Yesus Kristus','Ascension Day','Ascension of Jesus Christ','☁️'],
+  iduladha:['Idul Adha','Hari Raya Idul Adha','Eid al-Adha','Eid al-Adha (Idul Adha)','🐐'],
+  waisak:['Waisak','Hari Raya Waisak','Vesak','Vesak Day (Waisak)','🪷'],
+  pancasila:['Hari Lahir Pancasila','Hari Lahir Pancasila','Pancasila Day','Birth of Pancasila','🦅'],
+  muharam:['Tahun Baru Islam','1 Muharam, Tahun Baru Islam','Islamic New Year','Islamic New Year (1 Muharram)','🌙'],
+  merdeka:['Hari Kemerdekaan','Proklamasi Kemerdekaan RI','Independence Day','Indonesian Independence Day','🇮🇩'],
+  maulid:['Maulid Nabi','Maulid Nabi Muhammad saw.','Mawlid','Birthday of the Prophet Muhammad','🕌'],
+  natal:['Natal','Kelahiran Yesus Kristus (Natal)','Christmas','Christmas Day','🎄']
+};
+// L = libur nasional, C = cuti bersama
+const HOLIDAYS = [
+  ['2026-01-01','tahunbaru','L'],['2026-01-16','isra','L'],['2026-02-16','imlek','C'],['2026-02-17','imlek','L'],['2026-03-18','nyepi','C'],['2026-03-19','nyepi','L'],
+  ['2026-03-20','idulfitri','C'],['2026-03-21','idulfitri','L'],['2026-03-22','idulfitri','L'],['2026-03-23','idulfitri','C'],['2026-03-24','idulfitri','C'],
+  ['2026-04-03','wafat','L'],['2026-04-05','paskah','L'],['2026-05-01','buruh','L'],['2026-05-14','kenaikan','L'],['2026-05-15','kenaikan','C'],
+  ['2026-05-27','iduladha','L'],['2026-05-28','iduladha','C'],['2026-05-31','waisak','L'],['2026-06-01','pancasila','L'],['2026-06-16','muharam','L'],
+  ['2026-08-17','merdeka','L'],['2026-08-25','maulid','L'],['2026-12-24','natal','C'],['2026-12-25','natal','L'],
+  ['2027-01-01','tahunbaru','L'],['2027-01-05','isra','L'],['2027-02-05','imlek','C'],['2027-02-06','imlek','L'],['2027-03-08','nyepi','L'],
+  ['2027-03-09','idulfitri','C'],['2027-03-10','idulfitri','L'],['2027-03-11','idulfitri','L'],['2027-03-12','idulfitri','C'],['2027-03-15','idulfitri','C'],
+  ['2027-03-25','wafat','C'],['2027-03-26','wafat','L'],['2027-03-28','paskah','L'],['2027-05-01','buruh','L'],['2027-05-06','kenaikan','L'],
+  ['2027-05-17','iduladha','L'],['2027-05-18','iduladha','C'],['2027-05-19','waisak','C'],['2027-05-20','waisak','L'],['2027-06-01','pancasila','L'],
+  ['2027-06-06','muharam','L'],['2027-08-15','maulid','L'],['2027-08-17','merdeka','L'],['2027-12-24','natal','C'],['2027-12-25','natal','L'],['2027-12-26','isra','L']
+];
+// National commemoration days (not days off): [MM-DD, name ID, name EN, icon]
+const OBSERVANCES = [
+  ['01-25','Hari Gizi Nasional','National Nutrition Day','🥗'],['02-09','Hari Pers Nasional','National Press Day','📰'],['03-30','Hari Film Nasional','National Film Day','🎬'],
+  ['04-21','Hari Kartini','Kartini Day','👩'],['05-02','Hari Pendidikan Nasional','National Education Day','🎓'],['05-20','Hari Kebangkitan Nasional','National Awakening Day','🌅'],
+  ['06-29','Hari Keluarga Nasional','National Family Day','👨‍👩‍👧'],['07-23','Hari Anak Nasional','National Children’s Day','🧒'],['10-01','Hari Kesaktian Pancasila','Pancasila Sanctity Day','🦅'],
+  ['10-02','Hari Batik Nasional','National Batik Day','👘'],['10-05','Hari TNI','Armed Forces Day','🎖️'],['10-22','Hari Santri Nasional','National Santri Day','📿'],
+  ['10-28','Hari Sumpah Pemuda','Youth Pledge Day','✊'],['11-10','Hari Pahlawan','Heroes’ Day','🎗️'],['11-25','Hari Guru Nasional','National Teachers’ Day','🍎'],
+  ['12-22','Hari Ibu','Mother’s Day','💐']
+];
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const addDays = (s, n) => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() + n); return ymd(d); };
+const holOn = s => HOLIDAYS.filter(h => h[0] === s);
+const isOff = s => { const wd = new Date(s + 'T12:00:00').getDay(); return wd === 0 || wd === 6 || holOn(s).length > 0; };
+const holName = (key, full) => { const k = HOL_KIND[key]; return state.lang === 'id' ? (full ? k[1] : k[0]) : (full ? k[3] : k[2]); };
+const holDate = s => new Date(s + 'T12:00:00').toLocaleDateString(locale(), { weekday:'long', day:'numeric', month:'long', year: s.slice(0, 4) === String(new Date().getFullYear()) ? undefined : 'numeric' });
+function longWeekend(s){
+  let a = s, b = s;
+  while (isOff(addDays(a, -1))) a = addDays(a, -1);
+  while (isOff(addDays(b, 1))) b = addDays(b, 1);
+  const n = Math.round((Date.parse(b + 'T12:00:00') - Date.parse(a + 'T12:00:00')) / 86400000) + 1;
+  return n >= 3 ? { a, b, n } : null;
+}
+function holidayToday(){
+  const today = ymd(new Date()), tomorrow = addDays(today, 1);
+  const h = holOn(today)[0];
+  if (h) return { when:'today', h };
+  const o = OBSERVANCES.find(x => x[0] === today.slice(5));
+  if (o) return { when:'obs', o };
+  const t1 = holOn(tomorrow)[0];
+  if (t1) return { when:'tomorrow', h:t1 };
+  return null;
+}
+function holidayChipHtml(){
+  const x = holidayToday(); if (!x) return '';
+  let icon, txt;
+  if (x.when === 'obs'){ icon = x.o[3]; txt = state.lang === 'id' ? `Hari ini ${x.o[1]}` : `Today: ${x.o[2]}`; }
+  else {
+    icon = HOL_KIND[x.h[1]][4];
+    const nm = holName(x.h[1]);
+    txt = x.when === 'today'
+      ? (state.lang === 'id' ? (x.h[2] === 'C' ? `Hari ini cuti bersama ${nm}` : /^Hari /.test(nm) ? `Hari ini libur, ${nm}` : `Hari ini libur ${nm}`) : (x.h[2] === 'C' ? `Joint leave today: ${nm}` : `Holiday today: ${nm}`))
+      : (state.lang === 'id' ? `Besok libur ${nm}` : `Tomorrow: ${nm} holiday`);
+  }
+  return `<button type="button" class="zodiac holchip" id="holchip"><span class="mi">${icon}</span>${esc(txt)}</button>`;
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#holchip')) return;
+  const x = holidayToday(); if (!x) return;
+  if (x.when === 'obs') return toast(state.lang === 'id' ? `${x.o[3]} ${x.o[1]}. Hari peringatan nasional, bukan hari libur.` : `${x.o[3]} ${x.o[2]}. A national commemoration day, not a day off.`, 5000);
+  const day = x.when === 'today' ? ymd(new Date()) : addDays(ymd(new Date()), 1), lw = longWeekend(day);
+  const kind = x.h[2] === 'C' ? (state.lang === 'id' ? 'Cuti bersama' : 'Joint leave day') : (state.lang === 'id' ? 'Libur nasional' : 'National holiday');
+  const lwTxt = lw ? (state.lang === 'id' ? ` Libur panjang ${lw.n} hari.` : ` ${lw.n}-day long weekend.`) : '';
+  toast(`${HOL_KIND[x.h[1]][4]} ${kind}: ${holName(x.h[1], true)}.${lwTxt}`, 5000);
+});
+function holidayCard(){
+  const today = ymd(new Date());
+  const next = []; const seen = new Set();
+  for (const h of HOLIDAYS){
+    if (h[0] < today || h[2] !== 'L') continue;
+    const k = h[1] + h[0].slice(0, 4); if (seen.has(k)) continue; seen.add(k);
+    next.push(h); if (next.length === 3) break;
+  }
+  if (!next.length) return '';
+  const days = s => Math.round((Date.parse(s + 'T12:00:00') - Date.parse(today + 'T12:00:00')) / 86400000);
+  const rows = next.map(h => {
+    const n = days(h[0]), lw = longWeekend(h[0]);
+    const when = n === 0 ? (state.lang === 'id' ? 'hari ini' : 'today') : n === 1 ? (state.lang === 'id' ? 'besok' : 'tomorrow') : (state.lang === 'id' ? `${n} hari lagi` : `in ${n} days`);
+    const lwTxt = lw ? (state.lang === 'id' ? `🏖️ Libur panjang ${lw.n} hari` : `🏖️ ${lw.n}-day long weekend`) : '';
+    return `<li><span class="hi-ic" aria-hidden="true">${HOL_KIND[h[1]][4]}</span><span><b>${esc(holName(h[1]))}</b> <small class="muted">(${esc(when)})</small><br><small>${esc(holDate(h[0]))}${lwTxt ? '<br>' + lwTxt : ''}</small></span></li>`;
+  }).join('');
+  return `<div class="fact holiday-fact"><h3>${state.lang === 'id' ? 'Libur nasional berikutnya' : 'Upcoming national holidays'}</h3><ul class="hol-list">${rows}</ul><p class="muted small">${state.lang === 'id' ? 'Sesuai SKB 3 Menteri tentang libur nasional dan cuti bersama.' : 'Based on the official joint ministerial decree (SKB 3 Menteri).'}</p></div>`;
+}
+
 /* ================= Moon: full & half moon ================= */
 const MOON_EMOJI = ['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'];
 // days (in the place's calendar) from today until an event
@@ -2119,6 +2231,7 @@ function extrasUmum(){
   return `<div class="facts">
     <div class="fact"><h3>${t('pantun')}</h3><p class="pantun">${pt.map(esc).join('<br>')}</p></div>
     <div class="fact"><h3>${t('outfit')}</h3><div class="outfit">${items.map(([k, n]) => `<span><svg viewBox="0 0 24 24" aria-hidden="true">${OUTFIT_SVG[k]}</svg>${esc(n)}</span>`).join('')}</div><p>${esc(t('ofSay', joined))}</p></div>
+    ${safeExtra(holidayCard)}
     ${safeExtra(moonCard)}
     <div class="fact"><h3>${t('mosq')}</h3><div class="val"><span class="lvl lvl${ml}">${t('mosqLv')[ml]}</span></div><p>${t('mosqNote')}</p></div>
   </div>`;
