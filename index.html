@@ -2341,7 +2341,19 @@ function renderInstallLink(){
 }
 if (isIOS() && !isStandalone()) setTimeout(() => showInstall(false), 20000);
 if ('serviceWorker' in navigator && location.protocol === 'https:'){
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  window.addEventListener('load', () => {
+    const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+      // look for a new version whenever the app comes back to the screen
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+    }).catch(() => {});
+    // when a new version takes over, reload once so the phone shows it straight away
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || reloaded) return;
+      reloaded = true; location.reload();
+    });
+  });
 }
 window.addEventListener('offline', () => toast(t('offline'), 6000));
 window.addEventListener('online', () => { toast(t('online'), 3000); if (state.place) loadPlace(state.place, { quiet:true }); });
