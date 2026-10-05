@@ -354,6 +354,8 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 
 <script>
 (() => {
+// ===== SETTING: paste your Cloudflare Worker address between the quotes, e.g. 'https://langit-bmkg.yourname.workers.dev'
+const BMKG_PROXY = 'https://langit-bmkg.bosminyaktondano.workers.dev';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const store = {
@@ -812,7 +814,7 @@ async function loadQuakes(){
   if (!inIndonesia(state.place)) return;
   if (state.quakes && Date.now() - state.quakes.at < 10*60*1000) return;
   try{
-    const j = await getJSON('https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json');
+    const j = await getJSON(BMKG_PROXY ? BMKG_PROXY.replace(/\/+$/, '') + '/gempa-terkini' : 'https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json');
     const list = (j.Infogempa && j.Infogempa.gempa) || [];
     state.quakes = { at: Date.now(), list: Array.isArray(list) ? list : [list] };
     if (state.data) { renderTiles(state.data); if (state.mode === 'nelayan') renderMode(); }
