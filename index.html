@@ -203,6 +203,9 @@ h2{font-family:var(--display);font-size:1.2rem;font-weight:650;letter-spacing:-.
 .wind-txt{min-width:0}
 .wind-txt .big{white-space:nowrap}
 .wind-txt .big small{display:inline-block}
+.shake-toggle summary{cursor:pointer;font-weight:600;color:var(--rain);padding:6px 0}
+.shake-toggle[open] summary{margin-bottom:10px}
+.shake-toggle p{margin-top:8px!important}
 .shakemap{display:block;padding:0;border:0;background:none;cursor:zoom-in;text-align:left}
 .lightbox{position:fixed;inset:0;z-index:80;background:rgba(5,12,24,.86);display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
 .lightbox img{max-width:100%;max-height:100%;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
@@ -757,7 +760,7 @@ Object.assign(STR.en, {
 });
 Object.assign(STR.id, {
   qSec:'Gempa dan guncangan tanah (BMKG)', qLatest:'Gempa terbaru', qFelt:'Gempa dirasakan terbaru', qFeltBy:v=>`Dirasakan: ${v}`, qFrom:km=>`${km} dari lokasi Anda`,
-  qNearest:'Gempa M5+ terdekat dalam daftar BMKG', qShake:'Peta guncangan (shakemap)', qShakeNote:'Ketuk untuk memperbesar. Warna menunjukkan seberapa kuat guncangan di tiap daerah.',
+  qNearest:'Gempa M5+ terdekat dalam daftar BMKG', qShake:'Peta guncangan (shakemap)', qShakeOpen:'Lihat peta guncangan', qShakeNote:'Ketuk untuk memperbesar. Warna menunjukkan seberapa kuat guncangan di tiap daerah.',
   qMore:'Lihat semua', qLess:'Tampilkan lebih sedikit', qDepth:d=>`kedalaman ${d}`,
   qMmi:'Apa arti skala MMI?', qMmiList:['I–II: hampir tidak terasa, hanya oleh beberapa orang dalam keadaan diam.','III: terasa di dalam rumah, seperti truk berlalu.','IV: dirasakan banyak orang, jendela dan pintu berderik.','V: dirasakan hampir semua orang, benda kecil bisa jatuh.','VI ke atas: menakutkan, bisa menimbulkan kerusakan ringan hingga berat.'],
   qOfficial:'Sumber resmi: BMKG. Ikuti arahan BMKG dan BPBD saat terjadi gempa.', qOpen:'Buka BMKG',
@@ -777,7 +780,7 @@ Object.assign(STR.id, {
 });
 Object.assign(STR.en, {
   qSec:'Earthquakes and ground shaking (BMKG)', qLatest:'Latest earthquake', qFelt:'Recently felt earthquakes', qFeltBy:v=>`Felt: ${v}`, qFrom:km=>`${km} from you`,
-  qNearest:'Nearest M5+ quake in the BMKG list', qShake:'Shaking map (shakemap)', qShakeNote:'Tap to enlarge. Colours show how strongly each area shook.',
+  qNearest:'Nearest M5+ quake in the BMKG list', qShake:'Shaking map (shakemap)', qShakeOpen:'Show the shaking map', qShakeNote:'Tap to enlarge. Colours show how strongly each area shook.',
   qMore:'Show all', qLess:'Show less', qDepth:d=>`depth ${d}`,
   qMmi:'What does the MMI scale mean?', qMmiList:['I–II: barely felt, only by a few people at rest.','III: felt indoors, like a passing truck.','IV: felt by many people, windows and doors rattle.','V: felt by nearly everyone, small objects may fall.','VI and above: frightening, can cause light to heavy damage.'],
   qOfficial:'Official source: BMKG. Follow BMKG and BPBD instructions during an earthquake.', qOpen:'Open BMKG',
@@ -1865,9 +1868,9 @@ function renderQuakeSection(){
     const proxy = shake && base ? `${base}/shakemap/${shake}` : '';
     html += `<div class="quake-main"><h3>${t('qLatest')}</h3>
       <div class="qm-head"><span class="mag s-${magLvl(m)}">M${esc(L.Magnitude)}</span><div><b>${esc(L.Wilayah)}</b><br><small>${esc(quakeAgo(L))}, ${esc(t('qDepth', L.Kedalaman || '–'))}${km != null ? '. ' + esc(t('qFrom', kmDist(km))) : ''}</small></div></div>
-      <p class="${tsunamiRisk(L) ? 'alert' : 'muted'}">${esc(L.Potensi || '')}</p>
+      ${/tsunami/i.test(L.Potensi || '') ? `<p class="${tsunamiRisk(L) ? 'alert' : 'muted'}">${esc(L.Potensi)}</p>` : ''}
       ${L.Dirasakan ? `<p>${esc(t('qFeltBy', L.Dirasakan))}</p>` : ''}
-      ${shake ? `<button type="button" class="shakemap" aria-label="${esc(t('qShake'))}"><img src="${direct}" ${proxy ? `onerror="this.onerror=null;this.src='${proxy}'"` : ''} loading="lazy" alt="${esc(t('qShake'))}"></button><p class="muted small">${t('qShake')}. ${t('qShakeNote')}</p>` : ''}
+      ${shake ? `<details class="shake-toggle"><summary>🗺️ ${t('qShakeOpen')}</summary><button type="button" class="shakemap" aria-label="${esc(t('qShake'))}"><img src="${direct}" ${proxy ? `onerror="this.onerror=null;this.src='${proxy}'"` : ''} loading="lazy" alt="${esc(t('qShake'))}"></button><p class="muted small">${t('qShakeNote')}</p></details>` : ''}
     </div>`;
   }
   html += '<div class="quake-side">';
