@@ -1943,9 +1943,11 @@ function modeGolf(){
     for (let k = i; k <= i + 4; k++){ const sc = hourScore(k); if (sc == null){ ok = false; break; } sum += sc; }
     if (ok) starts.push({ i, sum });
   }
-  starts.sort((a, b) => b.sum - a.sum || a.i - b.i);
-  const best = starts[0], alt = best && starts.find(x => Math.abs(x.i - best.i) >= 4);
-  const startLabel = i => `${dayLabel(H.time[i])} ${hourStr(H.time[i])}`;
+  // prefer the soonest good slot: a start that is nearly as good as the very best (within 20%, e.g. 1° warmer) beats waiting until tomorrow
+  const top = starts.reduce((m, x) => Math.max(m, x.sum), -Infinity);
+  const best = starts.filter(x => x.sum >= top - Math.max(1, Math.abs(top) * 0.2)).sort((a, b) => a.i - b.i)[0];
+  const alt = best && starts.filter(x => Math.abs(x.i - best.i) >= 4).sort((a, b) => b.sum - a.sum || a.i - b.i)[0];
+  const startLabel = i => i === i0 ? `${state.lang === 'id' ? 'sekarang juga' : 'right now'} (${hourStr(H.time[i])})` : `${dayLabel(H.time[i])} ${hourStr(H.time[i])}`;
   const finish = i => { const h = (+H.time[i].slice(11, 13) + 4) % 24; return clock(h, 30); };
   const teeText = best ? t('gfTee', startLabel(best.i), finish(best.i)) + (alt ? ' ' + t('gfAlt', startLabel(alt.i)) : '') : t('gfNoTee');
 
