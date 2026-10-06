@@ -3007,7 +3007,7 @@ function hideInstall(snoozeDays){
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault(); installEvt = e;
   renderInstallLink();
-  if (isPhone()) setTimeout(() => showInstall(false), 15000);
+  if (isPhone()) setTimeout(() => showInstall(false), 2000); // shortly after the weather appears
 });
 window.addEventListener('appinstalled', () => { installEvt = null; hideInstall(0); renderInstallLink(); });
 $('#installGo').onclick = async () => {
@@ -3023,7 +3023,7 @@ function renderInstallLink(){
   if (!a){ a = document.createElement('button'); a.type = 'button'; a.className = 'install-link'; a.onclick = () => showInstall(true); f.appendChild(a); }
   a.textContent = (isPhone() ? '📲 ' : '💻 ') + t('instFooter');
 }
-if (isIOS() && !isStandalone()) setTimeout(() => showInstall(false), 20000);
+if (isIOS() && !isStandalone()) setTimeout(() => showInstall(false), 2000);
 if ('serviceWorker' in navigator && location.protocol === 'https:'){
   window.addEventListener('load', () => {
     const hadController = !!navigator.serviceWorker.controller;
