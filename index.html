@@ -347,7 +347,7 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .install-later{background:var(--soft)}
 .install-go{background:#0A57C2;color:#fff}
 .install-link{margin-top:10px;border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 14px;font-weight:600;color:var(--ink)}
-@media (display-mode: standalone){ .install, .install-link{display:none!important} }
+@media (display-mode: standalone){ .install:not(.namebox), .install-link{display:none!important} }
 
 /* gempa section */
 .quake-sec[hidden]{display:none}
