@@ -415,6 +415,10 @@ button.greet{border:0;background:none;padding:0;color:inherit;cursor:pointer;tex
 .namebox .nb-ic{font-size:1.8rem;text-align:center}
 .namebox input{grid-column:1 / -1;width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font-size:1rem}
 .namebox input:focus{outline:2px solid var(--focus);outline-offset:1px}
+#astroSlot{display:contents}
+.astro-fact p{margin:0}
+.astro-sec[hidden]{display:none}
+.astro-sec .facts{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
 /* icons */
 .ico{overflow:visible}
 .ico *{stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
@@ -494,6 +498,10 @@ button.greet{border:0;background:none;padding:0;color:inherit;cursor:pointer;tex
         <div class="tiles" id="tiles"></div>
       </section>
     </div>
+    <section id="astroSec" class="astro-sec" hidden aria-labelledby="h-astro">
+      <h2 id="h-astro"></h2>
+      <div id="astroBody" class="facts"></div>
+    </section>
     <section id="quakeSec" class="quake-sec" hidden aria-labelledby="h-quake">
       <h2 id="h-quake"></h2>
       <div id="quakeBody"></div>
@@ -1116,6 +1124,7 @@ async function loadPlace(place, opts = {}){
     store.set('skyline.last', place);
     render(!opts.quiet);
     loadQuakes();
+    loadNeo();
     ensureExtras();
   }catch(err){
     if (opts.quiet) return;
@@ -1225,7 +1234,7 @@ function render(animate){
   $('#heroArea').innerHTML = `
     <div class="hero">
       <div>
-        <div class="greet-row"><button type="button" class="greet" id="greet" aria-label="${esc(t('nmEdit'))}">${greetHtml()}</button>${holidayChipHtml()}<button type="button" class="zodiac" id="zodiac">${zodiacHtml()}</button>${moonChipHtml()}</div>
+        <div class="greet-row"><button type="button" class="greet" id="greet" aria-label="${esc(t('nmEdit'))}">${greetHtml()}</button>${holidayChipHtml()}<button type="button" class="zodiac" id="zodiac">${zodiacHtml()}</button>${moonChipHtml() || `<span id="astroSlot">${astroChipHtml()}</span>`}</div>
         <h1 class="place">${esc(state.place.name)}
           <button class="star" id="star" type="button" aria-pressed="${fav}" aria-label="${esc(fav ? t('unsave') : t('save'))}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg>
@@ -1248,6 +1257,7 @@ function render(animate){
   renderHourly(d, i0);
   renderDaily(d);
   renderTiles(d);
+  renderAstroSection();
   renderQuakeSection();
   $('#sheet').classList.remove('loading', 'nodata');
   // installed app: Chrome already puts "Langit" in front of the title, so don't repeat it
@@ -2049,6 +2059,142 @@ function seasonBlock(){
     <p class="muted small">${t('ssnNote')}</p></div>`;
 }
 
+/* ================= Astronomy: eclipses, supermoon, meteor showers, asteroids ================= */
+// Eclipses 2027–2028 (UTC date). vis: 'yes' visible from Indonesia, 'part' partly/some regions, 'no'
+const ECLIPSES = [
+  ['2027-02-06','solar-annular','Amerika Selatan dan Atlantik','South America and the Atlantic','no'],
+  ['2027-08-02','solar-total','Spanyol, Afrika Utara dan Timur Tengah (terlama abad ini)','Spain, North Africa and the Middle East (longest this century)','no'],
+  ['2028-01-12','lunar-partial','Amerika, Eropa dan Afrika','the Americas, Europe and Africa','no'],
+  ['2028-01-26','solar-annular','Amerika Selatan dan Spanyol','South America and Spain','no'],
+  ['2028-07-06','lunar-partial','Asia, Australia dan Indonesia','Asia, Australia and Indonesia','yes'],
+  ['2028-07-22','solar-total','Australia dan Selandia Baru','Australia and New Zealand','part'],
+  ['2028-12-31','lunar-total','Asia, Australia dan Indonesia','Asia, Australia and Indonesia','yes']
+];
+const ECL_NAME = {
+  'solar-total':['Gerhana Matahari Total','Total solar eclipse','🌑'], 'solar-annular':['Gerhana Matahari Cincin','Annular solar eclipse','💍'],
+  'lunar-total':['Gerhana Bulan Total','Total lunar eclipse','🔴'], 'lunar-partial':['Gerhana Bulan Sebagian','Partial lunar eclipse','🌗']
+};
+// Annual meteor shower peaks: [MM-DD, name, max meteors/hour, good from Indonesia]
+const METEORS = [
+  ['01-03','Quadrantid',110,false],['04-22','Lyrid',18,true],['05-06','Eta Aquariid',50,true],['07-30','Delta Aquariid',25,true],
+  ['08-12','Perseid',100,true],['10-21','Orionid',20,true],['11-17','Leonid',15,true],['12-14','Geminid',150,true]
+];
+// Earth–moon distance in km (main lunar terms, accurate to a few hundred km)
+function moonDist(ms){
+  const r = x => x * Math.PI / 180, d = ms / 86400000 + 2440587.5 - 2451545.0;
+  const M = r(134.963 + 13.064993 * d), D = r(297.850 + 12.190749 * d), S = r(357.529 + 0.98560028 * d);
+  return 385000.56 - 20905.36 * Math.cos(M) - 3699.11 * Math.cos(2*D - M) - 2955.97 * Math.cos(2*D) - 569.93 * Math.cos(2*M)
+    + 48.89 * Math.cos(S) + 246.16 * Math.cos(2*D - 2*M) - 152.14 * Math.cos(2*D - M - S) - 170.73 * Math.cos(2*D + M)
+    - 204.59 * Math.cos(2*D - S) - 129.62 * Math.cos(M - S) + 108.74 * Math.cos(D) + 104.76 * Math.cos(M + S);
+}
+function perigees(fromMs, days){
+  const out = [], step = 3600000; let a = moonDist(fromMs - step), b = moonDist(fromMs);
+  for (let ms = fromMs + step; ms < fromMs + days * 86400000; ms += step){
+    const c = moonDist(ms);
+    if (b < a && b <= c) out.push({ ms: ms - step, km: b });
+    a = b; b = c;
+  }
+  return out;
+}
+const kmFmt = km => Math.round(km).toLocaleString(locale()) + ' km';
+function astroInfo(){
+  const now = Date.now(), today = msToLocal(now).slice(0, 10), L = state.lang === 'id';
+  const peri = perigees(now - 12 * 3600000, 35)[0];
+  const fulls = moonEvents(now - 12 * 3600000).filter(e => e.kind === 'full');
+  const superFull = fulls.find(f => moonDist(f.ms) < 362000);
+  const ecl = ECLIPSES.find(e => e[0] >= today.slice(0, 10)) ;
+  const eclVis = ECLIPSES.find(e => e[0] >= today && e[4] === 'yes');
+  // next meteor peak (this year or next)
+  const y = +today.slice(0, 4);
+  const met = METEORS.map(m => ({ m, day: `${today.slice(5) <= m[0] ? y : y + 1}-${m[0]}` })).sort((a, b) => a.day < b.day ? -1 : 1)[0];
+  return { today, peri, superFull, ecl, eclVis, met, L };
+}
+const dayDiff = s => Math.round((Date.parse(s + 'T00:00Z') - Date.parse(msToLocal(Date.now()).slice(0, 10) + 'T00:00Z')) / 86400000);
+const longDate = s => new Date(s.slice(0, 10) + 'T12:00:00Z').toLocaleDateString(locale(), { weekday:'long', day:'numeric', month:'long', year: s.slice(0, 4) === String(new Date().getFullYear()) ? undefined : 'numeric', timeZone:'UTC' });
+const inDays = n => state.lang === 'id' ? (n === 0 ? 'hari ini' : n === 1 ? 'besok' : `${n} hari lagi`) : (n === 0 ? 'today' : n === 1 ? 'tomorrow' : `in ${n} days`);
+
+// Chip for the header, only on special days (moon and holiday chips still come first)
+function astroChipHtml(){
+  if (!state.data) return '';
+  const a = astroInfo(), L = a.L;
+  let ic = '', txt = '';
+  const neo = nearestNeo();
+  if (a.ecl && dayDiff(a.ecl[0]) === 0){ ic = ECL_NAME[a.ecl[1]][2]; txt = L ? `Hari ini ${ECL_NAME[a.ecl[1]][0]}` : `${ECL_NAME[a.ecl[1]][1]} today`; }
+  else if (a.superFull && dayDiff(msToLocal(a.superFull.ms)) === 0){ ic = '🌕'; txt = L ? 'Supermoon malam ini' : 'Supermoon tonight'; }
+  else if (a.met && a.met.m[3] && dayDiff(a.met.day) === 0){ ic = '☄️'; txt = L ? `Puncak hujan meteor ${a.met.m[1]}` : `${a.met.m[1]} meteor shower peaks`; }
+  else if (a.peri && dayDiff(msToLocal(a.peri.ms)) === 0){ ic = '🔭'; txt = L ? 'Bulan paling dekat hari ini' : 'Moon at its closest today'; }
+  else if (neo && neo.ld < 1 && Math.abs(dayDiff(neo.date)) <= 1){ ic = '☄️'; txt = L ? 'Asteroid melintas dekat' : 'Asteroid passing close'; }
+  if (!txt) return '';
+  return `<button type="button" class="zodiac astrochip" id="astrochip"><span class="mi">${ic}</span>${esc(txt)}</button>`;
+}
+document.addEventListener('click', e => { if (e.target.closest('#astrochip')){ const c = $('#astroSec'); if (c && !c.hidden) c.scrollIntoView({ behavior:'smooth', block:'start' }); } });
+
+// Asteroids from NASA JPL (through the Worker)
+async function loadNeo(){
+  if (!BMKG_PROXY || (state.neo && Date.now() - state.neo.at < 6 * 3600000)) return;
+  const j = await getJSON(BMKG_PROXY.replace(/\/+$/, '') + '/asteroid').catch(() => null);
+  if (!j || !Array.isArray(j.fields) || !Array.isArray(j.data)) return;
+  const f = k => j.fields.indexOf(k);
+  const list = j.data.map(r => {
+    const H = parseFloat(r[f('h')]), dia = parseFloat(r[f('diameter')]);
+    const size = !isNaN(dia) ? dia * 1000 : !isNaN(H) ? 1329000 / Math.sqrt(0.14) * Math.pow(10, -H / 5) : null; // metres
+    const cd = String(r[f('cd')] || ''); const mo = { Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12' };
+    const m = cd.match(/^(\d{4})-(\w{3})-(\d{2}) (\d{2}):(\d{2})/);
+    const ms = m ? Date.UTC(+m[1], +mo[m[2]] - 1, +m[3], +m[4], +m[5]) : null;
+    return { name: String(r[f('fullname')] || r[f('des')] || '').trim().replace(/^\(|\)$/g, ''), ld: parseFloat(r[f('dist')]) * 389.17, km: parseFloat(r[f('dist')]) * 149597870.7, v: parseFloat(r[f('v_rel')]), size, ms };
+  }).filter(x => x.ms && !isNaN(x.km));
+  state.neo = { at: Date.now(), list };
+  if (state.data) renderAstroSection();
+  const slot = $('#astroSlot'); if (slot) slot.innerHTML = astroChipHtml();
+}
+function nearestNeo(){
+  if (!state.neo || !state.neo.list.length) return null;
+  const now = Date.now();
+  const recent = state.neo.list.filter(x => x.ms > now - 7 * 86400000 && x.ms < now + 30 * 86400000).sort((a, b) => a.km - b.km)[0];
+  return recent ? { ...recent, date: msToLocal(recent.ms).slice(0, 10) } : null;
+}
+const sizeTxt = m => m == null ? '' : m >= 1000 ? `${(m / 1000).toFixed(1).replace('.', state.lang === 'id' ? ',' : '.')} km` : `${Math.round(m / 5) * 5 || 5} m`;
+const sizeCompare = m => { const L = state.lang === 'id'; if (m == null) return ''; return m < 15 ? (L ? 'seukuran bus' : 'about the size of a bus') : m < 50 ? (L ? 'seukuran rumah' : 'about the size of a house') : m < 150 ? (L ? 'seukuran lapangan sepak bola' : 'about the size of a football pitch') : m < 400 ? (L ? 'seukuran Monas' : 'about the size of a tall tower') : (L ? 'sebesar bukit' : 'as big as a hill'); };
+
+function renderAstroSection(){
+  const sec = $('#astroSec'); if (!sec || !state.data) return;
+  $('#h-astro').textContent = state.lang === 'id' ? '🌌 Langit malam & antariksa' : '🌌 Night sky & space';
+  const html = safeExtra(moonCard) + safeExtra(astroCard);
+  $('#astroBody').innerHTML = html;
+  sec.hidden = !html;
+}
+function astroCard(){
+  const a = astroInfo(), L = a.L, rows = [];
+  // eclipse
+  if (a.ecl){
+    const n = ECL_NAME[a.ecl[1]], vis = a.ecl[4] === 'yes' ? (L ? '✅ Terlihat dari Indonesia' : '✅ Visible from Indonesia') : a.ecl[4] === 'part' ? (L ? '🔸 Mungkin terlihat sebagian dari beberapa wilayah Indonesia' : '🔸 May be partly visible from parts of Indonesia') : (L ? '❌ Tidak terlihat dari Indonesia' : '❌ Not visible from Indonesia');
+    rows.push(`<li><span class="hi-ic">${n[2]}</span><span><b>${L ? 'Gerhana berikutnya' : 'Next eclipse'}:</b> ${esc(L ? n[0] : n[1])} <small class="muted">(${esc(inDays(dayDiff(a.ecl[0])))})</small><br><small>${esc(longDate(a.ecl[0]))} · ${esc(L ? a.ecl[2] : a.ecl[3])}</small><br><small>${vis}</small></span></li>`);
+    if (a.eclVis && a.eclVis !== a.ecl){ const v = ECL_NAME[a.eclVis[1]]; rows.push(`<li><span class="hi-ic">🇮🇩</span><span><b>${L ? 'Gerhana berikutnya di Indonesia' : 'Next eclipse visible in Indonesia'}:</b> ${esc(L ? v[0] : v[1])}<br><small>${esc(longDate(a.eclVis[0]))} (${esc(inDays(dayDiff(a.eclVis[0])))})</small></span></li>`); }
+  }
+  // moon distance
+  if (a.peri){
+    const pd = msToLocal(a.peri.ms), n = dayDiff(pd);
+    rows.push(`<li><span class="hi-ic">🔭</span><span><b>${n === 0 ? (L ? 'Hari ini bulan paling dekat ke Bumi!' : 'The moon is at its closest to Earth today!') : (L ? 'Bulan terdekat berikutnya (perigee)' : 'Next closest moon (perigee)')}</b><br><small>${esc(longDate(pd))} · ${kmFmt(a.peri.km)}${n ? ' (' + esc(inDays(n)) + ')' : ''}</small><br><small class="muted">${L ? `Sekarang bulan berjarak ${kmFmt(moonDist(Date.now()))}.` : `The moon is now ${kmFmt(moonDist(Date.now()))} away.`}</small></span></li>`);
+  }
+  if (a.superFull){ const sd = msToLocal(a.superFull.ms); rows.push(`<li><span class="hi-ic">🌕</span><span><b>Supermoon</b> <small class="muted">(${esc(inDays(dayDiff(sd)))})</small><br><small>${esc(longDate(sd))}. ${L ? 'Purnama saat bulan dekat, tampak lebih besar dan terang.' : 'A full moon close to Earth, looking bigger and brighter.'}</small></span></li>`); }
+  // meteor shower
+  if (a.met){
+    const m = a.met.m, n = dayDiff(a.met.day), lit = moonPhase(Date.parse(a.met.day + 'T18:00:00Z')).lit;
+    const moonNote = lit > 60 ? (L ? 'Bulan terang akan menyamarkan meteor yang redup.' : 'A bright moon will hide fainter meteors.') : (L ? 'Langit gelap, kondisi bagus untuk mengamati.' : 'Dark skies, good viewing conditions.');
+    rows.push(`<li><span class="hi-ic">☄️</span><span><b>${L ? `Hujan meteor ${m[1]}` : `${m[1]} meteor shower`}</b> <small class="muted">(${esc(inDays(n))})</small><br><small>${esc(longDate(a.met.day))} · ${L ? `hingga ~${m[2]} meteor/jam` : `up to ~${m[2]} meteors/hour`}${m[3] ? '' : (L ? ', kurang terlihat dari Indonesia' : ', hard to see from Indonesia')}</small><br><small class="muted">${L ? 'Terbaik setelah tengah malam, jauh dari lampu kota.' : 'Best after midnight, away from city lights.'} ${moonNote}</small></span></li>`);
+  }
+  // asteroid
+  const neo = nearestNeo();
+  if (neo){
+    const past = neo.ms < Date.now(), n = dayDiff(neo.date);
+    const when = past ? (L ? (n === 0 ? 'hari ini' : `${-n} hari lalu`) : (n === 0 ? 'today' : `${-n} days ago`)) : inDays(n);
+    const ld = neo.ld.toFixed(1).replace('.', L ? ',' : '.');
+    rows.push(`<li><span class="hi-ic">🪨</span><span><b>${past ? (L ? 'Asteroid baru saja melintas' : 'An asteroid just passed') : (L ? 'Asteroid akan melintas' : 'An asteroid will pass')}</b> <small class="muted">(${esc(when)})</small><br><small>${esc(neo.name)}${neo.size ? ` · ±${sizeTxt(neo.size)}, ${sizeCompare(neo.size)}` : ''}</small><br><small class="muted">${L ? `Jarak terdekat ${kmFmt(neo.km)} (${ld}× jarak Bumi–Bulan)${neo.v ? `, kecepatan ${Math.round(neo.v)} km/detik` : ''}. Tidak berbahaya.` : `Closest distance ${kmFmt(neo.km)} (${ld}× the Earth–moon distance)${neo.v ? `, ${Math.round(neo.v)} km/s` : ''}. No danger.`}</small></span></li>`);
+  }
+  if (!rows.length) return '';
+  return `<div class="fact astro-fact"><h3>${L ? 'Kalender langit' : 'Sky calendar'}</h3><ul class="hol-list">${rows.join('')}</ul><p class="muted small">${L ? 'Data asteroid: NASA JPL. Gerhana dan posisi bulan dihitung secara astronomis; untuk pengamatan resmi gerhana, ikuti BMKG.' : 'Asteroid data: NASA JPL. Eclipses and moon positions are calculated; for official eclipse observations, follow BMKG.'}</p></div>`;
+}
+
 /* ================= Holidays (SKB 3 Menteri 2026 & 2027) ================= */
 // [key, short name ID, full name ID, short EN, full EN, icon]
 const HOL_KIND = {
@@ -2283,7 +2429,6 @@ function extrasUmum(){
     <div class="fact"><h3>${t('pantun')}</h3><p class="pantun">${pt.map(esc).join('<br>')}</p></div>
     <div class="fact"><h3>${t('outfit')}</h3><div class="outfit">${items.map(([k, n]) => `<span><svg viewBox="0 0 24 24" aria-hidden="true">${OUTFIT_SVG[k]}</svg>${esc(n)}</span>`).join('')}</div><p>${esc(t('ofSay', joined))}</p></div>
     ${safeExtra(holidayCard)}
-    ${safeExtra(moonCard)}
     <div class="fact"><h3>${t('mosq')}</h3><div class="val"><span class="lvl lvl${ml}">${t('mosqLv')[ml]}</span></div><p>${t('mosqNote')}</p></div>
   </div>`;
 }
