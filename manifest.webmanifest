@@ -9,8 +9,8 @@
   "id": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0A57C2",
-  "theme_color": "#0A57C2",
+  "background_color": "#0E5FD0",
+  "theme_color": "#0E5FD0",
   "categories": [
     "weather",
     "lifestyle",
