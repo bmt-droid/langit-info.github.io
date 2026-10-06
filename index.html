@@ -423,6 +423,7 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
 .brand-txt{display:flex;flex-direction:column;line-height:1.05}
 .brand-tag{display:none}
 @media (min-width:820px){.brand-tag{display:block;font-family:var(--body);font-size:.72rem;font-weight:500;opacity:.8;letter-spacing:0;margin-top:2px}}
+.plane-btn{justify-self:start;align-self:flex-start;margin-top:8px;border:0;border-radius:999px;padding:10px 16px;font-weight:700;background:#0A57C2;color:#fff}
 /* icons */
 .ico{overflow:visible}
 .ico *{stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
@@ -2183,6 +2184,58 @@ function issCard(){
   return `<div class="fact"><h3>${L ? '🛰️ ISS lewat' : '🛰️ ISS passes'}</h3>${rows ? `<ul class="hol-list">${rows}</ul>` : `<p>${L ? 'Tidak ada lintasan ISS yang terlihat dalam 4 hari ke depan.' : 'No visible ISS passes in the next 4 days.'}</p>`}<p class="muted small">${L ? 'Stasiun Luar Angkasa Internasional terlihat seperti titik terang yang bergerak cepat tanpa berkedip. Data orbit: CelesTrak.' : 'The International Space Station looks like a bright dot moving fast without blinking. Orbit data: CelesTrak.'}</p></div>`;
 }
 
+/* ================= Planes overhead (tap to load) ================= */
+// ICAO airline prefix → [IATA code, name]
+const AIRLINES = {GIA:['GA','Garuda Indonesia'],CTV:['QG','Citilink'],LNI:['JT','Lion Air'],BTK:['ID','Batik Air'],WON:['IW','Wings Air'],SJY:['SJ','Sriwijaya Air'],NAM:['IN','NAM Air'],
+  AWQ:['QZ','Indonesia AirAsia'],PAS:['IP','Pelita Air'],TGN:['IL','Trigana Air'],SIA:['SQ','Singapore Airlines'],TGW:['TR','Scoot'],MAS:['MH','Malaysia Airlines'],AXM:['AK','AirAsia'],
+  JSA:['3K','Jetstar Asia'],QFA:['QF','Qantas'],JST:['JQ','Jetstar'],VOZ:['VA','Virgin Australia'],CPA:['CX','Cathay Pacific'],UAE:['EK','Emirates'],QTR:['QR','Qatar Airways'],ETD:['EY','Etihad'],
+  SVA:['SV','Saudia'],THY:['TK','Turkish Airlines'],KLM:['KL','KLM'],CES:['MU','China Eastern'],CSN:['CZ','China Southern'],CCA:['CA','Air China'],KAL:['KE','Korean Air'],JAL:['JL','Japan Airlines'],
+  ANA:['NH','ANA'],THA:['TG','Thai Airways'],VJC:['VJ','VietJet'],HVN:['VN','Vietnam Airlines'],PAL:['PR','Philippine Airlines'],CEB:['5J','Cebu Pacific'],EVA:['BR','EVA Air'],FDX:['FX','FedEx'],UPS:['5X','UPS']};
+function bearing(a1, o1, a2, o2){
+  const r = x => x * RAD, y = Math.sin(r(o2 - o1)) * Math.cos(r(a2)), x = Math.cos(r(a1)) * Math.sin(r(a2)) - Math.sin(r(a1)) * Math.cos(r(a2)) * Math.cos(r(o2 - o1));
+  return (Math.atan2(y, x) / RAD + 360) % 360;
+}
+function flightName(cs){
+  const c = String(cs || '').trim(), m = c.match(/^([A-Z]{3})(\d+[A-Z]?)$/);
+  if (m && AIRLINES[m[1]]) return { code: `${AIRLINES[m[1]][0]} ${m[2]}`, airline: AIRLINES[m[1]][1] };
+  return { code: c || '–', airline: '' };
+}
+async function loadPlanes(){
+  const card = $('#planeCard'); if (!card || !BMKG_PROXY) return;
+  card.innerHTML = planeHtml('loading');
+  try{
+    const p = state.place;
+    const j = await getJSON(`${BMKG_PROXY.replace(/\/+$/, '')}/planes?lat=${p.lat.toFixed(2)}&lon=${p.lon.toFixed(2)}`);
+    const list = (j.ac || []).filter(a => a.lat != null && a.lon != null && a.alt_baro !== 'ground' && (+a.alt_baro || 0) > 300)
+      .map(a => ({ ...a, km: haversine(p.lat, p.lon, a.lat, a.lon), brg: bearing(p.lat, p.lon, a.lat, a.lon) }))
+      .filter(a => a.km <= 50).sort((x, y) => x.km - y.km);
+    state.planes = { key: placeKey(p), at: Date.now(), list };
+  }catch(e){ state.planes = { key: placeKey(state.place), at: Date.now(), error: true }; }
+  const c = $('#planeCard'); if (c) c.innerHTML = planeHtml();
+}
+function planeHtml(mode){
+  const L = state.lang === 'id';
+  const head = `<h3>${L ? '✈️ Pesawat di atas kita' : '✈️ Planes above us'}</h3>`;
+  const btn = label => `<button type="button" class="plane-btn" id="planeBtn">${label}</button>`;
+  const P = state.planes && state.planes.key === placeKey(state.place) ? state.planes : null;
+  if (mode === 'loading') return head + `<p class="muted">${L ? 'Mencari pesawat di sekitar…' : 'Looking for planes nearby…'}</p>`;
+  if (!P) return head + `<p>${L ? 'Lihat pesawat yang sedang terbang dalam radius 50 km dari lokasi ini.' : 'See the planes flying within 50 km of this place right now.'}</p>` + btn(L ? '✈️ Lihat pesawat di atas kita' : '✈️ Show planes above us');
+  if (P.error) return head + `<p class="muted">${L ? 'Data pesawat belum bisa dimuat. Coba lagi sebentar lagi.' : 'Plane data couldn’t be loaded. Try again in a moment.'}</p>` + btn(L ? 'Coba lagi' : 'Try again');
+  const ago = Math.max(0, Math.round((Date.now() - P.at) / 60000));
+  if (!P.list.length) return head + `<p>${L ? 'Belum terdeteksi pesawat di sekitar sini saat ini.' : 'No planes detected nearby right now.'}</p><p class="muted small">${L ? 'Data berasal dari penerima ADS-B relawan; di sebagian daerah cakupannya masih terbatas.' : 'Data comes from volunteer ADS-B receivers; coverage is limited in some areas.'}</p>` + btn(L ? '🔄 Perbarui' : '🔄 Refresh');
+  const rows = P.list.slice(0, 4).map(a => {
+    const f = flightName(a.flight), m = Math.round((+a.alt_baro || +a.alt_geom || 0) * 0.3048 / 100) * 100;
+    const spd = a.gs != null ? speed(a.gs * 1.852) : '';
+    const low = m < 3000 ? (L ? ' Terbang rendah, mungkin akan mendarat atau baru lepas landas.' : ' Flying low, probably landing or just taking off.') : '';
+    return `<li><span class="hi-ic">✈️</span><span><b>${esc(f.code)}</b>${f.airline ? ` <small class="muted">${esc(f.airline)}</small>` : ''}${a.t ? ` <small class="muted">· ${esc(a.t)}</small>` : ''}<br>
+      <small>${L ? `${Math.round(a.km)} km ke arah ${dir8(a.brg)}` : `${Math.round(a.km)} km to the ${dir8(a.brg)}`} · ${m.toLocaleString(locale())} m${spd ? ' · ' + spd : ''}${a.track != null ? (L ? ` · menuju ${dir8(a.track)}` : ` · heading ${dir8(a.track)}`) : ''}</small>${low ? `<br><small class="muted">${low.trim()}</small>` : ''}</span></li>`;
+  }).join('');
+  return head + `<p class="lead">${L ? `${P.list.length} pesawat sedang terbang dalam radius 50 km` : `${P.list.length} planes flying within 50 km`}</p><ul class="hol-list">${rows}</ul>
+    <p class="muted small">${L ? `Diperbarui ${ago ? ago + ' menit lalu' : 'baru saja'}. Data: adsb.lol (ODbL), dari penerima ADS-B relawan.` : `Updated ${ago ? ago + ' min ago' : 'just now'}. Data: adsb.lol (ODbL), from volunteer ADS-B receivers.`}</p>` + btn(L ? '🔄 Perbarui' : '🔄 Refresh');
+}
+function planeCard(){ return BMKG_PROXY ? `<div class="fact" id="planeCard">${planeHtml()}</div>` : ''; }
+document.addEventListener('click', e => { if (e.target.closest('#planeBtn')) loadPlanes(); });
+
 /* ================= Astronomy: eclipses, supermoon, meteor showers, asteroids ================= */
 // Eclipses 2027–2028 (UTC date). vis: 'yes' visible from Indonesia, 'part' partly/some regions, 'no'
 const ECLIPSES = [
@@ -2283,7 +2336,7 @@ const sizeCompare = m => { const L = state.lang === 'id'; if (m == null) return 
 function renderAstroSection(){
   const sec = $('#astroSec'); if (!sec || !state.data) return;
   $('#h-astro').textContent = state.lang === 'id' ? '🌌 Langit malam & antariksa' : '🌌 Night sky & space';
-  const html = safeExtra(moonCard) + safeExtra(planetCard) + safeExtra(issCard) + safeExtra(astroCard);
+  const html = safeExtra(moonCard) + safeExtra(planetCard) + safeExtra(issCard) + safeExtra(planeCard) + safeExtra(astroCard);
   $('#astroBody').innerHTML = html;
   sec.hidden = !html;
 }
