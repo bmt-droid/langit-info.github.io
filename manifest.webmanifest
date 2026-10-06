@@ -1,7 +1,7 @@
 {
   "name": "Langit",
   "short_name": "Langit",
-  "description": "Langit — Semua yang ada di atas kita. Cuaca Indonesia dengan mode Jemuran, Petani, Nelayan, Wisata dan Golf, plus gempa BMKG dan langit malam.",
+  "description": "Langit dan semua yang di atas sana. Cuaca Indonesia dengan mode Jemuran, Petani, Nelayan, Wisata dan Golf, plus gempa BMKG, pesawat dan langit malam.",
   "lang": "id",
   "dir": "ltr",
   "start_url": "./",

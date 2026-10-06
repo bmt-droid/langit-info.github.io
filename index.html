@@ -12,8 +12,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Langit">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="Langit, semua yang ada di atas kita: prakiraan cuaca Indonesia per jam, mode jemuran, petani, nelayan dan wisata. Data Open-Meteo dan BMKG.">
-<title>Langit — Semua yang ada di atas kita</title>
+<meta name="description" content="Langit dan semua yang di atas sana: prakiraan cuaca Indonesia per jam, mode jemuran, petani, nelayan dan wisata. Data Open-Meteo dan BMKG.">
+<title>Langit dan semua yang di atas sana</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -425,6 +425,8 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
 @media (min-width:820px){.brand-tag{display:block;font-family:var(--body);font-size:.72rem;font-weight:500;opacity:.8;letter-spacing:0;margin-top:2px}}
 .plane-btn{justify-self:start;align-self:flex-start;margin-top:8px;border:0;border-radius:999px;padding:10px 16px;font-weight:700;background:#0A57C2;color:#fff}
 .fl-tag{display:inline-block;margin-top:4px;padding:2px 9px;border-radius:999px;background:var(--soft);font-size:.8rem;font-weight:600}
+.plane-sec[hidden]{display:none}
+.plane-sec #planeCard{border-top:0;padding-top:0;max-width:640px}
 /* icons */
 .ico{overflow:visible}
 .ico *{stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
@@ -458,7 +460,7 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
     <div class="bar">
       <div class="brand">
         <svg id="brandIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></svg>
-        <span class="brand-txt">Langit<span class="brand-tag" id="brandTag">Semua yang ada di atas kita</span></span>
+        <span class="brand-txt">Langit<span class="brand-tag" id="brandTag">dan semua yang di atas sana</span></span>
       </div>
       <div class="search" role="combobox" aria-haspopup="listbox" aria-owns="results" aria-expanded="false" id="combo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -504,6 +506,10 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
         <div class="tiles" id="tiles"></div>
       </section>
     </div>
+    <section id="planeSec" class="plane-sec" hidden aria-labelledby="h-plane">
+      <h2 id="h-plane"></h2>
+      <div class="fact" id="planeCard"></div>
+    </section>
     <section id="astroSec" class="astro-sec" hidden aria-labelledby="h-astro">
       <h2 id="h-astro"></h2>
       <div id="astroBody" class="facts"></div>
@@ -1264,6 +1270,7 @@ function render(animate){
   renderHourly(d, i0);
   renderDaily(d);
   renderTiles(d);
+  renderPlaneSection();
   renderAstroSection();
   renderQuakeSection();
   $('#sheet').classList.remove('loading', 'nodata');
@@ -2195,6 +2202,35 @@ const AIRLINES = {GIA:['GA','Garuda Indonesia'],CTV:['QG','Citilink'],LNI:['JT',
 // Helicopters: ADS-B category A7 (rotorcraft) or a common helicopter type code
 const HELI_TYPES = /^(EC|AS3|AS5|AS6|H1|H2|H6|B06|B2|B4|B5|A10|A11|A13|A16|A169|A189|AW|S76|S92|R22|R44|R66|BK17|MI8|MI17|MI24|EH10|NH90|UH|AH|CH|SA3)/;
 const isHeli = a => a.category === 'A7' || HELI_TYPES.test(String(a.t || ''));
+// More airlines worldwide (ICAO prefix → [IATA code, name])
+Object.assign(AIRLINES, {
+  // Indonesia & neighbours
+  SJV:['IU','Super Air Jet'],TNU:['8B','TransNusa'],XAR:['XN','Xpress Air'],MXD:['OD','Batik Air Malaysia'],XAX:['D7','AirAsia X'],AIQ:['FD','Thai AirAsia'],
+  APG:['Z2','Philippines AirAsia'],TLM:['SL','Thai Lion Air'],NOK:['DD','Nok Air'],BKP:['PG','Bangkok Airways'],RBA:['BI','Royal Brunei'],BAV:['QH','Bamboo Airways'],
+  ANZ:['NZ','Air New Zealand'],FJI:['FJ','Fiji Airways'],ANG:['PX','Air Niugini'],RXA:['ZL','Rex Airlines'],
+  // East & South Asia
+  CAL:['CI','China Airlines'],SJX:['JX','Starlux'],HKE:['UO','HK Express'],CRK:['HX','Hong Kong Airlines'],CHH:['HU','Hainan Airlines'],CXA:['MF','Xiamen Airlines'],
+  CSZ:['ZH','Shenzhen Airlines'],CSC:['3U','Sichuan Airlines'],CQH:['9C','Spring Airlines'],AAR:['OZ','Asiana Airlines'],JNA:['LJ','Jin Air'],JJA:['7C','Jeju Air'],
+  TWB:['TW','T’way Air'],APJ:['MM','Peach'],JJP:['GK','Jetstar Japan'],AIC:['AI','Air India'],IGO:['6E','IndiGo'],AXB:['IX','Air India Express'],
+  ALK:['UL','SriLankan Airlines'],BBC:['BG','Biman Bangladesh'],PIA:['PK','Pakistan International'],
+  // Middle East & Africa
+  FDB:['FZ','flydubai'],ABY:['G9','Air Arabia'],GFA:['GF','Gulf Air'],OMA:['WY','Oman Air'],KAC:['KU','Kuwait Airways'],RJA:['RJ','Royal Jordanian'],
+  MEA:['ME','Middle East Airlines'],ELY:['LY','El Al'],MSR:['MS','EgyptAir'],FAD:['F3','flyadeal'],KNE:['XY','flynas'],
+  ETH:['ET','Ethiopian Airlines'],KQA:['KQ','Kenya Airways'],SAA:['SA','South African Airways'],RAM:['AT','Royal Air Maroc'],RWD:['WB','RwandAir'],
+  // Europe
+  DLH:['LH','Lufthansa'],BAW:['BA','British Airways'],AFR:['AF','Air France'],IBE:['IB','Iberia'],VLG:['VY','Vueling'],RYR:['FR','Ryanair'],
+  EZY:['U2','easyJet'],EJU:['EC','easyJet Europe'],WZZ:['W6','Wizz Air'],SWR:['LX','Swiss'],AUA:['OS','Austrian Airlines'],SAS:['SK','SAS'],
+  FIN:['AY','Finnair'],TAP:['TP','TAP Air Portugal'],ITY:['AZ','ITA Airways'],AEE:['A3','Aegean'],LOT:['LO','LOT Polish Airlines'],EIN:['EI','Aer Lingus'],
+  VIR:['VS','Virgin Atlantic'],NAX:['DY','Norwegian'],EWG:['EW','Eurowings'],CFG:['DE','Condor'],BEL:['SN','Brussels Airlines'],PGT:['PC','Pegasus'],
+  ICE:['FI','Icelandair'],AFL:['SU','Aeroflot'],
+  // Americas
+  AAL:['AA','American Airlines'],DAL:['DL','Delta'],UAL:['UA','United'],SWA:['WN','Southwest'],JBU:['B6','JetBlue'],ASA:['AS','Alaska Airlines'],
+  ACA:['AC','Air Canada'],WJA:['WS','WestJet'],AMX:['AM','Aeroméxico'],VOI:['Y4','Volaris'],LAN:['LA','LATAM'],TAM:['JJ','LATAM Brasil'],
+  GLO:['G3','Gol'],AZU:['AD','Azul'],AVA:['AV','Avianca'],CMP:['CM','Copa Airlines'],ARG:['AR','Aerolíneas Argentinas'],FFT:['F9','Frontier'],
+  NKS:['NK','Spirit'],HAL:['HA','Hawaiian Airlines'],SKW:['OO','SkyWest'],
+  // Cargo
+  CLX:['CV','Cargolux'],GTI:['5Y','Atlas Air'],CKS:['K4','Kalitta Air'],DHK:['D0','DHL'],BOX:['3S','AeroLogic']
+});
 function bearing(a1, o1, a2, o2){
   const r = x => x * RAD, y = Math.sin(r(o2 - o1)) * Math.cos(r(a2)), x = Math.cos(r(a1)) * Math.sin(r(a2)) - Math.sin(r(a1)) * Math.cos(r(a2)) * Math.cos(r(o2 - o1));
   return (Math.atan2(y, x) / RAD + 360) % 360;
@@ -2220,7 +2256,7 @@ async function loadPlanes(){
 }
 function planeHtml(mode){
   const L = state.lang === 'id';
-  const head = `<h3>${L ? '✈️ Pesawat di atas kita' : '✈️ Planes above us'}</h3>`;
+  const head = '';
   const btn = label => `<button type="button" class="plane-btn" id="planeBtn">${label}</button>`;
   const P = state.planes && state.planes.key === placeKey(state.place) ? state.planes : null;
   if (mode === 'loading') return head + `<p class="muted">${L ? 'Mencari pesawat di sekitar…' : 'Looking for planes nearby…'}</p>`;
@@ -2242,7 +2278,12 @@ function planeHtml(mode){
   return head + `<p class="lead">${L ? `${P.list.length} pesawat${P.list.some(isHeli) ? ' dan helikopter' : ''} sedang terbang dalam radius 50 km` : `${P.list.length} aircraft flying within 50 km`}</p><ul class="hol-list">${rows}</ul>
     <p class="muted small">${L ? `Diperbarui ${ago ? ago + ' menit lalu' : 'baru saja'}. Data: adsb.lol (ODbL), dari penerima ADS-B relawan.` : `Updated ${ago ? ago + ' min ago' : 'just now'}. Data: adsb.lol (ODbL), from volunteer ADS-B receivers.`}</p>` + btn(L ? '🔄 Perbarui' : '🔄 Refresh');
 }
-function planeCard(){ return BMKG_PROXY ? `<div class="fact" id="planeCard">${planeHtml()}</div>` : ''; }
+function renderPlaneSection(){
+  const sec = $('#planeSec'); if (!sec || !state.data || !BMKG_PROXY) return;
+  $('#h-plane').textContent = state.lang === 'id' ? '✈️ Pesawat di atas kita' : '✈️ Planes above us';
+  $('#planeCard').innerHTML = planeHtml();
+  sec.hidden = false;
+}
 document.addEventListener('click', e => { if (e.target.closest('#planeBtn')) loadPlanes(); });
 
 /* ================= Astronomy: eclipses, supermoon, meteor showers, asteroids ================= */
@@ -2345,7 +2386,7 @@ const sizeCompare = m => { const L = state.lang === 'id'; if (m == null) return 
 function renderAstroSection(){
   const sec = $('#astroSec'); if (!sec || !state.data) return;
   $('#h-astro').textContent = state.lang === 'id' ? '🌌 Langit malam & antariksa' : '🌌 Night sky & space';
-  const html = safeExtra(moonCard) + safeExtra(planetCard) + safeExtra(issCard) + safeExtra(planeCard) + safeExtra(astroCard);
+  const html = safeExtra(moonCard) + safeExtra(planetCard) + safeExtra(issCard) + safeExtra(astroCard);
   $('#astroBody').innerHTML = html;
   sec.hidden = !html;
 }
@@ -2908,12 +2949,12 @@ $('#locate').onclick = locateMe;
 /* ================= Language & units ================= */
 function applyStatic(){
   document.documentElement.lang = state.lang;
-  if ($('#brandTag')) $('#brandTag').textContent = state.lang === 'id' ? 'Semua yang ada di atas kita' : 'Everything above us';
+  if ($('#brandTag')) $('#brandTag').textContent = state.lang === 'id' ? 'dan semua yang di atas sana' : 'and everything up there';
   q.placeholder = t('search'); q.setAttribute('aria-label', t('search'));
   $('#locate span').textContent = t('locate'); $('#locate').setAttribute('aria-label', t('locate'));
   $('#h-hourly').textContent = t('h48'); $('#h-daily').textContent = t('d10'); $('#h-now').textContent = t('cond');
   $('#hourly').setAttribute('aria-label', t('hourlyLabel'));
-  $('#footer').innerHTML = `<p class="tagline">${state.lang === 'id' ? '☁️ Langit — Semua yang ada di atas kita' : '☁️ Langit — Everything above us'}</p><p class="credits">${t('footer')}</p><p class="copy">&copy; ${new Date().getFullYear()} BMT | Berkat Maha Tinggi</p>`;
+  $('#footer').innerHTML = `<p class="tagline">${state.lang === 'id' ? '☁️ Langit dan semua yang di atas sana' : '☁️ Langit and everything up there'}</p><p class="credits">${t('footer')}</p><p class="copy">&copy; ${new Date().getFullYear()} BMT | Berkat Maha Tinggi</p>`;
   if (typeof renderInstallLink === 'function') renderInstallLink();
   document.querySelectorAll('#langSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === state.lang));
   document.querySelectorAll('#unitSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.u === state.units));
