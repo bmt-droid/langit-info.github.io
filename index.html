@@ -1114,12 +1114,17 @@ function paintSky(p, time, bi, fx){
 
 /* ================= Data ================= */
 const placeKey = p => `${(+p.lat).toFixed(2)},${(+p.lon).toFixed(2)}`;
-async function getJSON(url){
-  const r = await fetch(url);
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok || j.error) throw new Error(j.reason || 'Request failed');
-  return j;
+// every request gives up after a while, so a slow or stuck connection can never freeze the page
+async function getJSON(url, ms = 12000){
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
+  try{
+    const r = await fetch(url, { signal: ctl.signal });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || j.error) throw new Error(j.reason || 'Request failed');
+    return j;
+  } finally { clearTimeout(timer); }
 }
+let loadSeq = 0;
 async function loadPlace(place, opts = {}){
   const changed = !state.place || placeKey(state.place) !== placeKey(place);
   state.place = place;
@@ -1136,11 +1141,14 @@ async function loadPlace(place, opts = {}){
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max,precipitation_sum,daylight_duration',
     minutely_15: 'precipitation'
   });
+  const seq = ++loadSeq; // if the user picks another place meanwhile, this older answer is ignored
+  const fUrl = 'https://api.open-meteo.com/v1/forecast?' + p;
   try{
     const [w, a] = await Promise.all([
-      getJSON('https://api.open-meteo.com/v1/forecast?' + p),
-      getJSON(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${place.lat}&longitude=${place.lon}&current=us_aqi,pm2_5,pm10&timezone=auto`).catch(() => null)
+      getJSON(fUrl, 12000).catch(() => getJSON(fUrl, 15000)), // one automatic retry
+      getJSON(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${place.lat}&longitude=${place.lon}&current=us_aqi,pm2_5,pm10&timezone=auto`, 8000).catch(() => null)
     ]);
+    if (seq !== loadSeq) return;
     state.data = w; state.aqi = a; state.lastRefresh = Date.now();
     store.set('skyline.last', place);
     render(!opts.quiet);
@@ -1149,7 +1157,7 @@ async function loadPlace(place, opts = {}){
     loadIss();
     ensureExtras();
   }catch(err){
-    if (opts.quiet) return;
+    if (opts.quiet || seq !== loadSeq) return;
     $('#sheet').classList.remove('loading');
     if (!state.data) $('#sheet').classList.add('nodata');
     $('#heroArea').innerHTML = `<div class="status">${esc(t('error'))}<br><button class="pill" id="retry" type="button">${esc(t('retry'))}</button></div>`;
