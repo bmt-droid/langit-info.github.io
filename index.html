@@ -797,11 +797,13 @@ Object.assign(STR.en, {
 Object.assign(STR.id, {
   instTitle:'Pasang Langit di HP', instTitlePc:'Pasang Langit di komputer ini', instSubPc:'Buka langsung dari desktop atau taskbar, tetap bisa dilihat saat offline.', instSub:'Buka lebih cepat dari layar utama, tetap bisa dilihat saat offline.', instGo:'Pasang', instLater:'Nanti', instFooter:'Pasang aplikasi Langit',
   instIos:'Ketuk tombol Bagikan, lalu pilih "Tambah ke Layar Utama".', instIosGo:'Mengerti',
+  instManual:'Ketuk menu ⋮ di pojok kanan atas browser, lalu pilih "Instal aplikasi" atau "Tambahkan ke layar utama".',
   offline:'Anda sedang offline. Menampilkan data terakhir yang tersimpan.', online:'Kembali online. Data diperbarui.'
 });
 Object.assign(STR.en, {
   instTitle:'Install Langit on your phone', instTitlePc:'Install Langit on this computer', instSubPc:'Open it straight from your desktop or taskbar, and still see it offline.', instSub:'Open it faster from your home screen, and still see it offline.', instGo:'Install', instLater:'Later', instFooter:'Install the Langit app',
   instIos:'Tap the Share button, then choose "Add to Home Screen".', instIosGo:'Got it',
+  instManual:'Tap the ⋮ menu at the top right of your browser, then choose "Install app" or "Add to Home screen".',
   offline:"You're offline. Showing the last saved data.", online:'Back online. Data refreshed.'
 });
 Object.assign(STR.id, {
@@ -3010,9 +3012,28 @@ window.addEventListener('beforeinstallprompt', e => {
   if (isPhone()) setTimeout(() => showInstall(false), 2000); // shortly after the weather appears
 });
 window.addEventListener('appinstalled', () => { installEvt = null; hideInstall(0); renderInstallLink(); });
+// when the browser can't show its own install window, explain how to install from the browser menu
+let installManual = false;
+function showManualInstall(){
+  installManual = true;
+  $('#installSub').textContent = t('instManual');
+  $('#installGo').textContent = t('instIosGo');
+  $('#installLater').hidden = true;
+  $('#install').hidden = false;
+}
 $('#installGo').onclick = async () => {
-  if (installEvt){ installEvt.prompt(); const r = await installEvt.userChoice.catch(() => null); installEvt = null; hideInstall(r && r.outcome === 'accepted' ? 0 : 7); renderInstallLink(); }
-  else hideInstall(30);
+  if (installManual){ installManual = false; hideInstall(7); return; }
+  if (installEvt){
+    const ev = installEvt; installEvt = null;
+    try{
+      await ev.prompt();
+      const r = await ev.userChoice;
+      hideInstall(r && r.outcome === 'accepted' ? 0 : 7);
+    }catch(e){ showManualInstall(); }
+    renderInstallLink();
+  }
+  else if (isIOS()) hideInstall(30);
+  else showManualInstall();
 };
 $('#installLater').onclick = () => hideInstall(7);
 function renderInstallLink(){
