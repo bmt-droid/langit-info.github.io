@@ -14,10 +14,17 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="Langit dan semua yang di atas sana: prakiraan cuaca Indonesia per jam, mode jemuran, petani, nelayan dan wisata. Data Open-Meteo dan BMKG.">
 <title>Langit dan semua yang di atas sana</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="canonical" href="https://langit.info/">
+<script>/* Langit moved to langit.info: send visitors of the old GitHub address there */
+if (location.hostname === 'bmt-droid.github.io') location.replace('https://langit.info/' + location.hash);</script>
+<link rel="preload" href="assets/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+/* Fonts are hosted on langit.info itself (SIL Open Font License), no outside requests */
+@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-display:swap;font-weight:200 800;src:url(assets/bricolage-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-display:swap;font-weight:200 800;src:url(assets/bricolage-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Figtree';font-style:normal;font-display:swap;font-weight:300 900;src:url(assets/figtree-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Figtree';font-style:normal;font-display:swap;font-weight:300 900;src:url(assets/figtree-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 :root{
   --paper:#F6F8F9; --ink:#16212C; --muted:#5D6B79; --line:#DDE3E8; --soft:#E7ECF0;
   --rain:#2C6BD9; --focus:#2C6BD9;
@@ -446,8 +453,8 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
   .hero-icon{position:absolute;right:0;top:0}
   .hero-icon svg{width:88px}
   .day{grid-template-columns:3.4rem 26px 2.4rem 2.2rem 1fr 2.2rem;gap:8px}
-  .verdict.art{grid-template-columns:96px 1fr}
-  .line-art{width:96px}
+  .verdict.art{grid-template-columns:1fr;gap:10px}
+  .line-art{width:104px}
   .mode-panel{padding:18px 16px}
 }
 </style>
@@ -531,7 +538,7 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
 <script>
 (() => {
 // ===== SETTING: paste your Cloudflare Worker address between the quotes, e.g. 'https://langit-bmkg.yourname.workers.dev'
-const BMKG_PROXY = 'https://langit-bmkg.bosminyaktondano.workers.dev';
+const BMKG_PROXY = 'https://api.langit.info';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const store = {
@@ -1889,8 +1896,12 @@ function modeGolf(){
   const finish = i => { const h = (+H.time[i].slice(11, 13) + 4) % 24; return clock(h, 30); };
   const teeText = best ? t('gfTee', startLabel(best.i), finish(best.i)) + (alt ? ' ' + t('gfAlt', startLabel(alt.i)) : '') : t('gfNoTee');
 
+  // after dark the strip starts at the next first light, so golfers see tomorrow's playable hours straight away
+  let s0 = i0;
+  if (cur === 'night'){ let k = i0; while (k < end && !H.is_day[k]) k++; if (k < end) s0 = k; }
+  const stripTitle = t('gfStrip') + (s0 !== i0 ? ' · ' + dayLabel(H.time[s0]) : '');
   const items = [];
-  for (let i = i0; i < Math.min(end, i0 + 24); i++){
+  for (let i = s0; i < Math.min(end, s0 + (s0 !== i0 ? 14 : 24)); i++){
     const g = golfAt(i);
     items.push({ cls: { good:'s-good', ok:'s-ok', poor:'s-poor', storm:'s-bad', night:'' }[g], label: i === i0 ? t('now') : hourStr(H.time[i]).replace(/[.:]00$/, ''), tip: hourStr(H.time[i]) });
   }
@@ -1921,7 +1932,7 @@ function modeGolf(){
   for (let i = i0; i < end && H.time[i].slice(0, 10) === today; i++) maxApp = Math.max(maxApp, H.apparent_temperature[i] ?? -99);
   const vt = tone === 'night' ? 'muted' : tone === 'storm' ? 'bad' : tone === 'bad' ? 'poor' : tone;
   return verdict(vt, title, `<p>${esc(sub)}</p><p class="muted">${esc(teeText)}</p>`, sceneGolf(tone, ws))
-    + strip(items, t('gfStrip'), [['good', lg[0]], ['ok', lg[1]], ['poor', lg[2]], ['bad', lg[3]], ['soft', t('night')]])
+    + strip(items, esc(stripTitle), [['good', lg[0]], ['ok', lg[1]], ['poor', lg[2]], ['bad', lg[3]], ['soft', t('night')]])
     + `<div class="facts">
       ${fact(t('gfWind'), esc(t('gfWindV', speed(ws), dir8(c.wind_direction_10m))), esc(windText) + `<br><br>${esc(t('gfWindLocal'))}`)}
       ${fact(t('gfCarry'), len(total), esc(t('gfCarryParts', len(tempM), len(altM), elevStr)) + `<br><br>${esc(t('gfCarryNote'))}`)}
@@ -2150,7 +2161,7 @@ function planetCard(){
 // ISS: orbit from CelesTrak (via the Worker), passes computed in the browser with satellite.js
 let satLibP = null;
 const loadSatLib = () => satLibP || (satLibP = new Promise((res, rej) => { if (window.satellite) return res(window.satellite);
-  const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js'; sc.onload = () => res(window.satellite); sc.onerror = rej; document.head.appendChild(sc); }));
+  const sc = document.createElement('script'); sc.src = 'assets/satellite.min.js'; sc.onload = () => res(window.satellite); sc.onerror = rej; document.head.appendChild(sc); }));
 async function loadIss(){
   if (!BMKG_PROXY || !state.place) return;
   const key = placeKey(state.place);
