@@ -137,6 +137,11 @@ a{color:inherit}
 .modes{display:flex;gap:8px;margin-top:22px;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:none}
 .modes button{white-space:nowrap;font-weight:600;padding:10px 15px}
 .modes button[aria-selected="true"]{background:var(--glass-on);border-color:currentColor}
+/* readable buttons on pale (cloudy, foggy, rainy, light) skies */
+.sky[data-pale="yes"]{--glass:rgba(12,30,52,.26);--glass-line:rgba(255,255,255,.34);--glass-on:rgba(12,30,52,.42)}
+.sky .pill,.sky .seg button,.sky .zodiac{text-shadow:0 1px 2px rgba(8,22,42,.35)}
+/* the selected mode is always clear: solid white with dark text */
+.sky .modes button[aria-selected="true"]{background:#fff;color:#14263D;border-color:#fff;text-shadow:none;box-shadow:0 6px 16px rgba(8,22,42,.22)}
 .modes .mode-ico{width:22px;height:22px;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.18))}
 @media (max-width:820px){
   .modes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;overflow:visible;padding:2px 0 0}
@@ -1024,13 +1029,14 @@ function applySky(d){
     time = 'day';
     p = kind === 'storm' ? ['#2C3A4C','#465A70','#748A9F']
       : wet ? ['#3A5068','#587089','#93A8BC']
-      : kind === 'fog' ? ['#7E8B98','#A3AEB9','#CED6DE']
-      : grey ? ['#3E5F84','#6A8CB2','#B3C8DD']
+      : kind === 'fog' ? ['#6E7D8D','#8E9DAD','#B2BECA']
+      : grey ? ['#3A5A80','#5F80A6','#8EA8C4']
       : kind === 'partly' ? ['#0F5FC6','#3D8DE0','#94C8F2']
       : ['#0A57C2','#2F86E0','#86C3F5'];
   }
   const bi = time === 'day' ? 'day' : time === 'twilight' ? (dawn ? 'dawn' : 'dusk') : 'night';
   paintSky(p, time, bi, skyFx(time, kind, c.cloud_cover, !!c.is_day));
+  $('#sky').dataset.pale = time === 'day' && (wet || grey || kind === 'fog' || kind === 'snow') ? 'yes' : 'no';
 }
 // Animated sky: drifting clouds, sun glow, twinkling stars, falling rain, lightning, fog
 function skyFx(time, kind, cc, day){
@@ -1063,6 +1069,7 @@ function skyFx(time, kind, cc, day){
   return h;
 }
 function paintSky(p, time, bi, fx){
+  $('#sky').dataset.pale = 'no';
   $('#skyfx').innerHTML = fx != null ? fx : skyFx(time, 'clear', 0, time === 'day');
   const sky = $('#sky');
   sky.style.setProperty('--sky-top', p[0]);
