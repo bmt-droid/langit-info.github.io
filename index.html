@@ -2271,14 +2271,38 @@ function issCard(){
 const slimAstrosLocal = j => ({ count: j.count || 0, people: (j.results || []).map(a => ({ name: a.name || '', agency: (a.agency && (a.agency.abbrev || a.agency.name)) || '',
   country: (Array.isArray(a.nationality) ? (a.nationality[0] || {}).alpha_2_code : '') || '' })) });
 const flagOf = cc => /^[A-Z]{2}$/i.test(cc || '') ? String.fromCodePoint(...[...cc.toUpperCase()].map(c => 127397 + c.charCodeAt(0))) : '';
+// Space data: each visitor's browser asks The Space Devs directly (everyone has their own free allowance),
+// remembered on the device for a while; our Worker is only the backup.
+const TSD = 'https://ll.thespacedevs.com/2.3.0';
+const CREWED_RE = /crew|shenzhou|soyuz ms|gaganyaan|axiom|\bax-\d|polaris|starliner|artemis ii|inspiration4|fram2/i;
+function slimLaunchesLocal(j){
+  return (j.results || []).map(x => {
+    const conf = (x.rocket && x.rocket.configuration) || {}, m = x.mission || {}, pad = x.pad || {}, loc = pad.location || {}, lsp = x.launch_service_provider || {};
+    return { name: x.name || '', rocket: conf.full_name || conf.name || '', mission: m.name || '', type: m.type || '',
+      provider: lsp.name && lsp.name.length <= 18 ? lsp.name : (lsp.abbrev || lsp.name || ''),
+      net: x.net || null, precision: (x.net_precision && x.net_precision.abbrev) || '', status: (x.status && x.status.abbrev) || '',
+      site: loc.name || pad.name || '', country: (pad.country && pad.country.alpha_2_code) || '',
+      crewed: m.type === 'Human Exploration' || CREWED_RE.test(`${x.name} ${conf.name} ${m.name}`), src: 'tsd' };
+  });
+}
+async function spaceGet(key, maxAge, direct, slim, backup){
+  const saved = store.get(key, null);
+  if (saved && Date.now() - saved.at < maxAge) return saved.v;
+  let v = null;
+  try{ v = slim(await getJSON(direct, 10000)); }catch(e){}
+  if (!v || (Array.isArray(v) ? !v.length : !v.people.length)){ try{ v = await getJSON(backup, 10000); }catch(e){ v = null; } }
+  if (v && (Array.isArray(v) ? v.length : v.people && v.people.length)){ store.set(key, { at: Date.now(), v }); return v; }
+  return saved ? saved.v : null;   // nothing new: keep the last good copy on this device
+}
 async function loadSpace(){
   if (!BMKG_PROXY) return;
   const base = BMKG_PROXY.replace(/\/+$/, ''), now = Date.now(), jobs = [];
   if (!state.launches || now - state.launches.at > 30 * 60000)
-    jobs.push(getJSON(base + '/launches', 10000).then(list => { if (Array.isArray(list)) state.launches = { at: now, list: list.filter(x => !/^tbd$/i.test(x.mission) && !/unconfirmed|unknown/i.test(x.rocket)) }; }).catch(() => {}));
+    jobs.push(spaceGet('skyline.launches', 30 * 60000, `${TSD}/launches/upcoming/?limit=10&mode=normal&hide_recent_previous=true`, slimLaunchesLocal, base + '/launches')
+      .then(list => { if (Array.isArray(list)) state.launches = { at: now, list: list.filter(x => !/^tbd$/i.test(x.mission) && !/unconfirmed|unknown/i.test(x.rocket)) }; }));
   if (!state.astros || now - state.astros.at > 3 * 3600000)
-    jobs.push(getJSON(base + '/astros', 10000).catch(() => getJSON('https://ll.thespacedevs.com/2.3.0/astronauts/?in_space=true&limit=40&mode=normal', 10000).then(slimAstrosLocal))
-      .then(j => { if (j && Array.isArray(j.people) && j.people.length) state.astros = { at: now, ...j }; }).catch(() => {}));
+    jobs.push(spaceGet('skyline.astros', 6 * 3600000, `${TSD}/astronauts/?in_space=true&limit=40&mode=normal`, slimAstrosLocal, base + '/astros')
+      .then(j => { if (j && Array.isArray(j.people) && j.people.length) state.astros = { at: now, ...j }; }));
   if (!jobs.length) return;
   await Promise.all(jobs);
   if (state.data){ renderAstroSection(); const slot = $('#astroSlot'); if (slot) slot.innerHTML = astroChipHtml(); }
