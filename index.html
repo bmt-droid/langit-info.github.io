@@ -168,6 +168,9 @@ a{color:inherit}
 /* ---------- Sheet ---------- */
 .sheet{position:relative;margin-top:-46px;background:var(--paper);border-radius:30px 30px 0 0;padding:30px 20px calc(48px + env(safe-area-inset-bottom,0px))}
 .sheet.loading{opacity:.45;transition:opacity .2s}
+body::before{content:"";position:fixed;top:0;left:0;height:3px;width:40%;z-index:100;background:linear-gradient(90deg,transparent,#7CC4FF,#fff,transparent);transform:translateX(-100%);opacity:0;pointer-events:none}
+body.busy::before{opacity:1;animation:busybar 1.1s ease-in-out infinite}
+@keyframes busybar{from{transform:translateX(-100%)}to{transform:translateX(260%)}}
 .sheet.nodata{display:none}
 section{margin-bottom:40px}
 h2{font-family:var(--display);font-size:1.2rem;font-weight:650;letter-spacing:-.015em;margin:0 0 14px}
@@ -1125,14 +1128,10 @@ async function getJSON(url, ms = 12000){
   } finally { clearTimeout(timer); }
 }
 let loadSeq = 0;
-async function loadPlace(place, opts = {}){
-  const changed = !state.place || placeKey(state.place) !== placeKey(place);
-  state.place = place;
-  if (changed){ state.marine = null; state.farm = null; state.metar = null; state.season = null; state.sea = null; state.extraError = false; }
-  if (!opts.quiet){
-    $('#sheet').classList.add('loading');
-    if (!state.data) $('#heroArea').innerHTML = `<p class="status">${esc(t('loading', place.name))}</p>`;
-  }
+// Weather answers are kept for a few minutes per place, so switching back and forth is instant
+const wxCache = new Map(), wxInflight = new Map();
+const FRESH_MS = 10 * 60 * 1000;
+function forecastUrl(place){
   const p = new URLSearchParams({
     latitude: place.lat, longitude: place.lon, timezone: 'auto',
     forecast_days: 10, forecast_hours: 48, forecast_minutely_15: 8,
@@ -1141,27 +1140,68 @@ async function loadPlace(place, opts = {}){
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max,precipitation_sum,daylight_duration',
     minutely_15: 'precipitation'
   });
+  return 'https://api.open-meteo.com/v1/forecast?' + p;
+}
+// one shared request per place: a tap that is already loading never starts a second download
+function fetchWeather(place){
+  const k = placeKey(place);
+  if (wxInflight.has(k)) return wxInflight.get(k);
+  const fUrl = forecastUrl(place);
+  const aUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${place.lat}&longitude=${place.lon}&current=us_aqi,pm2_5,pm10&timezone=auto`;
+  const aqi = getJSON(aUrl, 8000).catch(() => null);
+  const job = getJSON(fUrl, 10000).catch(() => getJSON(fUrl, 15000)) // one automatic retry
+    .then(w => { const e = { w, a: null, at: Date.now(), aqi }; wxCache.set(k, e); aqi.then(a => { e.a = a; }); return e; })
+    .finally(() => wxInflight.delete(k));
+  wxInflight.set(k, job);
+  return job;
+}
+// warm up a favourite as soon as a finger touches it
+function prefetchPlace(place){
+  const e = wxCache.get(placeKey(place));
+  if (!e || Date.now() - e.at > FRESH_MS) fetchWeather(place).catch(() => {});
+}
+function setBusy(on){ document.body.classList.toggle('busy', !!on); }
+
+async function loadPlace(place, opts = {}){
+  const changed = !state.place || placeKey(state.place) !== placeKey(place);
+  state.place = place;
+  if (changed){ state.marine = null; state.farm = null; state.metar = null; state.season = null; state.sea = null; state.extraError = false; }
   const seq = ++loadSeq; // if the user picks another place meanwhile, this older answer is ignored
-  const fUrl = 'https://api.open-meteo.com/v1/forecast?' + p;
-  try{
-    const [w, a] = await Promise.all([
-      getJSON(fUrl, 12000).catch(() => getJSON(fUrl, 15000)), // one automatic retry
-      getJSON(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${place.lat}&longitude=${place.lon}&current=us_aqi,pm2_5,pm10&timezone=auto`, 8000).catch(() => null)
-    ]);
-    if (seq !== loadSeq) return;
-    state.data = w; state.aqi = a; state.lastRefresh = Date.now();
+  const k = placeKey(place);
+  const show = (e, animate) => {
+    state.data = e.w; state.aqi = e.a; state.lastRefresh = e.at;
     store.set('skyline.last', place);
-    render(!opts.quiet);
-    loadQuakes();
-    loadNeo();
-    loadIss();
-    ensureExtras();
+    render(animate);
+    loadQuakes(); loadNeo(); loadIss(); ensureExtras();
+    // air quality may arrive a moment later: fill in just the tiles
+    if (!e.a) e.aqi.then(a => { if (a && seq === loadSeq && state.data === e.w){ state.aqi = a; renderTiles(state.data); } });
+  };
+  const cached = wxCache.get(k);
+  if (cached && !opts.force){
+    show(cached, false);                                   // instant, from memory
+    if (Date.now() - cached.at < FRESH_MS) return;         // still fresh: no download at all
+    opts = { ...opts, quiet: true };                       // older: refresh quietly in the background
+  }
+  if (!opts.quiet){
+    setBusy(true);
+    $('#sheet').classList.add('loading');
+    if (!state.data) $('#heroArea').innerHTML = `<p class="status">${esc(t('loading', place.name))}</p>`;
+    else { const h = $('#heroArea .place'); if (h && h.firstChild) h.firstChild.nodeValue = place.name + ' '; } // show the new name right away
+  }
+  try{
+    if (opts.quiet) wxCache.delete(k);
+    const e = await fetchWeather(place);
+    if (seq !== loadSeq) return;
+    setBusy(false);
+    show(e, !opts.quiet);
   }catch(err){
-    if (opts.quiet || seq !== loadSeq) return;
+    if (seq !== loadSeq) return;
+    setBusy(false);
+    if (opts.quiet) return;
     $('#sheet').classList.remove('loading');
     if (!state.data) $('#sheet').classList.add('nodata');
     $('#heroArea').innerHTML = `<div class="status">${esc(t('error'))}<br><button class="pill" id="retry" type="button">${esc(t('retry'))}</button></div>`;
-    $('#retry').onclick = () => loadPlace(place);
+    $('#retry').onclick = () => loadPlace(place, { force: true });
   }
 }
 
@@ -2893,7 +2933,7 @@ function renderFavs(){
   const el = $('#favs');
   el.innerHTML = state.favs.filter(f => !state.place || placeKey(f) !== placeKey(state.place))
     .map(f => `<button class="pill" type="button" data-k="${placeKey(f)}">${esc(f.name)}</button>`).join('');
-  el.querySelectorAll('button').forEach(b => b.onclick = () => { const f = state.favs.find(x => placeKey(x) === b.dataset.k); if (f) loadPlace(f); });
+  el.querySelectorAll('button').forEach(b => { const f = state.favs.find(x => placeKey(x) === b.dataset.k); if (!f) return; b.onclick = () => loadPlace(f); b.addEventListener('pointerdown', () => prefetchPlace(f), { passive: true }); });
 }
 
 /* ================= Search ================= */
@@ -2906,12 +2946,41 @@ function drawList(){
   list.hidden = false; combo.setAttribute('aria-expanded', 'true');
   if (active >= 0) q.setAttribute('aria-activedescendant', 'opt' + active);
 }
+// Clean up raw place-name results: drop look-alike spellings, rank Indonesia and real towns first,
+// add the kabupaten/kota so same-named villages can be told apart, and remove duplicates
+const fold = v => String(v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const stripPrefix = v => String(v || '').replace(/^(Kota|Kabupaten|Kotamadya|Provinsi|Propinsi|Daerah Istimewa|Daerah Khusus Ibukota|Region|Oblast)\s+/i, '').trim();
+const shortAdm = v => String(v || '').replace(/^Kabupaten\s+/i, 'Kab. ').replace(/^Kotamadya\s+/i, 'Kota ').replace(/^(Provinsi|Propinsi)\s+/i, '').trim();
+const FEAT_RANK = { PPLC: 600, PPLA: 500, PPLA2: 400, PPLA3: 300, PPLA4: 200, PPLX: 150, PPL: 100 };
+function tidyPlaces(raw, term){
+  const want = fold(term);
+  const named = r => fold(stripPrefix(r.name));
+  let list = raw.filter(r => named(r).startsWith(want) || fold(r.name).startsWith(want));
+  if (!list.length) list = raw;                       // nothing starts with what was typed: keep the closest matches
+  // when Indonesian matches exist, tiny foreign villages of the same name are just clutter
+  if (list.some(r => r.country_code === 'ID')) list = list.filter(r => r.country_code === 'ID' || r.population > 0 || (FEAT_RANK[r.feature_code] ?? 0) >= 200);
+  const score = r => (r.country_code === 'ID' ? 400 : 0) + (FEAT_RANK[r.feature_code] ?? 50) + (r.population > 0 ? Math.log10(r.population) * 30 : 0) + (named(r) === want ? 40 : 0);
+  list = list.map((r, i) => ({ r, s: score(r), i })).sort((a, b) => b.s - a.s || a.i - b.i).map(x => x.r);
+  const out = [];
+  for (const r of list){
+    const name = stripPrefix(r.name) || r.name;
+    const adm2 = r.admin2 && fold(stripPrefix(r.admin2)) !== fold(name) ? shortAdm(r.admin2) : '';
+    const adm1 = fold(stripPrefix(r.admin1)) === fold(name) ? '' : shortAdm(r.admin1);
+    const region = [adm2, adm1, r.country_code === 'ID' ? '' : r.country].filter(Boolean).join(', ') || r.country || '';
+    const dup = out.some(o => (fold(o.name) === fold(name) && fold(o.region) === fold(region)) ||
+                              (fold(o.name) === fold(name) && Math.abs(o.lat - r.latitude) < 0.05 && Math.abs(o.lon - r.longitude) < 0.05));
+    if (dup) continue;
+    out.push({ name, region, lat: r.latitude, lon: r.longitude });
+    if (out.length === 6) break;
+  }
+  return out;
+}
 async function search(term){
   const id = ++reqId;
   try{
-    const j = await getJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(term)}&count=6&language=${state.lang}&format=json`);
+    const j = await getJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(term)}&count=25&language=${state.lang}&format=json`, 8000);
     if (id !== reqId) return;
-    results = (j.results || []).map(x => ({ name: x.name, region: [x.admin1, x.country].filter(Boolean).join(', '), lat: x.latitude, lon: x.longitude }));
+    results = tidyPlaces(j.results || [], term);
     active = results.length ? 0 : -1;
     drawList();
   }catch(e){ if (id === reqId){ results = []; list.innerHTML = `<li class="empty">${esc(t('searchDown'))}</li>`; list.hidden = false; } }
@@ -2930,8 +2999,11 @@ q.addEventListener('keydown', e => {
   else if (e.key === 'Enter'){ e.preventDefault(); choose(active < 0 ? 0 : active); }
   else if (e.key === 'Escape') closeList();
 });
-list.addEventListener('mousedown', e => { const li = e.target.closest('li[data-i]'); if (li){ e.preventDefault(); choose(+li.dataset.i); } });
-q.addEventListener('blur', () => setTimeout(closeList, 120));
+// pick a result: start loading on first touch, keep the keyboard from stealing the tap
+list.addEventListener('pointerdown', e => { const li = e.target.closest('li[data-i]'); if (li && results[+li.dataset.i]) prefetchPlace(results[+li.dataset.i]); });
+list.addEventListener('mousedown', e => { if (e.target.closest('li[data-i]')) e.preventDefault(); });
+list.addEventListener('click', e => { const li = e.target.closest('li[data-i]'); if (li) choose(+li.dataset.i); });
+q.addEventListener('blur', () => setTimeout(closeList, 300));
 
 /* ================= Location ================= */
 function toast(msg, ms = 5000){
@@ -3069,7 +3141,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:'){
   });
 }
 window.addEventListener('offline', () => toast(t('offline'), 6000));
-window.addEventListener('online', () => { toast(t('online'), 3000); if (state.place) loadPlace(state.place, { quiet:true }); });
+window.addEventListener('online', () => { toast(t('online'), 3000); if (state.place) loadPlace(state.place, { quiet:true, force:true }); });
 
 /* ================= Boot ================= */
 applyStatic();
@@ -3082,10 +3154,10 @@ applyStatic();
 })();
 renderModes();
 loadPlace(store.get('skyline.last', null) || DEFAULT_PLACE);
-setInterval(() => { if (!document.hidden && state.place) loadPlace(state.place, { quiet:true }); }, 15 * 60 * 1000);
+setInterval(() => { if (!document.hidden && state.place) loadPlace(state.place, { quiet:true, force:true }); }, 15 * 60 * 1000);
 setInterval(() => { const g = $('#greet'); if (g) g.innerHTML = greetHtml(); const z = $('#zodiac'); if (z) z.innerHTML = zodiacHtml(); }, 60 * 1000);
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && state.data && Date.now() - (state.lastRefresh || 0) > 10 * 60 * 1000) loadPlace(state.place, { quiet:true });
+  if (!document.hidden && state.data && Date.now() - (state.lastRefresh || 0) > 10 * 60 * 1000) loadPlace(state.place, { quiet:true, force:true });
 });
 })();
 </script>
