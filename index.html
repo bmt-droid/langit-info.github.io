@@ -12,8 +12,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Langit">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="Langit: prakiraan cuaca Indonesia per jam, mode jemuran, petani, nelayan dan wisata. Data Open-Meteo dan BMKG.">
-<title>Langit — Cuaca Indonesia</title>
+<meta name="description" content="Langit, semua yang ada di atas kita: prakiraan cuaca Indonesia per jam, mode jemuran, petani, nelayan dan wisata. Data Open-Meteo dan BMKG.">
+<title>Langit — Semua yang ada di atas kita</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -419,6 +419,10 @@ button.greet{border:0;background:none;padding:0;color:inherit;cursor:pointer;tex
 .astro-fact p{margin:0}
 .astro-sec[hidden]{display:none}
 .astro-sec .facts{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;color:var(--ink);margin-bottom:10px}
+.brand-txt{display:flex;flex-direction:column;line-height:1.05}
+.brand-tag{display:none}
+@media (min-width:820px){.brand-tag{display:block;font-family:var(--body);font-size:.72rem;font-weight:500;opacity:.8;letter-spacing:0;margin-top:2px}}
 /* icons */
 .ico{overflow:visible}
 .ico *{stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
@@ -452,7 +456,7 @@ button.greet{border:0;background:none;padding:0;color:inherit;cursor:pointer;tex
     <div class="bar">
       <div class="brand">
         <svg id="brandIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></svg>
-        Langit
+        <span class="brand-txt">Langit<span class="brand-tag" id="brandTag">Semua yang ada di atas kita</span></span>
       </div>
       <div class="search" role="combobox" aria-haspopup="listbox" aria-owns="results" aria-expanded="false" id="combo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -1125,6 +1129,7 @@ async function loadPlace(place, opts = {}){
     render(!opts.quiet);
     loadQuakes();
     loadNeo();
+    loadIss();
     ensureExtras();
   }catch(err){
     if (opts.quiet) return;
@@ -2059,6 +2064,125 @@ function seasonBlock(){
     <p class="muted small">${t('ssnNote')}</p></div>`;
 }
 
+/* ================= Planets tonight & ISS passes ================= */
+const RAD = Math.PI / 180;
+const jdDays = ms => ms / 86400000 + 2440587.5 - 2451545.0;
+function sunRaDec(ms){
+  const d = jdDays(ms), Ms = (357.529 + 0.98560028 * d) * RAD;
+  const lam = (280.459 + 0.98564736 * d + 1.915 * Math.sin(Ms) + 0.020 * Math.sin(2 * Ms)) * RAD, eps = 23.439 * RAD;
+  return { ra: Math.atan2(Math.cos(eps) * Math.sin(lam), Math.cos(lam)), dec: Math.asin(Math.sin(eps) * Math.sin(lam)), lam };
+}
+function altAz(ra, dec, ms, lat, lon){
+  const lst = ((280.46061837 + 360.98564736629 * jdDays(ms) + lon) % 360) * RAD, H = lst - ra, ph = lat * RAD;
+  const alt = Math.asin(Math.sin(ph) * Math.sin(dec) + Math.cos(ph) * Math.cos(dec) * Math.cos(H));
+  const az = Math.atan2(-Math.sin(H), Math.tan(dec) * Math.cos(ph) - Math.sin(ph) * Math.cos(H));
+  return { alt: alt / RAD, az: (az / RAD + 360) % 360 };
+}
+// JPL approximate orbital elements (J2000 + rate per century): a, e, I, L, long. perihelion, long. node
+const PLANETS = {
+  mercury:[[0.38709927,0.00000037],[0.20563593,0.00001906],[7.00497902,-0.00594749],[252.25032350,149472.67411175],[77.45779628,0.16047689],[48.33076593,-0.12534081]],
+  venus:[[0.72333566,0.00000390],[0.00677672,-0.00004107],[3.39467605,-0.00078890],[181.97909950,58517.81538729],[131.60246718,0.00268329],[76.67984255,-0.27769418]],
+  earth:[[1.00000261,0.00000562],[0.01671123,-0.00004392],[-0.00001531,-0.01294668],[100.46457166,35999.37244981],[102.93768193,0.32327364],[0,0]],
+  mars:[[1.52371034,0.00001847],[0.09339410,0.00007882],[1.84969142,-0.00813131],[-4.55343205,19140.30268499],[-23.94362959,0.44441088],[49.55953891,-0.29257343]],
+  jupiter:[[5.20288700,-0.00011607],[0.04838624,-0.00013253],[1.30439695,-0.00183714],[34.39644051,3034.74612775],[14.72847983,0.21252668],[100.47390909,0.20469106]],
+  saturn:[[9.53667594,-0.00125060],[0.05386179,-0.00050991],[2.48599187,0.00193609],[49.95424423,1222.49362201],[92.59887831,-0.41897216],[113.66242448,-0.28867794]]
+};
+function helio(name, ms){
+  const T = jdDays(ms) / 36525, el = PLANETS[name].map(([v, r]) => v + r * T);
+  const [a, e, I, L, wbar, O] = [el[0], el[1], el[2] * RAD, el[3], el[4], el[5] * RAD];
+  let M = ((L - wbar) % 360) * RAD, E = M + e * Math.sin(M);
+  for (let k = 0; k < 6; k++) E -= (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+  const x = a * (Math.cos(E) - e), y = a * Math.sqrt(1 - e * e) * Math.sin(E), w = (wbar - el[5]) * RAD;
+  const cw = Math.cos(w), sw = Math.sin(w), cO = Math.cos(O), sO = Math.sin(O), cI = Math.cos(I), sI = Math.sin(I);
+  return [(cw * cO - sw * sO * cI) * x + (-sw * cO - cw * sO * cI) * y, (cw * sO + sw * cO * cI) * x + (-sw * sO + cw * cO * cI) * y, sw * sI * x + cw * sI * y];
+}
+function planetRaDec(name, ms){
+  const p = helio(name, ms), q = helio('earth', ms), x = p[0] - q[0], y = p[1] - q[1], z = p[2] - q[2], eps = 23.43928 * RAD;
+  const ye = y * Math.cos(eps) - z * Math.sin(eps), ze = y * Math.sin(eps) + z * Math.cos(eps);
+  return { ra: Math.atan2(ye, x), dec: Math.atan2(ze, Math.hypot(x, ye)) };
+}
+const PL_INFO = {
+  venus:['Venus','Venus','✨','sangat terang, "Bintang Kejora"','very bright, the "Evening/Morning Star"'],
+  jupiter:['Jupiter','Jupiter','🟠','terang dan stabil, tidak berkelip','bright and steady, it doesn’t twinkle'],
+  mars:['Mars','Mars','🔴','kemerahan','reddish'],
+  saturn:['Saturnus','Saturn','🪐','kekuningan, cincinnya terlihat dengan teleskop kecil','yellowish, rings visible in a small telescope'],
+  mercury:['Merkurius','Mercury','⚪','dekat cakrawala, sulit dilihat','low on the horizon, tricky to spot']
+};
+function planetsTonight(){
+  const p = state.place, D = state.data.daily, now = Date.now();
+  const k = localNow().h >= 4 && now > localToMs(D.sunrise[0]) ? 0 : -1;
+  const start = Math.max(now, localToMs(D.sunset[Math.max(0, k)]) - 1800000), end = localToMs(D.sunrise[Math.max(0, k) + 1] || D.sunrise[Math.max(0, k)]) + 1800000;
+  const out = [];
+  for (const name of ['venus','jupiter','mars','saturn','mercury']){
+    let best = null, first = null, last = null;
+    for (let ms = start; ms <= end; ms += 15 * 60000){
+      const sun = sunRaDec(ms), sa = altAz(sun.ra, sun.dec, ms, p.lat, p.lon).alt;
+      if (sa > -7) continue;
+      const pr = planetRaDec(name, ms), aa = altAz(pr.ra, pr.dec, ms, p.lat, p.lon);
+      if (aa.alt < (name === 'mercury' ? 5 : 10)) continue;
+      if (!first) first = { ms, ...aa };
+      last = { ms, ...aa };
+      if (!best || aa.alt > best.alt) best = { ms, ...aa };
+    }
+    if (best) out.push({ name, first, last, best });
+  }
+  return out;
+}
+function planetCard(){
+  const L = state.lang === 'id', list = planetsTonight();
+  const hm = ms => clockStr(msToLocal(ms));
+  const where = aa => aa.alt > 70 ? (L ? 'hampir tepat di atas kepala' : 'almost overhead') : `${L ? 'di langit' : 'in the'} ${dir8(aa.az)}${L ? '' : ' sky'}, ${L ? 'ketinggian' : 'about'} ${Math.round(aa.alt)}°`;
+  const rows = list.map(x => { const i = PL_INFO[x.name];
+    return `<li><span class="hi-ic">${i[2]}</span><span><b>${L ? i[0] : i[1]}</b> <small class="muted">${x.last.ms - x.first.ms < 45 * 60000 ? (L ? 'sebentar, sekitar ' : 'briefly, around ') + hm(x.first.ms) : hm(x.first.ms) + '–' + hm(x.last.ms)}</small><br><small>${L ? 'Terbaik sekitar' : 'Best around'} ${hm(x.best.ms)}, ${esc(where(x.best))}.</small><br><small class="muted">${esc(L ? i[3] : i[4])}</small></span></li>`; }).join('');
+  const note = L ? 'Planet terlihat seperti bintang terang yang tidak berkelip. Dihitung untuk lokasi ini; awan bisa menghalangi.' : 'Planets look like bright stars that don’t twinkle. Calculated for this place; clouds may block the view.';
+  return `<div class="fact"><h3>${L ? '🪐 Planet malam ini' : '🪐 Planets tonight'}</h3>${rows ? `<ul class="hol-list">${rows}</ul>` : `<p>${L ? 'Tidak ada planet terang yang tinggi di langit malam ini.' : 'No bright planets high in the sky tonight.'}</p>`}<p class="muted small">${note}</p></div>`;
+}
+
+// ISS: orbit from CelesTrak (via the Worker), passes computed in the browser with satellite.js
+let satLibP = null;
+const loadSatLib = () => satLibP || (satLibP = new Promise((res, rej) => { if (window.satellite) return res(window.satellite);
+  const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js'; sc.onload = () => res(window.satellite); sc.onerror = rej; document.head.appendChild(sc); }));
+async function loadIss(){
+  if (!BMKG_PROXY || !state.place) return;
+  const key = placeKey(state.place);
+  if (state.iss && state.iss.key === key && Date.now() - state.iss.at < 3 * 3600000) return;
+  try{
+    const [lib, txt] = await Promise.all([loadSatLib(), fetch(BMKG_PROXY.replace(/\/+$/, '') + '/iss').then(r => r.ok ? r.text() : Promise.reject())]);
+    const lines = txt.split(/\r?\n/).map(x => x.trim()).filter(Boolean), l1 = lines.find(x => x.startsWith('1 ')), l2 = lines.find(x => x.startsWith('2 '));
+    if (!l1 || !l2) return;
+    state.iss = { key, at: Date.now(), passes: issPasses(lib, lib.twoline2satrec(l1, l2), state.place) };
+    renderAstroSection();
+  }catch(e){ /* ISS card stays hidden */ }
+}
+function issPasses(sat, rec, p){
+  const obs = { latitude: p.lat * RAD, longitude: p.lon * RAD, height: 0.05 }, out = [], step = 20000, now = Date.now();
+  let cur = null;
+  for (let ms = now; ms < now + 4 * 86400000 && out.length < 4; ms += step){
+    const dt = new Date(ms), pv = sat.propagate(rec, dt); if (!pv.position) continue;
+    const g = sat.gstime(dt), look = sat.ecfToLookAngles(obs, sat.eciToEcf(pv.position, g)), el = look.elevation / RAD;
+    if (el >= 10){
+      if (!cur) cur = { start: ms, az0: look.azimuth / RAD, max: el, maxMs: ms, pos: pv.position };
+      if (el > cur.max){ cur.max = el; cur.maxMs = ms; cur.pos = pv.position; }
+      cur.end = ms; cur.az1 = look.azimuth / RAD;
+    } else if (cur){
+      const sun = sunRaDec(cur.maxMs), dark = altAz(sun.ra, sun.dec, cur.maxMs, p.lat, p.lon).alt < -6;
+      const sh = [Math.cos(sun.dec) * Math.cos(sun.ra), Math.cos(sun.dec) * Math.sin(sun.ra), Math.sin(sun.dec)], r = [cur.pos.x, cur.pos.y, cur.pos.z];
+      const dot = r[0] * sh[0] + r[1] * sh[1] + r[2] * sh[2], perp = Math.hypot(r[0] - dot * sh[0], r[1] - dot * sh[1], r[2] - dot * sh[2]);
+      const lit = !(dot < 0 && perp < 6371);
+      if (dark && lit && cur.max >= 20) out.push(cur);
+      cur = null;
+    }
+  }
+  return out;
+}
+function issCard(){
+  if (!state.iss || state.iss.key !== placeKey(state.place)) return '';
+  const L = state.lang === 'id', ps = state.iss.passes.slice(0, 3);
+  const rows = ps.map(x => { const st = msToLocal(x.start), mins = Math.max(1, Math.round((x.end - x.start) / 60000));
+    return `<li><span class="hi-ic">🛰️</span><span><b>${esc(dayLabel(st))} ${clockStr(st)}</b> <small class="muted">(${mins} ${L ? 'menit' : 'min'})</small><br><small>${L ? `Muncul dari ${dir8(x.az0)}, setinggi ${Math.round(x.max)}°, hilang ke ${dir8(x.az1)}.` : `Appears from the ${dir8(x.az0)}, up to ${Math.round(x.max)}°, disappears to the ${dir8(x.az1)}.`}</small></span></li>`; }).join('');
+  return `<div class="fact"><h3>${L ? '🛰️ ISS lewat' : '🛰️ ISS passes'}</h3>${rows ? `<ul class="hol-list">${rows}</ul>` : `<p>${L ? 'Tidak ada lintasan ISS yang terlihat dalam 4 hari ke depan.' : 'No visible ISS passes in the next 4 days.'}</p>`}<p class="muted small">${L ? 'Stasiun Luar Angkasa Internasional terlihat seperti titik terang yang bergerak cepat tanpa berkedip. Data orbit: CelesTrak.' : 'The International Space Station looks like a bright dot moving fast without blinking. Orbit data: CelesTrak.'}</p></div>`;
+}
+
 /* ================= Astronomy: eclipses, supermoon, meteor showers, asteroids ================= */
 // Eclipses 2027–2028 (UTC date). vis: 'yes' visible from Indonesia, 'part' partly/some regions, 'no'
 const ECLIPSES = [
@@ -2159,7 +2283,7 @@ const sizeCompare = m => { const L = state.lang === 'id'; if (m == null) return 
 function renderAstroSection(){
   const sec = $('#astroSec'); if (!sec || !state.data) return;
   $('#h-astro').textContent = state.lang === 'id' ? '🌌 Langit malam & antariksa' : '🌌 Night sky & space';
-  const html = safeExtra(moonCard) + safeExtra(astroCard);
+  const html = safeExtra(moonCard) + safeExtra(planetCard) + safeExtra(issCard) + safeExtra(astroCard);
   $('#astroBody').innerHTML = html;
   sec.hidden = !html;
 }
@@ -2722,11 +2846,12 @@ $('#locate').onclick = locateMe;
 /* ================= Language & units ================= */
 function applyStatic(){
   document.documentElement.lang = state.lang;
+  if ($('#brandTag')) $('#brandTag').textContent = state.lang === 'id' ? 'Semua yang ada di atas kita' : 'Everything above us';
   q.placeholder = t('search'); q.setAttribute('aria-label', t('search'));
   $('#locate span').textContent = t('locate'); $('#locate').setAttribute('aria-label', t('locate'));
   $('#h-hourly').textContent = t('h48'); $('#h-daily').textContent = t('d10'); $('#h-now').textContent = t('cond');
   $('#hourly').setAttribute('aria-label', t('hourlyLabel'));
-  $('#footer').innerHTML = `<p class="credits">${t('footer')}</p><p class="copy">&copy; ${new Date().getFullYear()} BMT | Berkat Maha Tinggi</p>`;
+  $('#footer').innerHTML = `<p class="tagline">${state.lang === 'id' ? '☁️ Langit — Semua yang ada di atas kita' : '☁️ Langit — Everything above us'}</p><p class="credits">${t('footer')}</p><p class="copy">&copy; ${new Date().getFullYear()} BMT | Berkat Maha Tinggi</p>`;
   if (typeof renderInstallLink === 'function') renderInstallLink();
   document.querySelectorAll('#langSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === state.lang));
   document.querySelectorAll('#unitSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.u === state.units));

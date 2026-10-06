@@ -1,7 +1,7 @@
 {
   "name": "Langit",
   "short_name": "Langit",
-  "description": "Prakiraan cuaca Indonesia dengan mode Jemuran, Petani, Nelayan, Wisata dan Golf. Data Open-Meteo dan BMKG.",
+  "description": "Langit — Semua yang ada di atas kita. Cuaca Indonesia dengan mode Jemuran, Petani, Nelayan, Wisata dan Golf, plus gempa BMKG dan langit malam.",
   "lang": "id",
   "dir": "ltr",
   "start_url": "./",
