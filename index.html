@@ -2949,16 +2949,34 @@ function drawList(){
 // Clean up raw place-name results: drop look-alike spellings, rank Indonesia and real towns first,
 // add the kabupaten/kota so same-named villages can be told apart, and remove duplicates
 const fold = v => String(v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-const stripPrefix = v => String(v || '').replace(/^(Kota|Kabupaten|Kotamadya|Provinsi|Propinsi|Daerah Istimewa|Daerah Khusus Ibukota|Region|Oblast)\s+/i, '').trim();
-const shortAdm = v => String(v || '').replace(/^Kabupaten\s+/i, 'Kab. ').replace(/^Kotamadya\s+/i, 'Kota ').replace(/^(Provinsi|Propinsi)\s+/i, '').trim();
+const stripPrefix = v => String(v || '').replace(/^(Kota|Kabupaten|Kotamadya|Provinsi|Propinsi|Daerah Tingkat I{1,2}|Daerah Istimewa|Daerah Khusus Ibukota|Region|Oblast)\s+/i, '').trim();
+const shortAdm = v => String(v || '').replace(/^Kabupaten\s+/i, 'Kab. ').replace(/^Kotamadya\s+/i, 'Kota ').replace(/^(Provinsi|Propinsi|Daerah Tingkat I{1,2})\s+/i, '').trim();
 const FEAT_RANK = { PPLC: 600, PPLA: 500, PPLA2: 400, PPLA3: 300, PPLA4: 200, PPLX: 150, PPL: 100 };
+// Famous islands and destinations that the place database lists poorly (or only as a region),
+// shown first when they match what is typed
+const POPULAR = [
+  ['Bali', 'Pulau Bali (Denpasar)', -8.65, 115.22], ['Ubud', 'Kab. Gianyar, Bali', -8.507, 115.263],
+  ['Canggu', 'Kab. Badung, Bali', -8.648, 115.138], ['Seminyak', 'Kab. Badung, Bali', -8.69, 115.165],
+  ['Nusa Dua', 'Kab. Badung, Bali', -8.80, 115.23], ['Uluwatu', 'Kab. Badung, Bali', -8.829, 115.085],
+  ['Nusa Penida', 'Kab. Klungkung, Bali', -8.727, 115.544], ['Lombok', 'Pulau Lombok (Mataram)', -8.583, 116.116],
+  ['Gili Trawangan', 'Kab. Lombok Utara, NTB', -8.351, 116.038], ['Mandalika', 'Kab. Lombok Tengah, NTB', -8.895, 116.29],
+  ['Labuan Bajo', 'Kab. Manggarai Barat, NTT', -8.496, 119.888], ['Pulau Komodo', 'Kab. Manggarai Barat, NTT', -8.55, 119.45],
+  ['Raja Ampat', 'Papua Barat Daya (Waisai)', -0.43, 130.82], ['Gunung Bromo', 'Jawa Timur', -7.942, 112.953],
+  ['Kawah Ijen', 'Kab. Banyuwangi, Jawa Timur', -8.058, 114.242], ['Danau Toba', 'Sumatera Utara (Parapat)', 2.663, 98.937],
+  ['Belitung', 'Pulau Belitung (Tanjung Pandan)', -2.74, 107.63], ['Bunaken', 'Kota Manado, Sulawesi Utara', 1.62, 124.76],
+  ['Wakatobi', 'Sulawesi Tenggara', -5.32, 123.54], ['Karimunjawa', 'Kab. Jepara, Jawa Tengah', -5.84, 110.46],
+  ['Dieng', 'Kab. Wonosobo, Jawa Tengah', -7.21, 109.91], ['Borobudur', 'Kab. Magelang, Jawa Tengah', -7.608, 110.204],
+  ['Puncak Bogor', 'Kab. Bogor, Jawa Barat', -6.70, 106.99], ['Lembang', 'Kab. Bandung Barat, Jawa Barat', -6.81, 107.62],
+  ['Kepulauan Seribu', 'DKI Jakarta (Pulau Pramuka)', -5.745, 106.614], ['Derawan', 'Kab. Berau, Kalimantan Timur', 2.29, 118.25],
+].map(([name, region, lat, lon]) => ({ name, region, lat, lon }));
+const popularMatches = term => { const w = fold(term); return w.length < 2 ? [] : POPULAR.filter(p => fold(p.name).startsWith(w) || fold(p.name).split(' ').some(x => x.startsWith(w))); };
 function tidyPlaces(raw, term){
   const want = fold(term);
   const named = r => fold(stripPrefix(r.name));
   let list = raw.filter(r => named(r).startsWith(want) || fold(r.name).startsWith(want));
   if (!list.length) list = raw;                       // nothing starts with what was typed: keep the closest matches
   // when Indonesian matches exist, tiny foreign villages of the same name are just clutter
-  if (list.some(r => r.country_code === 'ID')) list = list.filter(r => r.country_code === 'ID' || r.population > 0 || (FEAT_RANK[r.feature_code] ?? 0) >= 200);
+  if (list.some(r => r.country_code === 'ID')) list = list.filter(r => r.country_code === 'ID' || r.population >= 100000 || (FEAT_RANK[r.feature_code] ?? 0) >= 400);
   const score = r => (r.country_code === 'ID' ? 400 : 0) + (FEAT_RANK[r.feature_code] ?? 50) + (r.population > 0 ? Math.log10(r.population) * 30 : 0) + (named(r) === want ? 40 : 0);
   list = list.map((r, i) => ({ r, s: score(r), i })).sort((a, b) => b.s - a.s || a.i - b.i).map(x => x.r);
   const out = [];
@@ -2980,10 +2998,12 @@ async function search(term){
   try{
     const j = await getJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(term)}&count=25&language=${state.lang}&format=json`, 8000);
     if (id !== reqId) return;
-    results = tidyPlaces(j.results || [], term);
+    const pop = popularMatches(term);
+    const clean = tidyPlaces(j.results || [], term).filter(r => !pop.some(p => fold(p.name) === fold(r.name) && Math.abs(p.lat - r.lat) < 0.2 && Math.abs(p.lon - r.lon) < 0.2));
+    results = [...pop, ...clean].slice(0, 6);
     active = results.length ? 0 : -1;
     drawList();
-  }catch(e){ if (id === reqId){ results = []; list.innerHTML = `<li class="empty">${esc(t('searchDown'))}</li>`; list.hidden = false; } }
+  }catch(e){ if (id === reqId){ results = popularMatches(term); if (results.length){ active = 0; drawList(); } else { list.innerHTML = `<li class="empty">${esc(t('searchDown'))}</li>`; list.hidden = false; } } }
 }
 function choose(i){ const r = results[i]; if (!r) return; q.value = ''; closeList(); q.blur(); loadPlace(r); }
 q.addEventListener('input', () => {
