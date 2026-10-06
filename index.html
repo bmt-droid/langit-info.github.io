@@ -435,6 +435,7 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
 @media (min-width:820px){.brand-tag{display:block;font-family:var(--body);font-size:.72rem;font-weight:500;opacity:.8;letter-spacing:0;margin-top:2px}}
 .plane-btn{justify-self:start;align-self:flex-start;margin-top:8px;border:0;border-radius:999px;padding:10px 16px;font-weight:700;background:#0A57C2;color:#fff}
 .fl-tag{display:inline-block;margin-top:4px;padding:2px 9px;border-radius:999px;background:var(--soft);font-size:.8rem;font-weight:600}
+.st-good{color:var(--good);font-weight:600}.st-ok{color:var(--ok);font-weight:600}.st-poor{color:var(--poor);font-weight:600}.st-bad{color:var(--bad);font-weight:600}
 .plane-sec[hidden]{display:none}
 .plane-sec #planeCard{border-top:0;padding-top:0;max-width:640px}
 /* icons */
@@ -1172,7 +1173,7 @@ async function loadPlace(place, opts = {}){
     state.data = e.w; state.aqi = e.a; state.lastRefresh = e.at;
     store.set('skyline.last', place);
     render(animate);
-    loadQuakes(); loadNeo(); loadIss(); ensureExtras();
+    loadQuakes(); loadNeo(); loadIss(); loadSpace(); ensureExtras();
     // air quality may arrive a moment later: fill in just the tiles
     if (!e.a) e.aqi.then(a => { if (a && seq === loadSeq && state.data === e.w){ state.aqi = a; renderTiles(state.data); } });
   };
@@ -2216,13 +2217,22 @@ async function loadIss(){
   if (!BMKG_PROXY || !state.place) return;
   const key = placeKey(state.place);
   if (state.iss && state.iss.key === key && Date.now() - state.iss.at < 3 * 3600000) return;
+  const base = BMKG_PROXY.replace(/\/+$/, '');
+  const tle = path => fetch(base + path).then(r => r.ok ? r.text() : Promise.reject()).then(txt => {
+    const lines = txt.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+    const l1 = lines.find(x => x.startsWith('1 ')), l2 = lines.find(x => x.startsWith('2 '));
+    return l1 && l2 ? [l1, l2] : null;
+  }).catch(() => null);
   try{
-    const [lib, txt] = await Promise.all([loadSatLib(), fetch(BMKG_PROXY.replace(/\/+$/, '') + '/iss').then(r => r.ok ? r.text() : Promise.reject())]);
-    const lines = txt.split(/\r?\n/).map(x => x.trim()).filter(Boolean), l1 = lines.find(x => x.startsWith('1 ')), l2 = lines.find(x => x.startsWith('2 '));
-    if (!l1 || !l2) return;
-    state.iss = { key, at: Date.now(), passes: issPasses(lib, lib.twoline2satrec(l1, l2), state.place) };
+    const [lib, iss, css] = await Promise.all([loadSatLib(), tle('/iss'), tle('/css')]);
+    if (!iss && !css) return;
+    const passes = [];
+    if (iss) issPasses(lib, lib.twoline2satrec(iss[0], iss[1]), state.place).forEach(x => passes.push({ ...x, st: 'ISS' }));
+    if (css) issPasses(lib, lib.twoline2satrec(css[0], css[1]), state.place).forEach(x => passes.push({ ...x, st: 'Tiangong' }));
+    passes.sort((a, b) => a.start - b.start);
+    state.iss = { key, at: Date.now(), passes, has: { iss: !!iss, css: !!css } };
     renderAstroSection();
-  }catch(e){ /* ISS card stays hidden */ }
+  }catch(e){ /* station card stays hidden */ }
 }
 function issPasses(sat, rec, p){
   const obs = { latitude: p.lat * RAD, longitude: p.lon * RAD, height: 0.05 }, out = [], step = 20000, now = Date.now();
@@ -2247,10 +2257,64 @@ function issPasses(sat, rec, p){
 }
 function issCard(){
   if (!state.iss || state.iss.key !== placeKey(state.place)) return '';
-  const L = state.lang === 'id', ps = state.iss.passes.slice(0, 3);
+  const L = state.lang === 'id', ps = state.iss.passes.slice(0, 4);
   const rows = ps.map(x => { const st = msToLocal(x.start), mins = Math.max(1, Math.round((x.end - x.start) / 60000));
-    return `<li><span class="hi-ic">🛰️</span><span><b>${esc(dayLabel(st))} ${clockStr(st)}</b> <small class="muted">(${mins} ${L ? 'menit' : 'min'})</small><br><small>${L ? `Muncul dari ${dir8(x.az0)}, setinggi ${Math.round(x.max)}°, hilang ke ${dir8(x.az1)}.` : `Appears from the ${dir8(x.az0)}, up to ${Math.round(x.max)}°, disappears to the ${dir8(x.az1)}.`}</small></span></li>`; }).join('');
-  return `<div class="fact"><h3>${L ? '🛰️ ISS lewat' : '🛰️ ISS passes'}</h3>${rows ? `<ul class="hol-list">${rows}</ul>` : `<p>${L ? 'Tidak ada lintasan ISS yang terlihat dalam 4 hari ke depan.' : 'No visible ISS passes in the next 4 days.'}</p>`}<p class="muted small">${L ? 'Stasiun Luar Angkasa Internasional terlihat seperti titik terang yang bergerak cepat tanpa berkedip. Data orbit: CelesTrak.' : 'The International Space Station looks like a bright dot moving fast without blinking. Orbit data: CelesTrak.'}</p></div>`;
+    const nm = x.st === 'ISS' ? (L ? 'ISS' : 'ISS') : (L ? 'Tiangong (Tiongkok)' : 'Tiangong (China)');
+    return `<li><span class="hi-ic">${x.st === 'ISS' ? '🛰️' : '🏯'}</span><span><b>${esc(dayLabel(st))} ${clockStr(st)}</b> <small class="muted">· ${nm} · ${mins} ${L ? 'menit' : 'min'}</small><br><small>${L ? `Muncul dari ${dir8(x.az0)}, setinggi ${Math.round(x.max)}°, hilang ke ${dir8(x.az1)}.` : `Appears from the ${dir8(x.az0)}, up to ${Math.round(x.max)}°, disappears to the ${dir8(x.az1)}.`}</small></span></li>`; }).join('');
+  return `<div class="fact"><h3>${L ? '🛰️ Stasiun luar angkasa lewat' : '🛰️ Space station passes'}</h3>${rows ? `<ul class="hol-list">${rows}</ul>` : `<p>${L ? 'Tidak ada lintasan ISS atau Tiangong yang terlihat dalam 4 hari ke depan.' : 'No visible ISS or Tiangong passes in the next 4 days.'}</p>`}<p class="muted small">${L ? 'ISS (internasional) dan Tiangong (milik Tiongkok) terlihat seperti titik terang yang bergerak cepat tanpa berkedip, paling mudah dilihat setelah senja atau sebelum subuh. Data orbit: CelesTrak.' : 'The ISS and China’s Tiangong look like bright dots moving fast without blinking, best seen after dusk or before dawn. Orbit data: CelesTrak.'}</p></div>`;
+}
+
+/* ================= Rockets and people in space (The Space Devs, via the Worker) ================= */
+const flagOf = cc => /^[A-Z]{2}$/i.test(cc || '') ? String.fromCodePoint(...[...cc.toUpperCase()].map(c => 127397 + c.charCodeAt(0))) : '';
+async function loadSpace(){
+  if (!BMKG_PROXY) return;
+  const base = BMKG_PROXY.replace(/\/+$/, ''), now = Date.now(), jobs = [];
+  if (!state.launches || now - state.launches.at > 30 * 60000)
+    jobs.push(getJSON(base + '/launches', 10000).then(list => { if (Array.isArray(list)) state.launches = { at: now, list }; }).catch(() => {}));
+  if (!state.astros || now - state.astros.at > 3 * 3600000)
+    jobs.push(getJSON(base + '/astros', 10000).then(j => { if (j && Array.isArray(j.people)) state.astros = { at: now, ...j }; }).catch(() => {}));
+  if (!jobs.length) return;
+  await Promise.all(jobs);
+  if (state.data){ renderAstroSection(); const slot = $('#astroSlot'); if (slot) slot.innerHTML = astroChipHtml(); }
+}
+const LAUNCH_STATUS = {
+  Go: ['Siap meluncur', 'Go for launch', 'good'], TBC: ['Menunggu konfirmasi', 'To be confirmed', 'ok'], TBD: ['Jadwal belum pasti', 'Date not set', 'ok'],
+  Hold: ['Ditahan sementara', 'On hold', 'poor'], 'In Flight': ['Sedang terbang', 'In flight', 'good'], Success: ['Berhasil', 'Success', 'good'],
+  Failure: ['Gagal', 'Failed', 'bad'], 'Partial Failure': ['Gagal sebagian', 'Partial failure', 'bad'],
+};
+const launchLeft = (ms, L) => { const m = Math.round((ms - Date.now()) / 60000);
+  if (m <= 0) return L ? 'sedang berlangsung' : 'happening now';
+  if (m >= 48 * 60) return L ? `${Math.round(m / 1440)} hari lagi` : `in ${Math.round(m / 1440)} days`;
+  if (m >= 24 * 60){ const hh = Math.round((m - 1440) / 60); return L ? `1 hari ${hh} jam lagi` : `in 1 day ${hh} h`; }
+  const h = Math.floor(m / 60), mm = m % 60; return L ? `${h ? h + ' jam ' : ''}${mm} menit lagi` : `in ${h ? h + ' h ' : ''}${mm} min`; };
+function upcomingLaunches(){
+  if (!state.launches) return [];
+  const now = Date.now();
+  return state.launches.list.filter(x => x.net && Date.parse(x.net) > now - 2 * 3600000 && !/^(Success|Failure|Partial Failure)$/.test(x.status));
+}
+function launchCard(){
+  const list = upcomingLaunches().slice(0, 4); if (!list.length) return '';
+  const L = state.lang === 'id';
+  const rows = list.map(x => {
+    const ms = Date.parse(x.net), loc = msToLocal(ms), exact = /^(SEC|MIN|HR|H)$/.test(x.precision);
+    const dd = dayDiff(loc), when = exact ? `${dd >= 0 && dd <= 1 ? dayLabel(loc) : longDate(loc)} ${clockStr(loc)}` : (L ? 'sekitar ' : 'around ') + longDate(loc);
+    const st = LAUNCH_STATUS[x.status] || [x.status, x.status, 'ok'];
+    const title = x.mission || (x.name.split('|')[1] || x.name).trim();
+    return `<li><span class="hi-ic">${x.crewed ? '🧑‍🚀' : '🚀'}</span><span><b>${esc(title)}</b>${x.crewed ? ` <small class="fl-tag">${L ? 'berawak' : 'crewed'}</small>` : ''}<br>
+      <small>${esc(x.rocket)}${x.provider ? ' · ' + esc(x.provider) : ''}</small><br>
+      <small>${esc(when)}${exact ? ` · <span class="lcd" data-to="${ms}">${esc(launchLeft(ms, L))}</span>` : ''}</small><br>
+      <small class="muted">${flagOf(x.country)} ${esc(x.site)} · <span class="st-${st[2]}">${esc(L ? st[0] : st[1])}</span></small></span></li>`;
+  }).join('');
+  return `<div class="fact"><h3>${L ? '🚀 Peluncuran roket berikutnya' : '🚀 Next rocket launches'}</h3><ul class="hol-list">${rows}</ul><p class="muted small">${L ? 'Waktu sesuai zona waktu lokasi ini. Jadwal peluncuran sering bergeser karena cuaca atau teknis. Data: The Space Devs.' : 'Times are in this location’s time zone. Launch times often shift for weather or technical reasons. Data: The Space Devs.'}</p></div>`;
+}
+function astrosCard(){
+  const A = state.astros; if (!A || !A.people.length) return '';
+  const L = state.lang === 'id';
+  const cn = p => /^(CMSA|CNSA)$/i.test(p.agency) || p.country === 'CN';
+  const groups = [['ISS', A.people.filter(p => !cn(p))], ['Tiangong', A.people.filter(cn)]].filter(g => g[1].length);
+  const rows = groups.map(([st, ps]) => `<li><span class="hi-ic">${st === 'ISS' ? '🛰️' : '🏯'}</span><span><b>${st}</b> <small class="muted">· ${ps.length} ${L ? 'orang' : ps.length > 1 ? 'people' : 'person'}</small><br><small>${ps.map(p => `${flagOf(p.country)} ${esc(p.name)}`).join(', ')}</small></span></li>`).join('');
+  const n = A.people.length;
+  return `<div class="fact"><h3>${L ? '🧑‍🚀 Orang di luar angkasa' : '🧑‍🚀 People in space'}</h3><div class="val">${n} <small>${L ? 'orang saat ini' : n > 1 ? 'people right now' : 'person right now'}</small></div><ul class="hol-list">${rows}</ul><p class="muted small">${L ? 'Pembagian stasiun diperkirakan dari badan antariksanya. Data: The Space Devs.' : 'Station grouping is estimated from each person’s space agency. Data: The Space Devs.'}</p></div>`;
 }
 
 /* ================= Planes overhead (tap to load) ================= */
@@ -2397,7 +2461,7 @@ function astroInfo(){
   const met = METEORS.map(m => ({ m, day: `${today.slice(5) <= m[0] ? y : y + 1}-${m[0]}` })).sort((a, b) => a.day < b.day ? -1 : 1)[0];
   return { today, peri, superFull, ecl, eclVis, met, L };
 }
-const dayDiff = s => Math.round((Date.parse(s + 'T00:00Z') - Date.parse(msToLocal(Date.now()).slice(0, 10) + 'T00:00Z')) / 86400000);
+const dayDiff = s => Math.round((Date.parse(String(s).slice(0, 10) + 'T00:00Z') - Date.parse(msToLocal(Date.now()).slice(0, 10) + 'T00:00Z')) / 86400000);
 const longDate = s => new Date(s.slice(0, 10) + 'T12:00:00Z').toLocaleDateString(locale(), { weekday:'long', day:'numeric', month:'long', year: s.slice(0, 4) === String(new Date().getFullYear()) ? undefined : 'numeric', timeZone:'UTC' });
 const inDays = n => state.lang === 'id' ? (n === 0 ? 'hari ini' : n === 1 ? 'besok' : `${n} hari lagi`) : (n === 0 ? 'today' : n === 1 ? 'tomorrow' : `in ${n} days`);
 
@@ -2412,6 +2476,8 @@ function astroChipHtml(){
   else if (a.met && a.met.m[3] && dayDiff(a.met.day) === 0){ ic = '☄️'; txt = L ? `Puncak hujan meteor ${a.met.m[1]}` : `${a.met.m[1]} meteor shower peaks`; }
   else if (a.peri && dayDiff(msToLocal(a.peri.ms)) === 0){ ic = '🔭'; txt = L ? 'Bulan paling dekat hari ini' : 'Moon at its closest today'; }
   else if (neo && neo.ld < 1 && Math.abs(dayDiff(neo.date)) <= 1){ ic = '☄️'; txt = L ? 'Asteroid melintas dekat' : 'Asteroid passing close'; }
+  else { const cr = upcomingLaunches().find(x => x.crewed && /^(SEC|MIN|HR|H)$/.test(x.precision) && dayDiff(msToLocal(Date.parse(x.net))) === 0);
+    if (cr){ ic = '🧑‍🚀'; txt = L ? 'Peluncuran berawak hari ini' : 'Crewed launch today'; } }
   if (!txt) return '';
   return `<button type="button" class="zodiac astrochip" id="astrochip"><span class="mi">${ic}</span>${esc(txt)}</button>`;
 }
@@ -2447,7 +2513,7 @@ const sizeCompare = m => { const L = state.lang === 'id'; if (m == null) return 
 function renderAstroSection(){
   const sec = $('#astroSec'); if (!sec || !state.data) return;
   $('#h-astro').textContent = state.lang === 'id' ? '🌌 Langit malam & antariksa' : '🌌 Night sky & space';
-  const html = safeExtra(moonCard) + safeExtra(planetCard) + safeExtra(issCard) + safeExtra(astroCard);
+  const html = safeExtra(moonCard) + safeExtra(planetCard) + safeExtra(issCard) + safeExtra(launchCard) + safeExtra(astrosCard) + safeExtra(astroCard);
   $('#astroBody').innerHTML = html;
   sec.hidden = !html;
 }
@@ -2646,6 +2712,7 @@ const safeExtra = fn => { try{ return fn(); }catch(e){ console.warn('Langit extr
 
 // countdown chips update themselves every 30 seconds
 function tickCountdowns(){
+  document.querySelectorAll('.lcd[data-to]').forEach(el => { el.textContent = launchLeft(+el.dataset.to, state.lang === 'id'); });
   document.querySelectorAll('.countdown[data-to]').forEach(el => {
     const left = Math.round((+el.dataset.to - Date.now()) / 60000);
     el.textContent = left <= 0 ? t('cdNow') : t('cd', Math.floor(left / 60), left % 60);
