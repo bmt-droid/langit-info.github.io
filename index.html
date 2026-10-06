@@ -644,7 +644,7 @@ id: {
   gfGood:'Cuaca ideal untuk golf', gfOk:'Masih bisa main, siapkan diri', gfBad:'Kurang cocok main sekarang', gfStorm:'Ada petir, jangan ke lapangan', gfNight:'Lapangan sudah gelap',
   gfGoodSub:'Angin tenang dan tidak ada hujan dalam beberapa jam ke depan.', gfOkSub:'Ada angin, panas atau peluang hujan. Bawa payung dan air.', gfBadSub:'Hujan atau angin kencang akan mengganggu permainan.',
   gfStormSub:'Hujan petir diperkirakan dalam 6 jam. Petir sangat berbahaya di lapangan terbuka, segera cari tempat berlindung jika terdengar guntur.', gfNightSub:'Matahari sudah terbenam.',
-  gfTee:(w,e)=>`Tee time terbaik untuk 18 hole: ${w}, selesai sekitar pukul ${e}.`, gfAlt:w=>`Alternatif: ${w}.`, gfNoTee:'Belum ada waktu yang nyaman untuk 18 hole dalam 36 jam ke depan.',
+  gfTee:(w,e)=>`Tee time terbaik untuk 18 hole: ${w}, selesai sekitar pukul ${e}.`, gfAlt:w=>`Alternatif: ${w}.`, gfAltBetter:w=>`Lebih sejuk dan nyaman: ${w}.`, gfNoTee:'Belum ada waktu yang nyaman untuk 18 hole dalam 36 jam ke depan.',
   gfWind:'Angin dan pilihan klub', gfWindV:(sp,d)=>`${sp} dari ${d}`, gfClub0:'Angin hampir tidak berpengaruh pada pukulan.',
   gfClub:(h,tl)=>`Melawan angin, tambah sekitar ${h} klub. Searah angin, kurangi sekitar ${tl} klub, karena angin dari belakang membantu lebih sedikit daripada angin dari depan menghambat.`,
   clubWords:{0.5:'setengah',1:'1',1.5:'satu setengah',2:'2',2.5:'dua setengah',3:'3'},
@@ -733,7 +733,7 @@ en: {
   gfGood:'Ideal golf weather', gfOk:'Playable, come prepared', gfBad:'Not great for a round right now', gfStorm:'Lightning risk, stay off the course', gfNight:'The course is dark',
   gfGoodSub:'Light wind and no rain for the next few hours.', gfOkSub:'Some wind, heat or a chance of rain. Bring an umbrella and water.', gfBadSub:'Rain or strong wind will spoil the round.',
   gfStormSub:'Thunderstorms are expected within 6 hours. Lightning is very dangerous on open courses; take shelter as soon as you hear thunder.', gfNightSub:'The sun has set.',
-  gfTee:(w,e)=>`Best tee time for 18 holes: ${w}, finishing around ${e}.`, gfAlt:w=>`Alternative: ${w}.`, gfNoTee:'No comfortable time for 18 holes in the next 36 hours.',
+  gfTee:(w,e)=>`Best tee time for 18 holes: ${w}, finishing around ${e}.`, gfAlt:w=>`Alternative: ${w}.`, gfAltBetter:w=>`Cooler and more comfortable: ${w}.`, gfNoTee:'No comfortable time for 18 holes in the next 36 hours.',
   gfWind:'Wind and club choice', gfWindV:(sp,d)=>`${sp} from the ${d}`, gfClub0:'Wind will barely affect your shots.',
   gfClub:(h,tl)=>`Into the wind, take about ${h} more club. Downwind, take about ${tl} less, because a tailwind helps less than a headwind hurts.`,
   clubWords:{0.5:'half a',1:'1',1.5:'one and a half',2:'2',2.5:'two and a half',3:'3'},
@@ -1943,13 +1943,13 @@ function modeGolf(){
     for (let k = i; k <= i + 4; k++){ const sc = hourScore(k); if (sc == null){ ok = false; break; } sum += sc; }
     if (ok) starts.push({ i, sum });
   }
-  // prefer the soonest good slot: a start that is nearly as good as the very best (within 20%, e.g. 1° warmer) beats waiting until tomorrow
-  const top = starts.reduce((m, x) => Math.max(m, x.sum), -Infinity);
-  const best = starts.filter(x => x.sum >= top - Math.max(1, Math.abs(top) * 0.2)).sort((a, b) => a.i - b.i)[0];
+  // the soonest playable 18 holes is the recommendation; the most comfortable other slot is the alternative
+  const best = [...starts].sort((a, b) => a.i - b.i)[0];
   const alt = best && starts.filter(x => Math.abs(x.i - best.i) >= 4).sort((a, b) => b.sum - a.sum || a.i - b.i)[0];
+  const altBetter = alt && alt.sum > best.sum + Math.max(1.5, Math.abs(best.sum) * 0.25);
   const startLabel = i => i === i0 ? `${state.lang === 'id' ? 'sekarang juga' : 'right now'} (${hourStr(H.time[i])})` : `${dayLabel(H.time[i])} ${hourStr(H.time[i])}`;
   const finish = i => { const h = (+H.time[i].slice(11, 13) + 4) % 24; return clock(h, 30); };
-  const teeText = best ? t('gfTee', startLabel(best.i), finish(best.i)) + (alt ? ' ' + t('gfAlt', startLabel(alt.i)) : '') : t('gfNoTee');
+  const teeText = best ? t('gfTee', startLabel(best.i), finish(best.i)) + (alt ? ' ' + (altBetter ? t('gfAltBetter', startLabel(alt.i)) : t('gfAlt', startLabel(alt.i))) : '') : t('gfNoTee');
 
   // after dark the strip starts at the next first light, so golfers see tomorrow's playable hours straight away
   let s0 = i0;
