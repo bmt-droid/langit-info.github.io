@@ -417,6 +417,7 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .hol-list{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:10px}
 .hol-list li{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
 .hi-ic{font-size:1.45rem;line-height:1.2}
+.st-ic{width:1.5em;height:1.5em;display:block;margin:-.1em 0 0 -.05em}
 .holiday-fact p{margin:0}
 
 button.greet{border:0;background:none;padding:0;color:inherit;cursor:pointer;text-align:left}
@@ -2264,13 +2265,14 @@ function issCard(){
   if (firstCss && !ps.includes(firstCss)) ps = [...ps.slice(0, 3), firstCss];
   const rows = ps.map(x => { const st = msToLocal(x.start), mins = Math.max(1, Math.round((x.end - x.start) / 60000));
     const nm = x.st === 'ISS' ? (L ? 'ISS' : 'ISS') : (L ? 'Tiangong (Tiongkok)' : 'Tiangong (China)');
-    return `<li><span class="hi-ic">${x.st === 'ISS' ? '🛰️' : '🏯'}</span><span><b>${esc(dayLabel(st))} ${clockStr(st)}</b> <small class="muted">· ${nm} · ${mins} ${L ? 'menit' : 'min'}</small><br><small>${L ? `Muncul dari ${dir8(x.az0)}, setinggi ${Math.round(x.max)}°, hilang ke ${dir8(x.az1)}.` : `Appears from the ${dir8(x.az0)}, up to ${Math.round(x.max)}°, disappears to the ${dir8(x.az1)}.`}</small></span></li>`; }).join('');
+    return `<li><span class="hi-ic">${x.st === 'ISS' ? '🛰️' : CSS_ICON}</span><span><b>${esc(dayLabel(st))} ${clockStr(st)}</b> <small class="muted">· ${nm} · ${mins} ${L ? 'menit' : 'min'}</small><br><small>${L ? `Muncul dari ${dir8(x.az0)}, setinggi ${Math.round(x.max)}°, hilang ke ${dir8(x.az1)}.` : `Appears from the ${dir8(x.az0)}, up to ${Math.round(x.max)}°, disappears to the ${dir8(x.az1)}.`}</small></span></li>`; }).join('');
   return `<div class="fact"><h3>${L ? '🛰️ Stasiun luar angkasa lewat' : '🛰️ Space station passes'}</h3>${rows ? `<ul class="hol-list">${rows}</ul>` : `<p>${L ? 'Tidak ada lintasan ISS atau Tiangong yang terlihat dalam 7 hari ke depan.' : 'No visible ISS or Tiangong passes in the next 7 days.'}</p>`}<p class="muted small">${L ? 'ISS (internasional) dan Tiangong (milik Tiongkok) terlihat seperti titik terang yang bergerak cepat tanpa berkedip, paling mudah dilihat setelah senja atau sebelum subuh. Data orbit: CelesTrak.' : 'The ISS and China’s Tiangong look like bright dots moving fast without blinking, best seen after dusk or before dawn. Orbit data: CelesTrak.'}</p></div>`;
 }
 
 /* ================= Rockets and people in space (The Space Devs, via the Worker) ================= */
 const slimAstrosLocal = j => ({ count: j.count || 0, people: (j.results || []).filter(a => !/^starman$/i.test(a.name || '')).map(a => ({ name: a.name || '', agency: (a.agency && (a.agency.abbrev || a.agency.name)) || '',
   country: (Array.isArray(a.nationality) ? (a.nationality[0] || {}).alpha_2_code : '') || '' })) });
+const CSS_ICON = '<svg class="st-ic" viewBox="0 0 48 48" aria-hidden="true"> <defs> <linearGradient id="cssHull" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".55" stop-color="#E3E8EE"/><stop offset="1" stop-color="#AEB8C4"/></linearGradient> <linearGradient id="cssPv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3C6FB6"/><stop offset="1" stop-color="#1D3E73"/></linearGradient> </defs> <g transform="rotate(-28 24 24)"> <g stroke="#C9D3DE" stroke-width=".6"> <rect x="18.6" y="2" width="5.4" height="15" rx=".6" fill="url(#cssPv)"/> <rect x="18.6" y="31" width="5.4" height="15" rx=".6" fill="url(#cssPv)"/> <path d="M21.3 2v15M21.3 31v15M18.6 6h5.4M18.6 10h5.4M18.6 14h5.4M18.6 34h5.4M18.6 38h5.4M18.6 42h5.4" stroke="#8FB3E6" stroke-width=".45" opacity=".8"/> </g> <rect x="20.7" y="16.5" width="1.2" height="15" fill="#9AA6B3"/> <rect x="5" y="19.2" width="10" height="9.6" rx="2.2" fill="url(#cssHull)" stroke="#7E8A97" stroke-width=".7"/> <rect x="14" y="17.6" width="16" height="12.8" rx="3" fill="url(#cssHull)" stroke="#7E8A97" stroke-width=".7"/> <rect x="29" y="19.6" width="12" height="8.8" rx="2.2" fill="url(#cssHull)" stroke="#7E8A97" stroke-width=".7"/> <path d="M17 18v12M26.5 18v12M32.5 20v8M8.5 19.5v9" stroke="#B8C2CD" stroke-width=".7"/> <circle cx="42.4" cy="24" r="1.6" fill="#D7A44A" stroke="#7E8A97" stroke-width=".5"/> <rect x="21" y="14.3" width="1.6" height="3.4" fill="#C9D1DA"/> <circle cx="21.8" cy="13.6" r="1.5" fill="#F4F6F8" stroke="#7E8A97" stroke-width=".5"/> </g> </svg>';
 const flagOf = cc => /^[A-Z]{2}$/i.test(cc || '') ? String.fromCodePoint(...[...cc.toUpperCase()].map(c => 127397 + c.charCodeAt(0))) : '';
 // Space data: each visitor's browser asks The Space Devs directly (everyone has their own free allowance),
 // remembered on the device for a while; our Worker is only the backup.
@@ -2346,7 +2348,7 @@ function astrosCard(){
   const L = state.lang === 'id';
   const cn = p => /^(CMSA|CNSA)$/i.test(p.agency) || p.country === 'CN';
   const groups = [['ISS', A.people.filter(p => !cn(p))], ['Tiangong', A.people.filter(cn)]].filter(g => g[1].length);
-  const rows = groups.map(([st, ps]) => `<li><span class="hi-ic">${st === 'ISS' ? '🛰️' : '🏯'}</span><span><b>${st}</b> <small class="muted">· ${ps.length} ${L ? 'orang' : ps.length > 1 ? 'people' : 'person'}</small><br><small>${ps.map(p => `${flagOf(p.country)} ${esc(p.name)}`).join(', ')}</small></span></li>`).join('');
+  const rows = groups.map(([st, ps]) => `<li><span class="hi-ic">${st === 'ISS' ? '🛰️' : CSS_ICON}</span><span><b>${st}</b> <small class="muted">· ${ps.length} ${L ? 'orang' : ps.length > 1 ? 'people' : 'person'}</small><br><small>${ps.map(p => `${flagOf(p.country)} ${esc(p.name)}`).join(', ')}</small></span></li>`).join('');
   const n = A.people.length;
   return `<div class="fact"><h3>${L ? '🧑‍🚀 Orang di luar angkasa' : '🧑‍🚀 People in space'}</h3><div class="val">${n} <small>${L ? 'orang saat ini' : n > 1 ? 'people right now' : 'person right now'}</small></div><ul class="hol-list">${rows}</ul><p class="muted small">${L ? 'Pembagian stasiun diperkirakan dari badan antariksanya. Data: The Space Devs.' : 'Station grouping is estimated from each person’s space agency. Data: The Space Devs.'}</p></div>`;
 }
