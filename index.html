@@ -2237,7 +2237,7 @@ async function loadIss(){
 function issPasses(sat, rec, p){
   const obs = { latitude: p.lat * RAD, longitude: p.lon * RAD, height: 0.05 }, out = [], step = 20000, now = Date.now();
   let cur = null;
-  for (let ms = now; ms < now + 4 * 86400000 && out.length < 4; ms += step){
+  for (let ms = now; ms < now + 7 * 86400000 && out.length < 4; ms += step){
     const dt = new Date(ms), pv = sat.propagate(rec, dt); if (!pv.position) continue;
     const g = sat.gstime(dt), look = sat.ecfToLookAngles(obs, sat.eciToEcf(pv.position, g)), el = look.elevation / RAD;
     if (el >= 10){
@@ -2257,11 +2257,14 @@ function issPasses(sat, rec, p){
 }
 function issCard(){
   if (!state.iss || state.iss.key !== placeKey(state.place)) return '';
-  const L = state.lang === 'id', ps = state.iss.passes.slice(0, 4);
+  const L = state.lang === 'id', all = state.iss.passes;
+  let ps = all.slice(0, 4);
+  const firstCss = all.find(x => x.st === 'Tiangong');           // make sure Tiangong gets a row when it has one
+  if (firstCss && !ps.includes(firstCss)) ps = [...ps.slice(0, 3), firstCss];
   const rows = ps.map(x => { const st = msToLocal(x.start), mins = Math.max(1, Math.round((x.end - x.start) / 60000));
     const nm = x.st === 'ISS' ? (L ? 'ISS' : 'ISS') : (L ? 'Tiangong (Tiongkok)' : 'Tiangong (China)');
     return `<li><span class="hi-ic">${x.st === 'ISS' ? '🛰️' : '🏯'}</span><span><b>${esc(dayLabel(st))} ${clockStr(st)}</b> <small class="muted">· ${nm} · ${mins} ${L ? 'menit' : 'min'}</small><br><small>${L ? `Muncul dari ${dir8(x.az0)}, setinggi ${Math.round(x.max)}°, hilang ke ${dir8(x.az1)}.` : `Appears from the ${dir8(x.az0)}, up to ${Math.round(x.max)}°, disappears to the ${dir8(x.az1)}.`}</small></span></li>`; }).join('');
-  return `<div class="fact"><h3>${L ? '🛰️ Stasiun luar angkasa lewat' : '🛰️ Space station passes'}</h3>${rows ? `<ul class="hol-list">${rows}</ul>` : `<p>${L ? 'Tidak ada lintasan ISS atau Tiangong yang terlihat dalam 4 hari ke depan.' : 'No visible ISS or Tiangong passes in the next 4 days.'}</p>`}<p class="muted small">${L ? 'ISS (internasional) dan Tiangong (milik Tiongkok) terlihat seperti titik terang yang bergerak cepat tanpa berkedip, paling mudah dilihat setelah senja atau sebelum subuh. Data orbit: CelesTrak.' : 'The ISS and China’s Tiangong look like bright dots moving fast without blinking, best seen after dusk or before dawn. Orbit data: CelesTrak.'}</p></div>`;
+  return `<div class="fact"><h3>${L ? '🛰️ Stasiun luar angkasa lewat' : '🛰️ Space station passes'}</h3>${rows ? `<ul class="hol-list">${rows}</ul>` : `<p>${L ? 'Tidak ada lintasan ISS atau Tiangong yang terlihat dalam 7 hari ke depan.' : 'No visible ISS or Tiangong passes in the next 7 days.'}</p>`}<p class="muted small">${L ? 'ISS (internasional) dan Tiangong (milik Tiongkok) terlihat seperti titik terang yang bergerak cepat tanpa berkedip, paling mudah dilihat setelah senja atau sebelum subuh. Data orbit: CelesTrak.' : 'The ISS and China’s Tiangong look like bright dots moving fast without blinking, best seen after dusk or before dawn. Orbit data: CelesTrak.'}</p></div>`;
 }
 
 /* ================= Rockets and people in space (The Space Devs, via the Worker) ================= */
