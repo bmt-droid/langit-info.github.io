@@ -281,6 +281,7 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* fun extras */
+.astro-share{padding-top:6px}
 .share{display:inline-flex;align-items:center;gap:9px;justify-self:start;background:#1FA855;color:#fff;font-weight:700;padding:12px 18px;border-radius:999px;text-decoration:none;box-shadow:0 6px 16px rgba(31,168,85,.28)}
 .share svg{width:22px;height:22px}
 .pantun{font-family:var(--display);font-size:1.08rem;line-height:1.55;color:var(--ink)!important}
@@ -2543,12 +2544,37 @@ function nearestNeo(){
 const sizeTxt = m => m == null ? '' : m >= 1000 ? `${(m / 1000).toFixed(1).replace('.', state.lang === 'id' ? ',' : '.')} km` : `${Math.round(m / 5) * 5 || 5} m`;
 const sizeCompare = m => { const L = state.lang === 'id'; if (m == null) return ''; return m < 15 ? (L ? 'seukuran bus' : 'about the size of a bus') : m < 50 ? (L ? 'seukuran rumah' : 'about the size of a house') : m < 150 ? (L ? 'seukuran lapangan sepak bola' : 'about the size of a football pitch') : m < 400 ? (L ? 'seukuran Monas' : 'about the size of a tall tower') : (L ? 'sebesar bukit' : 'as big as a hill'); };
 
+// WhatsApp message summarising tonight's sky, built from the cards just shown
+function astroShare(body){
+  const L = state.lang === 'id', clean = v => String(v || '').replace(/\s+/g, ' ').trim();
+  const card = re => [...body.querySelectorAll('.fact')].find(f => re.test(f.querySelector('h3')?.textContent || ''));
+  const lines = [];
+  const moon = card(/Bulan malam|Moon tonight/); if (moon){ const v = moon.querySelector('.val'); if (v) lines.push(clean(v.textContent)); }
+  const pl = card(/Planet/); if (pl){ const n = [...pl.querySelectorAll('li b')].map(b => clean(b.textContent)); if (n.length) lines.push(`🪐 ${L ? 'Planet terlihat' : 'Planets visible'}: ${n.join(', ')}`); }
+  const st = card(/Stasiun|station/i); const sp = st && st.querySelector('li');
+  if (sp) lines.push(`🛰️ ${L ? 'Stasiun luar angkasa lewat' : 'Space station pass'}: ${clean(sp.querySelector('b')?.textContent)} (${clean(sp.querySelector('small.muted')?.textContent).replace(/^·\s*/, '').split('·')[0].trim()})`);
+  const la = card(/Peluncuran|launches/i); const lp = la && la.querySelector('li');
+  if (lp){ const sm = lp.querySelectorAll('small'); lines.push(`🚀 ${L ? 'Peluncuran roket berikutnya' : 'Next rocket launch'}: ${clean(lp.querySelector('b')?.textContent)} · ${clean(sm[sm.length - 2]?.textContent)}`); }
+  const ppl = card(/Orang di luar|People in space/); if (ppl){ const v = ppl.querySelector('.val'); if (v) lines.push(`🧑‍🚀 ${clean(v.textContent)} ${L ? 'di luar angkasa' : 'in space'}`); }
+  const cal = card(/Kalender langit|Sky calendar/); const cp = cal && cal.querySelector('li');
+  if (cp){ const first = document.createElement('div'); first.innerHTML = (cp.querySelector('span:last-child')?.innerHTML || '').split(/<br\s*\/?>/i)[0]; lines.push(`✨ ${clean(first.textContent)}`); }
+  if (!lines.length) return '';
+  const url = location.protocol.startsWith('http') ? location.origin + '/#antariksa' : '';
+  const head = L ? `🌌 Langit malam di ${state.place.name}` : `🌌 Night sky over ${state.place.name}`;
+  const msg = `${head}\n\n${lines.join('\n')}${url ? `\n\n${L ? 'Lihat langit malam di kotamu' : 'See the night sky where you are'}: ${url}` : ''}`;
+  return `<a class="share" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8L3.5 20.5l4.3-1.1A8.5 8.5 0 1 0 12 3.5z" fill="#fff"/><path d="M9.2 8.2c.3-.4.7-.4.9 0l.8 1.8c.1.3 0 .6-.2.8l-.5.6c.6 1.2 1.6 2.2 2.8 2.8l.6-.5c.2-.2.5-.3.8-.2l1.8.8c.4.2.4.6 0 .9-.6.7-1.5 1-2.4.7a8.4 8.4 0 0 1-5.2-5.2c-.3-.9 0-1.8.6-2.5z" fill="#1FA855"/></svg>
+    ${L ? 'Bagikan langit malam ke WhatsApp' : 'Share tonight’s sky on WhatsApp'}</a>`;
+}
 function renderAstroSection(){
   const sec = $('#astroSec'); if (!sec || !state.data) return;
   $('#h-astro').textContent = state.lang === 'id' ? '🌌 Langit malam & antariksa' : '🌌 Night sky & space';
   const html = safeExtra(moonCard) + safeExtra(planetCard) + safeExtra(issCard) + safeExtra(launchCard) + safeExtra(astrosCard) + safeExtra(astroCard);
   $('#astroBody').innerHTML = html;
   sec.hidden = !html;
+  if (html){ const sh = safeExtra(() => astroShare($('#astroBody'))); if (sh) $('#astroBody').insertAdjacentHTML('beforeend', `<div class="astro-share">${sh}</div>`); }
+  // opened from a shared link (langit.info/#antariksa): jump to this section once
+  if (html && location.hash === '#antariksa' && !state.astroJumped){ state.astroJumped = true; setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 500); }
 }
 function astroCard(){
   const a = astroInfo(), L = a.L, rows = [];
