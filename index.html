@@ -1947,8 +1947,10 @@ function modeGolf(){
   const best = [...starts].sort((a, b) => a.i - b.i)[0];
   const alt = best && starts.filter(x => Math.abs(x.i - best.i) >= 4).sort((a, b) => b.sum - a.sum || a.i - b.i)[0];
   const altBetter = alt && alt.sum > best.sum + Math.max(1.5, Math.abs(best.sum) * 0.25);
-  const startLabel = i => i === i0 ? `${state.lang === 'id' ? 'sekarang juga' : 'right now'} (${hourStr(H.time[i])})` : `${dayLabel(H.time[i])} ${hourStr(H.time[i])}`;
-  const finish = i => { const h = (+H.time[i].slice(11, 13) + 4) % 24; return clock(h, 30); };
+  const startLabel = i => { if (i === i0){ const n = localNow(); return `${state.lang === 'id' ? 'sekarang juga' : 'right now'} (${clock(n.h, n.m)})`; } return `${dayLabel(H.time[i])} ${hourStr(H.time[i])}`; };
+  // starting right now uses the real clock time (e.g. 06.19 → finish about 10.50); later starts use the whole hour
+  const startMin = i => { if (i === i0){ const n = localNow(); return n.h * 60 + n.m; } return +H.time[i].slice(11, 13) * 60; };
+  const finish = i => { const m = (startMin(i) + 270) % 1440, r = Math.round(m / 5) * 5 % 1440; return clock(Math.floor(r / 60), r % 60); };
   const teeText = best ? t('gfTee', startLabel(best.i), finish(best.i)) + (alt ? ' ' + (altBetter ? t('gfAltBetter', startLabel(alt.i)) : t('gfAlt', startLabel(alt.i))) : '') : t('gfNoTee');
 
   // after dark the strip starts at the next first light, so golfers see tomorrow's playable hours straight away
