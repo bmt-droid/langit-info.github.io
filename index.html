@@ -424,6 +424,7 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
 .brand-tag{display:none}
 @media (min-width:820px){.brand-tag{display:block;font-family:var(--body);font-size:.72rem;font-weight:500;opacity:.8;letter-spacing:0;margin-top:2px}}
 .plane-btn{justify-self:start;align-self:flex-start;margin-top:8px;border:0;border-radius:999px;padding:10px 16px;font-weight:700;background:#0A57C2;color:#fff}
+.fl-tag{display:inline-block;margin-top:4px;padding:2px 9px;border-radius:999px;background:var(--soft);font-size:.8rem;font-weight:600}
 /* icons */
 .ico{overflow:visible}
 .ico *{stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
@@ -2191,6 +2192,9 @@ const AIRLINES = {GIA:['GA','Garuda Indonesia'],CTV:['QG','Citilink'],LNI:['JT',
   JSA:['3K','Jetstar Asia'],QFA:['QF','Qantas'],JST:['JQ','Jetstar'],VOZ:['VA','Virgin Australia'],CPA:['CX','Cathay Pacific'],UAE:['EK','Emirates'],QTR:['QR','Qatar Airways'],ETD:['EY','Etihad'],
   SVA:['SV','Saudia'],THY:['TK','Turkish Airlines'],KLM:['KL','KLM'],CES:['MU','China Eastern'],CSN:['CZ','China Southern'],CCA:['CA','Air China'],KAL:['KE','Korean Air'],JAL:['JL','Japan Airlines'],
   ANA:['NH','ANA'],THA:['TG','Thai Airways'],VJC:['VJ','VietJet'],HVN:['VN','Vietnam Airlines'],PAL:['PR','Philippine Airlines'],CEB:['5J','Cebu Pacific'],EVA:['BR','EVA Air'],FDX:['FX','FedEx'],UPS:['5X','UPS']};
+// Helicopters: ADS-B category A7 (rotorcraft) or a common helicopter type code
+const HELI_TYPES = /^(EC|AS3|AS5|AS6|H1|H2|H6|B06|B2|B4|B5|A10|A11|A13|A16|A169|A189|AW|S76|S92|R22|R44|R66|BK17|MI8|MI17|MI24|EH10|NH90|UH|AH|CH|SA3)/;
+const isHeli = a => a.category === 'A7' || HELI_TYPES.test(String(a.t || ''));
 function bearing(a1, o1, a2, o2){
   const r = x => x * RAD, y = Math.sin(r(o2 - o1)) * Math.cos(r(a2)), x = Math.cos(r(a1)) * Math.sin(r(a2)) - Math.sin(r(a1)) * Math.cos(r(a2)) * Math.cos(r(o2 - o1));
   return (Math.atan2(y, x) / RAD + 360) % 360;
@@ -2198,7 +2202,8 @@ function bearing(a1, o1, a2, o2){
 function flightName(cs){
   const c = String(cs || '').trim(), m = c.match(/^([A-Z]{3})(\d+[A-Z]?)$/);
   if (m && AIRLINES[m[1]]) return { code: `${AIRLINES[m[1]][0]} ${m[2]}`, airline: AIRLINES[m[1]][1] };
-  return { code: c || '–', airline: '' };
+  // no airline code: usually a registration (e.g. PK-XYZ, T7JRG) = private, charter or other non-scheduled flight
+  return { code: c || '–', airline: '', priv: !!c && !/^[A-Z]{3}\d/.test(c) };
 }
 async function loadPlanes(){
   const card = $('#planeCard'); if (!card || !BMKG_PROXY) return;
@@ -2206,7 +2211,7 @@ async function loadPlanes(){
   try{
     const p = state.place;
     const j = await getJSON(`${BMKG_PROXY.replace(/\/+$/, '')}/planes?lat=${p.lat.toFixed(2)}&lon=${p.lon.toFixed(2)}`);
-    const list = (j.ac || []).filter(a => a.lat != null && a.lon != null && a.alt_baro !== 'ground' && (+a.alt_baro || 0) > 300)
+    const list = (j.ac || []).filter(a => a.lat != null && a.lon != null && a.alt_baro !== 'ground' && !((+a.dbFlags || 0) & 1) && ((+a.alt_baro || 0) > 300 || isHeli(a)))
       .map(a => ({ ...a, km: haversine(p.lat, p.lon, a.lat, a.lon), brg: bearing(p.lat, p.lon, a.lat, a.lon) }))
       .filter(a => a.km <= 50).sort((x, y) => x.km - y.km);
     state.planes = { key: placeKey(p), at: Date.now(), list };
@@ -2226,11 +2231,15 @@ function planeHtml(mode){
   const rows = P.list.slice(0, 4).map(a => {
     const f = flightName(a.flight), m = Math.round((+a.alt_baro || +a.alt_geom || 0) * 0.3048 / 100) * 100;
     const spd = a.gs != null ? speed(a.gs * 1.852) : '';
-    const low = m < 3000 ? (L ? ' Terbang rendah, mungkin akan mendarat atau baru lepas landas.' : ' Flying low, probably landing or just taking off.') : '';
-    return `<li><span class="hi-ic">✈️</span><span><b>${esc(f.code)}</b>${f.airline ? ` <small class="muted">${esc(f.airline)}</small>` : ''}${a.t ? ` <small class="muted">· ${esc(a.t)}</small>` : ''}<br>
-      <small>${L ? `${Math.round(a.km)} km ke arah ${dir8(a.brg)}` : `${Math.round(a.km)} km to the ${dir8(a.brg)}`} · ${m.toLocaleString(locale())} m${spd ? ' · ' + spd : ''}${a.track != null ? (L ? ` · menuju ${dir8(a.track)}` : ` · heading ${dir8(a.track)}`) : ''}</small>${low ? `<br><small class="muted">${low.trim()}</small>` : ''}</span></li>`;
+    const vr = +(a.baro_rate ?? a.geom_rate ?? 0);
+    const tag = isHeli(a) ? '' : vr > 300 ? (m < 3000 ? (L ? '🛫 baru lepas landas' : '🛫 just took off') : (L ? '↗️ menanjak' : '↗️ climbing'))
+      : vr < -300 ? (m < 3000 ? (L ? '🛬 akan mendarat' : '🛬 landing soon') : (L ? '↘️ mulai turun' : '↘️ descending'))
+      : m >= 9000 ? (L ? '✈️ terbang jelajah' : '✈️ cruising') : '';
+    const heli = isHeli(a);
+    return `<li><span class="hi-ic">${heli ? '🚁' : '✈️'}</span><span><b>${esc(f.code)}</b>${heli ? ` <small class="muted">${L ? 'helikopter' : 'helicopter'}</small>` : f.airline ? ` <small class="muted">${esc(f.airline)}</small>` : f.priv ? ` <small class="muted">${L ? 'pesawat pribadi/carter' : 'private/charter'}</small>` : ''}${a.t ? ` <small class="muted">· ${esc(a.t)}</small>` : ''}<br>
+      <small>${L ? `${Math.round(a.km)} km ke arah ${dir8(a.brg)}` : `${Math.round(a.km)} km to the ${dir8(a.brg)}`} · ${m.toLocaleString(locale())} m${spd ? ' · ' + spd : ''}${a.track != null ? (L ? ` · menuju ${dir8(a.track)}` : ` · heading ${dir8(a.track)}`) : ''}</small>${tag ? `<br><span class="fl-tag">${tag}</span>` : ''}</span></li>`;
   }).join('');
-  return head + `<p class="lead">${L ? `${P.list.length} pesawat sedang terbang dalam radius 50 km` : `${P.list.length} planes flying within 50 km`}</p><ul class="hol-list">${rows}</ul>
+  return head + `<p class="lead">${L ? `${P.list.length} pesawat${P.list.some(isHeli) ? ' dan helikopter' : ''} sedang terbang dalam radius 50 km` : `${P.list.length} aircraft flying within 50 km`}</p><ul class="hol-list">${rows}</ul>
     <p class="muted small">${L ? `Diperbarui ${ago ? ago + ' menit lalu' : 'baru saja'}. Data: adsb.lol (ODbL), dari penerima ADS-B relawan.` : `Updated ${ago ? ago + ' min ago' : 'just now'}. Data: adsb.lol (ODbL), from volunteer ADS-B receivers.`}</p>` + btn(L ? '🔄 Perbarui' : '🔄 Refresh');
 }
 function planeCard(){ return BMKG_PROXY ? `<div class="fact" id="planeCard">${planeHtml()}</div>` : ''; }
