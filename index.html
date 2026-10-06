@@ -2268,14 +2268,17 @@ function issCard(){
 }
 
 /* ================= Rockets and people in space (The Space Devs, via the Worker) ================= */
+const slimAstrosLocal = j => ({ count: j.count || 0, people: (j.results || []).map(a => ({ name: a.name || '', agency: (a.agency && (a.agency.abbrev || a.agency.name)) || '',
+  country: (Array.isArray(a.nationality) ? (a.nationality[0] || {}).alpha_2_code : '') || '' })) });
 const flagOf = cc => /^[A-Z]{2}$/i.test(cc || '') ? String.fromCodePoint(...[...cc.toUpperCase()].map(c => 127397 + c.charCodeAt(0))) : '';
 async function loadSpace(){
   if (!BMKG_PROXY) return;
   const base = BMKG_PROXY.replace(/\/+$/, ''), now = Date.now(), jobs = [];
   if (!state.launches || now - state.launches.at > 30 * 60000)
-    jobs.push(getJSON(base + '/launches', 10000).then(list => { if (Array.isArray(list)) state.launches = { at: now, list }; }).catch(() => {}));
+    jobs.push(getJSON(base + '/launches', 10000).then(list => { if (Array.isArray(list)) state.launches = { at: now, list: list.filter(x => !/^tbd$/i.test(x.mission) && !/unconfirmed|unknown/i.test(x.rocket)) }; }).catch(() => {}));
   if (!state.astros || now - state.astros.at > 3 * 3600000)
-    jobs.push(getJSON(base + '/astros', 10000).then(j => { if (j && Array.isArray(j.people)) state.astros = { at: now, ...j }; }).catch(() => {}));
+    jobs.push(getJSON(base + '/astros', 10000).catch(() => getJSON('https://ll.thespacedevs.com/2.3.0/astronauts/?in_space=true&limit=40&mode=normal', 10000).then(slimAstrosLocal))
+      .then(j => { if (j && Array.isArray(j.people) && j.people.length) state.astros = { at: now, ...j }; }).catch(() => {}));
   if (!jobs.length) return;
   await Promise.all(jobs);
   if (state.data){ renderAstroSection(); const slot = $('#astroSlot'); if (slot) slot.innerHTML = astroChipHtml(); }
@@ -2297,7 +2300,7 @@ function upcomingLaunches(){
 }
 function launchCard(){
   const list = upcomingLaunches().slice(0, 4); if (!list.length) return '';
-  const L = state.lang === 'id';
+  const L = state.lang === 'id', src = list[0].src === 'rll' ? 'RocketLaunch.live' : 'The Space Devs';
   const rows = list.map(x => {
     const ms = Date.parse(x.net), loc = msToLocal(ms), exact = /^(SEC|MIN|HR|H)$/.test(x.precision);
     const dd = dayDiff(loc), when = exact ? `${dd >= 0 && dd <= 1 ? dayLabel(loc) : longDate(loc)} ${clockStr(loc)}` : (L ? 'sekitar ' : 'around ') + longDate(loc);
@@ -2308,7 +2311,7 @@ function launchCard(){
       <small>${esc(when)}${exact ? ` · <span class="lcd" data-to="${ms}">${esc(launchLeft(ms, L))}</span>` : ''}</small><br>
       <small class="muted">${flagOf(x.country)} ${esc(x.site)} · <span class="st-${st[2]}">${esc(L ? st[0] : st[1])}</span></small></span></li>`;
   }).join('');
-  return `<div class="fact"><h3>${L ? '🚀 Peluncuran roket berikutnya' : '🚀 Next rocket launches'}</h3><ul class="hol-list">${rows}</ul><p class="muted small">${L ? 'Waktu sesuai zona waktu lokasi ini. Jadwal peluncuran sering bergeser karena cuaca atau teknis. Data: The Space Devs.' : 'Times are in this location’s time zone. Launch times often shift for weather or technical reasons. Data: The Space Devs.'}</p></div>`;
+  return `<div class="fact"><h3>${L ? '🚀 Peluncuran roket berikutnya' : '🚀 Next rocket launches'}</h3><ul class="hol-list">${rows}</ul><p class="muted small">${L ? 'Waktu sesuai zona waktu lokasi ini. Jadwal peluncuran sering bergeser karena cuaca atau teknis. Data: ' + src + '.' : 'Times are in this location’s time zone. Launch times often shift for weather or technical reasons. Data: ' + src + '.'}</p></div>`;
 }
 function astrosCard(){
   const A = state.astros; if (!A || !A.people.length) return '';

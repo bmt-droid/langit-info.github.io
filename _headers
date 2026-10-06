@@ -1,6 +1,6 @@
 # Security and caching headers for langit.info (read by Cloudflare Pages; GitHub Pages ignores this file)
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://data.bmkg.go.id https://api.langit.info https://langit-bmkg.bosminyaktondano.workers.dev; connect-src 'self' https://*.open-meteo.com https://api.bigdatacloud.net https://api.langit.info https://langit-bmkg.bosminyaktondano.workers.dev https://data.bmkg.go.id; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://data.bmkg.go.id https://api.langit.info https://langit-bmkg.bosminyaktondano.workers.dev; connect-src 'self' https://*.open-meteo.com https://ll.thespacedevs.com https://api.bigdatacloud.net https://api.langit.info https://langit-bmkg.bosminyaktondano.workers.dev https://data.bmkg.go.id; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
