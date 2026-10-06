@@ -2268,7 +2268,7 @@ function issCard(){
 }
 
 /* ================= Rockets and people in space (The Space Devs, via the Worker) ================= */
-const slimAstrosLocal = j => ({ count: j.count || 0, people: (j.results || []).map(a => ({ name: a.name || '', agency: (a.agency && (a.agency.abbrev || a.agency.name)) || '',
+const slimAstrosLocal = j => ({ count: j.count || 0, people: (j.results || []).filter(a => !/^starman$/i.test(a.name || '')).map(a => ({ name: a.name || '', agency: (a.agency && (a.agency.abbrev || a.agency.name)) || '',
   country: (Array.isArray(a.nationality) ? (a.nationality[0] || {}).alpha_2_code : '') || '' })) });
 const flagOf = cc => /^[A-Z]{2}$/i.test(cc || '') ? String.fromCodePoint(...[...cc.toUpperCase()].map(c => 127397 + c.charCodeAt(0))) : '';
 // Space data: each visitor's browser asks The Space Devs directly (everyone has their own free allowance),
@@ -2329,7 +2329,8 @@ function launchCard(){
     const ms = Date.parse(x.net), loc = msToLocal(ms), exact = /^(SEC|MIN|HR|H)$/.test(x.precision);
     const dd = dayDiff(loc), when = exact ? `${dd >= 0 && dd <= 1 ? dayLabel(loc) : longDate(loc)} ${clockStr(loc)}` : (L ? 'sekitar ' : 'around ') + longDate(loc);
     const st = LAUNCH_STATUS[x.status] || [x.status, x.status, 'ok'];
-    const title = x.mission || (x.name.split('|')[1] || x.name).trim();
+    let title = x.mission || (x.name.split('|')[1] || x.name).trim();
+    if (/^unknown payload$/i.test(title)) title = L ? 'Muatan belum diumumkan' : 'Undisclosed payload';
     return `<li><span class="hi-ic">${x.crewed ? '🧑‍🚀' : '🚀'}</span><span><b>${esc(title)}</b>${x.crewed ? ` <small class="fl-tag">${L ? 'berawak' : 'crewed'}</small>` : ''}<br>
       <small>${esc(x.rocket)}${x.provider ? ' · ' + esc(x.provider) : ''}</small><br>
       <small>${esc(when)}${exact ? ` · <span class="lcd" data-to="${ms}">${esc(launchLeft(ms, L))}</span>` : ''}</small><br>
@@ -2338,7 +2339,9 @@ function launchCard(){
   return `<div class="fact"><h3>${L ? '🚀 Peluncuran roket berikutnya' : '🚀 Next rocket launches'}</h3><ul class="hol-list">${rows}</ul><p class="muted small">${L ? 'Waktu sesuai zona waktu lokasi ini. Jadwal peluncuran sering bergeser karena cuaca atau teknis. Data: ' + src + '.' : 'Times are in this location’s time zone. Launch times often shift for weather or technical reasons. Data: ' + src + '.'}</p></div>`;
 }
 function astrosCard(){
-  const A = state.astros; if (!A || !A.people.length) return '';
+  const A0 = state.astros; if (!A0) return '';
+  const A = { ...A0, people: A0.people.filter(p => !/^starman$/i.test(p.name)) };   // the dummy in SpaceX's Tesla isn't a person
+  if (!A.people.length) return '';
   const L = state.lang === 'id';
   const cn = p => /^(CMSA|CNSA)$/i.test(p.agency) || p.country === 'CN';
   const groups = [['ISS', A.people.filter(p => !cn(p))], ['Tiangong', A.people.filter(cn)]].filter(g => g[1].length);
