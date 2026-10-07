@@ -2511,6 +2511,7 @@ async function loadIss(){
     passes.sort((a, b) => a.start - b.start);
     state.iss = { key, at: Date.now(), passes, has: { iss: !!iss, css: !!css } };
     renderAstroSection();
+    const slot = $('#astroSlot'); if (slot) slot.innerHTML = astroChipHtml();
   }catch(e){ /* station card stays hidden */ }
 }
 function issPasses(sat, rec, p){
@@ -2796,9 +2797,29 @@ function astroChipHtml(){
   else if (a.superFull && dayDiff(msToLocal(a.superFull.ms)) === 0){ ic = '🌕'; txt = L ? 'Supermoon malam ini' : 'Supermoon tonight'; }
   else if (a.met && a.met.m[3] && dayDiff(a.met.day) === 0){ ic = '☄️'; txt = L ? `Puncak hujan meteor ${a.met.m[1]}` : `${a.met.m[1]} meteor shower peaks`; }
   else if (a.peri && dayDiff(msToLocal(a.peri.ms)) === 0){ ic = '🔭'; txt = L ? 'Bulan paling dekat hari ini' : 'Moon at its closest today'; }
-  else if (neo && neo.ld < 1 && Math.abs(dayDiff(neo.date)) <= 1){ ic = '☄️'; txt = L ? 'Asteroid melintas dekat' : 'Asteroid passing close'; }
+  else if (soonNeo()){ const sn = soonNeo(), dd = dayDiff(msToLocal(sn.ms)); ic = '☄️'; txt = L ? `Asteroid melintas dekat ${dd <= 0 ? 'hari ini' : 'besok'}` : `Asteroid passing close ${dd <= 0 ? 'today' : 'tomorrow'}`; }
   else { const cr = upcomingLaunches().find(x => x.crewed && /^(SEC|MIN|HR|H)$/.test(x.precision) && dayDiff(msToLocal(Date.parse(x.net))) === 0);
     if (cr){ ic = '🧑‍🚀'; txt = L ? 'Peluncuran berawak hari ini' : 'Crewed launch today'; } }
+  // nothing special today: show the next thing worth looking up for
+  const when = ms => { const lt = msToLocal(ms), dd = dayDiff(lt); return `${dd <= 0 ? (L ? 'pukul' : 'at') : (L ? 'besok' : 'tomorrow')} ${clockStr(lt)}`; };
+  const now = Date.now();
+  if (!txt && state.iss && state.iss.key === placeKey(state.place)){
+    const ps = state.iss.passes.find(x => x.end > now && x.start < now + 14 * 3600000);
+    if (ps){ ic = '🛰️'; txt = L ? `${ps.st} lewat ${when(ps.start)}` : `${ps.st} passes over ${when(ps.start)}`; }
+  }
+  if (!txt){
+    const ln = upcomingLaunches().find(x => /^(SEC|MIN|HR|H)$/.test(x.precision || '') && Date.parse(x.net) > now && Date.parse(x.net) < now + 24 * 3600000);
+    if (ln){ ic = '🚀'; txt = L ? `Roket meluncur ${when(Date.parse(ln.net))}` : `Rocket launch ${when(Date.parse(ln.net))}`; }
+  }
+  if (!txt){
+    const h = localNow().h;
+    if (h >= 16 || h < 5){
+      const pl = safeExtra(planetsTonight) || [], order = ['venus', 'jupiter', 'saturn', 'mars', 'mercury'];
+      const best = order.map(n => pl.find(x => x.name === n)).find(Boolean);
+      const PN = { venus: ['Venus', '✨'], jupiter: ['Jupiter', '🪐'], saturn: ['Saturnus', '🪐'], mars: ['Mars', '🔴'], mercury: ['Merkurius', '✨'] };
+      if (best){ ic = PN[best.name][1]; const nm = L ? PN[best.name][0] : best.name[0].toUpperCase() + best.name.slice(1); txt = L ? `${nm} terlihat malam ini` : `${nm} visible tonight`; }
+    }
+  }
   if (!txt) return '';
   return `<button type="button" class="zodiac astrochip" id="astrochip"><span class="mi">${ic}</span>${esc(txt)}</button>`;
 }
@@ -2821,6 +2842,12 @@ async function loadNeo(){
   state.neo = { at: Date.now(), list };
   if (state.data) renderAstroSection();
   const slot = $('#astroSlot'); if (slot) slot.innerHTML = astroChipHtml();
+}
+// a close pass (under 1 lunar distance) that is coming up or only just happened: from 36 h before until 6 h after
+function soonNeo(){
+  if (!state.neo || !state.neo.list.length) return null;
+  const now = Date.now();
+  return state.neo.list.filter(x => x.ld < 1 && x.ms > now - 6 * 3600000 && x.ms < now + 36 * 3600000).sort((a, b) => a.ms - b.ms)[0] || null;
 }
 function nearestNeo(){
   if (!state.neo || !state.neo.list.length) return null;
