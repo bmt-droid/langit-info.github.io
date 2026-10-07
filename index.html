@@ -452,6 +452,17 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .cmp td svg{vertical-align:middle}
 .cmp td span{margin:0 4px;font-weight:600}
 .cmp-best th small:last-child{color:var(--good)}
+.cmp td.cmp-x{width:1%;padding-left:6px}
+.cmp-del{border:0;background:rgba(127,127,127,.15);color:inherit;width:22px;height:22px;border-radius:50%;font-size:.7rem;line-height:22px;padding:0;cursor:pointer;vertical-align:middle}
+.cmp-del:hover{background:rgba(232,90,79,.35)}
+.cmp-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.linkish{border:0;background:none;color:var(--muted);text-decoration:underline;cursor:pointer;font:inherit;font-size:.9rem;padding:4px}
+.cmp-form{display:flex;flex-direction:column;gap:8px;max-width:420px}
+.cmp-form[hidden]{display:none}
+.cmp-form input{font:inherit;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(127,127,127,.08);color:inherit}
+.cmp-res{display:flex;flex-direction:column;gap:6px}
+.cmp-pick{text-align:left;border:1px solid var(--line);background:none;color:inherit;border-radius:10px;padding:8px 12px;cursor:pointer;font:inherit}
+.cmp-pick:hover{background:rgba(127,127,127,.12)}
 .xing{list-style:none;margin:0;padding:0;display:grid;gap:14px}
 .xing li{display:flex;flex-direction:column;gap:6px}
 .xcells{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:360px}
@@ -3314,12 +3325,7 @@ async function loadWisata(){
     .then(r => { wis.peaks = asArr(r).map((d, k) => ({ pk: pk[k], d })); }).catch(() => { wis.peaks = []; }).then(done));
   else wis.peaks = [];
   // 4. compare destinations (favourites, or popular ones)
-  const favs = state.favs.filter(f => placeKey(f) !== key);
-  const others = (favs.length >= 2 ? favs : CMP_DEFAULT.filter(f => haversine(f.lat, f.lon, p.lat, p.lon) > 25)).slice(0, 6);
-  const list = [{ name: p.name, lat: p.lat, lon: p.lon, here: true }, ...others];
-  wis.cmpFav = favs.length >= 2;
-  jobs.push(getJSON(`https://api.open-meteo.com/v1/forecast?latitude=${q(list.map(x => x.lat))}&longitude=${q(list.map(x => x.lon))}&daily=weather_code,temperature_2m_max,precipitation_probability_max,precipitation_sum&forecast_days=10&timezone=auto`, 15000)
-    .then(r => { wis.cmp = asArr(r).map((d, k) => ({ pl: list[k], d })); }).catch(() => { wis.cmp = null; }).then(done));
+  jobs.push(fetchCompare(wis).then(done));
   // 5 + 6. rain around the place (centre + 6 points ~20 km away), last 24 h and next 24 h
   const ring = [[p.lat, p.lon]];
   for (let k = 0; k < 6; k++){ const a = k * Math.PI / 3; ring.push([+(p.lat + 0.18 * Math.cos(a)).toFixed(3), +(p.lon + 0.18 * Math.sin(a) / Math.cos(p.lat * Math.PI / 180)).toFixed(3)]); }
@@ -3339,6 +3345,54 @@ async function loadWisata(){
     }).catch(() => { wis.clim = null; }).then(done));
   await Promise.allSettled(jobs);
 }
+
+// destinations to compare: the visitor's own list (＋/✕ in the card), else ★ saved places, else popular ones
+function cmpOthers(){
+  const p = state.place, key = placeKey(p), custom = store.get('skyline.cmp', null);
+  if (Array.isArray(custom)) return { kind: 'custom', list: custom.filter(f => placeKey(f) !== key).slice(0, 8) };
+  const favs = state.favs.filter(f => placeKey(f) !== key);
+  if (favs.length >= 2) return { kind: 'fav', list: favs.slice(0, 8) };
+  return { kind: 'default', list: CMP_DEFAULT.filter(f => haversine(f.lat, f.lon, p.lat, p.lon) > 25).slice(0, 6) };
+}
+function fetchCompare(wis){
+  const p = state.place, o = cmpOthers(), list = [{ name: p.name, lat: p.lat, lon: p.lon, here: true }, ...o.list];
+  wis.cmpKind = o.kind; wis.cmpFav = o.kind !== 'default';
+  return getJSON(`https://api.open-meteo.com/v1/forecast?latitude=${list.map(x => x.lat).join(',')}&longitude=${list.map(x => x.lon).join(',')}&daily=weather_code,temperature_2m_max,precipitation_probability_max,precipitation_sum&forecast_days=10&timezone=auto`, 15000)
+    .then(r => { wis.cmp = asArr(r).map((d, k) => ({ pl: list[k], d })); }).catch(() => { wis.cmp = null; });
+}
+function cmpSave(list){
+  store.set('skyline.cmp', list.map(({ name, region, lat, lon }) => ({ name, region: region || '', lat, lon })));
+  const wis = state.wis; if (!wis) return;
+  wis.cmp = undefined; const el = $('#wisX'); if (el) el.innerHTML = safeExtra(wisCards);
+  fetchCompare(wis).then(() => { wisCache.set(placeKey(state.place), { at: wis.at, wis }); const e2 = $('#wisX'); if (e2 && state.mode === 'wisata') e2.innerHTML = safeExtra(wisCards); });
+}
+// small place lookup for the "add destination" box: popular places, Photon and the Open-Meteo list
+let cmpReq = 0, cmpRes = [];
+async function cmpLookup(term){
+  const id = ++cmpReq, box = $('#cmpRes'); if (!box) return;
+  if (term.length < 2){ box.innerHTML = ''; return; }
+  const [a, b] = await Promise.all([
+    getJSON(`https://photon.komoot.io/api/?q=${encodeURIComponent(term)}&limit=12&lang=${state.lang === 'en' ? 'en' : 'default'}&lat=-2.5&lon=118&zoom=5`, 6000).then(j => tidyPhoton(j.features || [], term)).catch(() => []),
+    getJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(term)}&count=15&language=${state.lang}&format=json`, 8000).then(j => tidyPlaces(j.results || [], term)).catch(() => [])
+  ]);
+  if (id !== cmpReq) return;
+  const out = popularMatches(term), same = (x, y) => haversine(x.lat, x.lon, y.lat, y.lon) < 3;
+  [...a.filter(r => r.cc === 'ID'), ...b.filter(r => r.cc === 'ID'), ...a, ...b].forEach(r => { if (out.length < 5 && !out.some(m => same(m, r))) out.push(r); });
+  cmpRes = out;
+  const L = state.lang === 'id';
+  box.innerHTML = out.length ? out.map((r, i) => `<button type="button" class="cmp-pick" data-cmp-pick="${i}"><b>${esc(r.name)}</b> <small class="muted">${esc(r.region || '')}</small></button>`).join('') : `<p class="muted small">${L ? 'Tidak ditemukan.' : 'Nothing found.'}</p>`;
+}
+let cmpTimer;
+document.addEventListener('input', e => { if (e.target.id === 'cmpQ'){ clearTimeout(cmpTimer); const v = e.target.value.trim(); cmpTimer = setTimeout(() => cmpLookup(v), 250); } });
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest('[data-cmp-del],[data-cmp-pick],#cmpAdd,#cmpReset,#cmpCancel'); if (!t) return;
+  const cur = cmpOthers().list;
+  if (t.id === 'cmpAdd'){ const f = $('#cmpForm'); if (f){ f.hidden = false; t.hidden = true; const i = $('#cmpQ'); if (i) i.focus(); } return; }
+  if (t.id === 'cmpCancel'){ const f = $('#cmpForm'), a = $('#cmpAdd'); if (f) f.hidden = true; if (a) a.hidden = false; return; }
+  if (t.id === 'cmpReset'){ try{ localStorage.removeItem('skyline.cmp'); }catch(_){} const wis = state.wis; if (wis){ wis.cmp = undefined; const el = $('#wisX'); if (el) el.innerHTML = safeExtra(wisCards); fetchCompare(wis).then(() => { const e2 = $('#wisX'); if (e2) e2.innerHTML = safeExtra(wisCards); }); } return; }
+  if (t.dataset.cmpDel != null){ cmpSave(cur.filter(f => placeKey(f) !== t.dataset.cmpDel)); return; }
+  if (t.dataset.cmpPick != null){ const r = cmpRes[+t.dataset.cmpPick]; if (!r) return; if (placeKey(r) === placeKey(state.place) || cur.some(f => haversine(f.lat, f.lon, r.lat, r.lon) < 3)){ const f = $('#cmpForm'); if (f) f.hidden = true; return; } cmpSave([...cur, r].slice(-8)); }
+});
 
 const lvlChip = (cls, txt) => `<span class="lvl-chip s-${cls}">${esc(txt)}</span>`;
 
@@ -3398,10 +3452,12 @@ function compareCard(){
   if (rows.length < 2) return '';
   const best = rows.slice().sort((a, b) => a.score - b.score)[0];
   const head = dates.map(s => `<th>${esc(weekday(s))}</th>`).join('');
-  const body = rows.sort((a, b) => a.score - b.score).map(r => `<tr class="${r === best ? 'cmp-best' : ''}"><th>${esc(r.o.pl.name)}${r.o.pl.here ? ` <small class="muted">(${L ? 'di sini' : 'here'})</small>` : ''}${r === best ? `<small>★ ${L ? 'paling kering' : 'driest'}</small>` : ''}</th>${r.ks.map(k => `<td>${icon(wmo(r.D.weather_code[k])[1], true, { size: 24 })}<span>${tFmt(r.D.temperature_2m_max[k])}</span><small class="pop">${r.D.precipitation_probability_max[k] ?? 0}%</small></td>`).join('')}</tr>`).join('');
+  const body = rows.sort((a, b) => a.score - b.score).map(r => `<tr class="${r === best ? 'cmp-best' : ''}"><th>${esc(r.o.pl.name)}${r.o.pl.here ? ` <small class="muted">(${L ? 'di sini' : 'here'})</small>` : ''}${r === best ? `<small>★ ${L ? 'paling kering' : 'driest'}</small>` : ''}</th>${r.ks.map(k => `<td>${icon(wmo(r.D.weather_code[k])[1], true, { size: 24 })}<span>${tFmt(r.D.temperature_2m_max[k])}</span><small class="pop">${r.D.precipitation_probability_max[k] ?? 0}%</small></td>`).join('')}<td class="cmp-x">${r.o.pl.here ? '' : `<button type="button" class="cmp-del" data-cmp-del="${placeKey(r.o.pl)}" aria-label="${L ? 'Hapus' : 'Remove'} ${esc(r.o.pl.name)}">✕</button>`}</td></tr>`).join('');
   return `<div class="wis-card"><h3>${L ? '⚖️ Bandingkan tujuan akhir pekan ini' : '⚖️ Compare destinations this weekend'}</h3>
-    <table class="cmp"><thead><tr><th></th>${head}</tr></thead><tbody>${body}</tbody></table>
-    <p class="muted small">${W.cmpFav ? (L ? 'Membandingkan tempat favoritmu (★). Persentase = peluang hujan.' : 'Comparing your saved places (★). Percentage = chance of rain.') : (L ? 'Simpan beberapa tempat dengan ★ untuk membandingkan tujuanmu sendiri. Persentase = peluang hujan.' : 'Save a few places with ★ to compare your own destinations. Percentage = chance of rain.')}</p></div>`;
+    <table class="cmp"><thead><tr><th></th>${head}<th></th></tr></thead><tbody>${body}</tbody></table>
+    <p class="cmp-tools"><button type="button" class="pill sos-btn" id="cmpAdd">＋ ${L ? 'Tambah tujuan' : 'Add destination'}</button>${W.cmpKind === 'custom' ? ` <button type="button" class="linkish" id="cmpReset">${L ? 'Kembalikan ke awal' : 'Reset list'}</button>` : ''}</p>
+    <div id="cmpForm" class="cmp-form" hidden><input id="cmpQ" type="search" autocomplete="off" placeholder="${L ? 'Ketik nama kota atau tempat…' : 'Type a town or place…'}"><div id="cmpRes" class="cmp-res"></div><button type="button" class="linkish" id="cmpCancel">${L ? 'Batal' : 'Cancel'}</button></div>
+    <p class="muted small">${W.cmpKind === 'custom' ? (L ? 'Daftar tujuanmu sendiri, tersimpan di perangkat ini. Persentase = peluang hujan.' : 'Your own list, saved on this device. Percentage = chance of rain.') : W.cmpKind === 'fav' ? (L ? 'Membandingkan tempat favoritmu (★). Ketuk ＋ atau ✕ untuk mengubah. Persentase = peluang hujan.' : 'Comparing your saved places (★). Tap ＋ or ✕ to change. Percentage = chance of rain.') : (L ? 'Ketuk ＋ untuk menambah tujuanmu sendiri, atau ✕ untuk menghapus. Persentase = peluang hujan.' : 'Tap ＋ to add your own destinations, or ✕ to remove one. Percentage = chance of rain.')}</p></div>`;
 }
 
 // 1. boat crossings
