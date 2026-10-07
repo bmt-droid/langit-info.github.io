@@ -2652,12 +2652,18 @@ async function loadPlanes(){
   card.innerHTML = planeHtml('loading');
   try{
     const p = state.place;
-    const j = await getJSON(`${BMKG_PROXY.replace(/\/+$/, '')}/planes?lat=${p.lat.toFixed(2)}&lon=${p.lon.toFixed(2)}`);
+    // straight from adsb.lol first (each phone has its own address, so shared-server limits don't apply); our Worker is the backup
+    let j = null, why = '';
+    try{ j = await getJSON(`https://api.adsb.lol/v2/point/${p.lat.toFixed(2)}/${p.lon.toFixed(2)}/27`, 9000); if (!Array.isArray(j.ac)) j = null; }catch(e){ why = e.name === 'AbortError' ? 'timeout' : e.message; }
+    if (!j){
+      try{ j = await getJSON(`${BMKG_PROXY.replace(/\/+$/, '')}/planes?lat=${p.lat.toFixed(2)}&lon=${p.lon.toFixed(2)}`, 12000); if (!Array.isArray(j.ac)) throw new Error('no aircraft list'); }
+      catch(e){ throw new Error(`${why || 'direct failed'} / backup: ${e.name === 'AbortError' ? 'timeout' : e.message}`); }
+    }
     const list = (j.ac || []).filter(a => a.lat != null && a.lon != null && a.alt_baro !== 'ground' && !((+a.dbFlags || 0) & 1) && ((+a.alt_baro || 0) > 300 || isHeli(a)))
       .map(a => ({ ...a, km: haversine(p.lat, p.lon, a.lat, a.lon), brg: bearing(p.lat, p.lon, a.lat, a.lon) }))
       .filter(a => a.km <= 50).sort((x, y) => x.km - y.km);
     state.planes = { key: placeKey(p), at: Date.now(), list };
-  }catch(e){ state.planes = { key: placeKey(state.place), at: Date.now(), error: true }; }
+  }catch(e){ state.planes = { key: placeKey(state.place), at: Date.now(), error: true, why: String(e.message || '').slice(0, 120) }; }
   const c = $('#planeCard'); if (c) c.innerHTML = planeHtml();
 }
 function planeHtml(mode){
@@ -2667,7 +2673,7 @@ function planeHtml(mode){
   const P = state.planes && state.planes.key === placeKey(state.place) ? state.planes : null;
   if (mode === 'loading') return head + `<p class="muted">${L ? 'Mencari pesawat di sekitar…' : 'Looking for planes nearby…'}</p>`;
   if (!P) return head + `<p>${L ? 'Lihat pesawat yang sedang terbang dalam radius 50 km dari lokasi ini.' : 'See the planes flying within 50 km of this place right now.'}</p>` + btn(L ? '✈️ Lihat pesawat di atas kita' : '✈️ Show planes above us');
-  if (P.error) return head + `<p class="muted">${L ? 'Data pesawat belum bisa dimuat. Coba lagi sebentar lagi.' : 'Plane data couldn’t be loaded. Try again in a moment.'}</p>` + btn(L ? 'Coba lagi' : 'Try again');
+  if (P.error) return head + `<p class="muted">${L ? 'Data pesawat belum bisa dimuat. Coba lagi sebentar lagi.' : 'Plane data couldn’t be loaded. Try again in a moment.'}</p>${P.why ? `<p class="muted small">(${esc(P.why)})</p>` : ''}` + btn(L ? 'Coba lagi' : 'Try again');
   const ago = Math.max(0, Math.round((Date.now() - P.at) / 60000));
   if (!P.list.length) return head + `<p>${L ? 'Belum terdeteksi pesawat di sekitar sini saat ini.' : 'No planes detected nearby right now.'}</p><p class="muted small">${L ? 'Data berasal dari penerima ADS-B relawan; di sebagian daerah cakupannya masih terbatas.' : 'Data comes from volunteer ADS-B receivers; coverage is limited in some areas.'}</p>` + btn(L ? '🔄 Perbarui' : '🔄 Refresh');
   const rows = P.list.slice(0, 4).map(a => {

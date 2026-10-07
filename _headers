@@ -1,7 +1,7 @@
 # Security and caching headers for langit.info (read by Cloudflare Pages; GitHub Pages ignores this file)
 # Allows Cloudflare Web Analytics. When Google ads are switched on, this policy must be widened for Google's ad domains.
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://data.bmkg.go.id https://api.langit.info https://langit-bmkg.bosminyaktondano.workers.dev; connect-src 'self' https://*.open-meteo.com https://api.bigdatacloud.net https://api.langit.info https://langit-bmkg.bosminyaktondano.workers.dev https://data.bmkg.go.id https://ll.thespacedevs.com https://cloudflareinsights.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://data.bmkg.go.id https://api.langit.info https://langit-bmkg.bosminyaktondano.workers.dev; connect-src 'self' https://*.open-meteo.com https://api.bigdatacloud.net https://api.langit.info https://langit-bmkg.bosminyaktondano.workers.dev https://data.bmkg.go.id https://ll.thespacedevs.com https://api.adsb.lol https://cloudflareinsights.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
