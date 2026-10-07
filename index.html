@@ -599,6 +599,8 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
 (() => {
 // ===== SETTING: paste your Cloudflare Worker address between the quotes, e.g. 'https://langit-bmkg.yourname.workers.dev'
 const BMKG_PROXY = 'https://api.langit.info';
+// technical error details only for us: open langit.info/?debug
+const DEBUG = /[?&]debug\b/.test(location.search);
 // ===== SETTING: Google AdSense. Ads stay off until 'client' is filled in.
 // client: your publisher ID from AdSense, e.g. 'ca-pub-1234567890123456'
 // slotMid / slotEnd: ad unit IDs (numbers) from AdSense → Ads → By ad unit → Display ads
@@ -651,7 +653,7 @@ id: {
   vis:'Jarak pandang', visClear:'Pandangan jelas.', visHaze:'Sedikit berkabut atau berasap.', visLow:'Berkurang karena kabut, asap atau hujan.',
   quake:'Gempa terkini (BMKG)', quakeNear:km=>`${km} dari lokasi ini.`, quakeDepth:d=>`Kedalaman ${d}.`,
   ago:h=>h<1?'Kurang dari 1 jam lalu':h<48?`${h} jam lalu`:`${Math.round(h/24)} hari lalu`,
-  footer:'Data prakiraan, kelautan dan kualitas udara: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0). Data gempa: <a href="https://www.bmkg.go.id/" target="_blank" rel="noopener">BMKG</a>. Diperbarui setiap 15 menit.',
+  footer:'Data prakiraan, kelautan dan kualitas udara: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0). Data gempa: <a href="https://www.bmkg.go.id/" target="_blank" rel="noopener">BMKG</a>. Pencarian lokasi: © kontributor OpenStreetMap. Diperbarui setiap 15 menit.',
   modes:{umum:'Umum',jemuran:'Jemuran',petani:'Petani',nelayan:'Nelayan',wisata:'Wisata',golf:'Golf'},
   loadingExtra:'Memuat data tambahan…', extraErr:'Data tambahan tidak bisa dimuat. Coba lagi nanti.',
   // Jemuran
@@ -746,7 +748,7 @@ en: {
   vis:'Visibility', visClear:'Clear view to the horizon.', visHaze:'Slight haze.', visLow:'Reduced by haze, fog or rain.',
   quake:'Latest earthquake (BMKG)', quakeNear:km=>`${km} from this place.`, quakeDepth:d=>`Depth ${d}.`,
   ago:h=>h<1?'Less than an hour ago':h<48?`${h} hours ago`:`${Math.round(h/24)} days ago`,
-  footer:'Forecast, marine and air-quality data from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0). Earthquake data from <a href="https://www.bmkg.go.id/" target="_blank" rel="noopener">BMKG</a>. Refreshes every 15 minutes.',
+  footer:'Forecast, marine and air-quality data from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0). Earthquake data from <a href="https://www.bmkg.go.id/" target="_blank" rel="noopener">BMKG</a>. Place search: © OpenStreetMap contributors. Refreshes every 15 minutes.',
   modes:{umum:'Overview',jemuran:'Laundry',petani:'Farming',nelayan:'Fishing',wisata:'Travel',golf:'Golf'},
   loadingExtra:'Loading extra data…', extraErr:"Extra data couldn't be loaded. Try again later.",
   jmGood:'Hang it out now!', jmOk:'Hang it out, but watch the sky', jmBad:'Keep the laundry inside', jmNight:"It's dark, hang it out tomorrow",
@@ -1191,7 +1193,7 @@ async function getJSON(url, ms = 12000){
   try{
     const r = await fetch(url, { signal: ctl.signal });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok || j.error) throw new Error(j.reason || ('HTTP ' + r.status));
+    if (!r.ok || j.error) throw new Error(j.reason || (typeof j.error === 'string' ? j.error : '') || ('HTTP ' + r.status));
     return j;
   } finally { clearTimeout(timer); }
 }
@@ -2046,7 +2048,7 @@ function modeNelayan(){
   const nTone = !H.is_day[i0] ? 'night' : (H.precipitation_probability[i0] ?? 0) >= 50 ? 'bad' : 'good';
   if (state.marine && state.marine.failed){
     const L = state.lang === 'id';
-    return verdict('muted', L ? 'Data gelombang belum termuat' : "Wave data didn't load", `<p class="muted">${L ? 'Koneksi ke layanan prakiraan laut sedang lambat atau terputus. Ini bukan berarti lokasi jauh dari laut.' : "The connection to the marine forecast service was slow or dropped. This doesn't mean the place is far from the sea."}</p>${state.marine.why ? `<p class="muted small">(${esc(String(state.marine.why).slice(0, 120))})</p>` : ''}<p><button class="pill sos-btn" id="seaRetry" type="button">${L ? 'Coba lagi' : 'Try again'}</button></p>`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}${safetyCard()}</div>` + official;
+    return verdict('muted', L ? 'Data gelombang belum termuat' : "Wave data didn't load", `<p class="muted">${L ? 'Sepertinya sinyal sedang lambat atau layanan prakiraan laut sedang sibuk. Coba lagi sebentar lagi ya.' : "The signal seems slow or the sea forecast service is busy. Please try again in a moment."}</p>${DEBUG && state.marine.why ? `<p class="muted small">(${esc(String(state.marine.why).slice(0, 120))})</p>` : ''}<p><button class="pill sos-btn" id="seaRetry" type="button">${L ? 'Coba lagi' : 'Try again'}</button></p>`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}${safetyCard()}</div>` + official;
   }
   if (!valid) return verdict('muted', t('nlInland'), `<p class="muted">${t('nlInlandSub')}</p>${safeExtra(coastSuggest)}`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}${safetyCard(false)}</div>` + official;
 
@@ -2673,7 +2675,7 @@ function planeHtml(mode){
   const P = state.planes && state.planes.key === placeKey(state.place) ? state.planes : null;
   if (mode === 'loading') return head + `<p class="muted">${L ? 'Mencari pesawat di sekitar…' : 'Looking for planes nearby…'}</p>`;
   if (!P) return head + `<p>${L ? 'Lihat pesawat yang sedang terbang dalam radius 50 km dari lokasi ini.' : 'See the planes flying within 50 km of this place right now.'}</p>` + btn(L ? '✈️ Lihat pesawat di atas kita' : '✈️ Show planes above us');
-  if (P.error) return head + `<p class="muted">${L ? 'Data pesawat belum bisa dimuat. Coba lagi sebentar lagi.' : 'Plane data couldn’t be loaded. Try again in a moment.'}</p>${P.why ? `<p class="muted small">(${esc(P.why)})</p>` : ''}` + btn(L ? 'Coba lagi' : 'Try again');
+  if (P.error) return head + `<p class="muted">${L ? 'Data pesawat sedang tidak tersedia. Coba lagi nanti ya.' : 'Plane data isn’t available right now. Please try again later.'}</p>${DEBUG && P.why ? `<p class="muted small">(${esc(P.why)})</p>` : ''}` + btn(L ? 'Coba lagi' : 'Try again');
   const ago = Math.max(0, Math.round((Date.now() - P.at) / 60000));
   if (!P.list.length) return head + `<p>${L ? 'Belum terdeteksi pesawat di sekitar sini saat ini.' : 'No planes detected nearby right now.'}</p><p class="muted small">${L ? 'Data berasal dari penerima ADS-B relawan; di sebagian daerah cakupannya masih terbatas.' : 'Data comes from volunteer ADS-B receivers; coverage is limited in some areas.'}</p>` + btn(L ? '🔄 Perbarui' : '🔄 Refresh');
   const rows = P.list.slice(0, 4).map(a => {
@@ -3597,7 +3599,7 @@ function drawList(){
 // add the kabupaten/kota so same-named villages can be told apart, and remove duplicates
 const fold = v => String(v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 const stripPrefix = v => String(v || '').replace(/^(Kota|Kabupaten|Kotamadya|Provinsi|Propinsi|Daerah Tingkat I{1,2}|Daerah Istimewa|Daerah Khusus Ibukota|Region|Oblast)\s+/i, '').trim();
-const shortAdm = v => String(v || '').replace(/^Kabupaten\s+/i, 'Kab. ').replace(/^Kotamadya\s+/i, 'Kota ').replace(/^(Provinsi|Propinsi|Daerah Tingkat I{1,2})\s+/i, '').trim();
+const shortAdm = v => String(v || '').replace(/^Kabupaten\s+/i, 'Kab. ').replace(/^Kotamadya\s+/i, 'Kota ').replace(/^(Provinsi|Propinsi|Daerah Tingkat I{1,2})\s+/i, '').replace(/^Daerah Istimewa\s+/i, 'DI ').replace(/^Daerah Khusus( Ibu ?kota)?\s+/i, 'DKI ').trim();
 const FEAT_RANK = { PPLC: 600, PPLA: 500, PPLA2: 400, PPLA3: 300, PPLA4: 200, PPLX: 150, PPL: 100 };
 // Famous islands and destinations that the place database lists poorly (or only as a region),
 // shown first when they match what is typed
@@ -3641,22 +3643,50 @@ function tidyPlaces(raw, term){
     const dup = out.some(o => (fold(o.name) === fold(name) && fold(o.region) === fold(region)) ||
                               (fold(o.name) === fold(name) && Math.abs(o.lat - r.latitude) < 0.05 && Math.abs(o.lon - r.longitude) < 0.05));
     if (dup) continue;
-    out.push({ name, region, lat: r.latitude, lon: r.longitude });
+    out.push({ name, region, lat: r.latitude, lon: r.longitude, cc: r.country_code });
+    if (out.length === 6) break;
+  }
+  return out;
+}
+// Photon (OpenStreetMap) results: towns, villages, islands, beaches, mountains and landmarks, with tidy names
+const PH_KEEP = /^(place|boundary|natural|tourism|leisure|aeroway|historic)$/;
+const PH_SKIP = /^(hotel|guest_house|hostel|motel|apartment|chalet|camp_site|caravan_site|picnic_site|information|artwork|yes|house|tree|stone|wetland|scrub|wood|grassland)$/;
+const PH_RANK = { city:300, town:260, municipality:250, island:240, state:220, administrative:200, county:200, volcano:200, beach:200, peak:180, national_park:180, village:140, suburb:120, region:120, attraction:150, aerodrome:150, bay:120, islet:120, quarter:90, neighbourhood:60, hamlet:50 };
+function tidyPhoton(feats, term){
+  const want = fold(term), out = [];
+  const ok = f => f && f.properties && f.properties.name && f.geometry && PH_KEEP.test(f.properties.osm_key) && !PH_SKIP.test(f.properties.osm_value) && (f.properties.osm_key !== 'boundary' || f.properties.osm_value === 'administrative');
+  const score = (f, i) => { const p = f.properties; return (p.countrycode === 'ID' ? 400 : 0) + (PH_RANK[p.osm_value] ?? 40) + (fold(stripPrefix(p.name)).startsWith(want) || fold(p.name).startsWith(want) ? 60 : 0) - i * 4; };
+  const list = feats.filter(ok).map((f, i) => ({ f, s: score(f, i) })).sort((a, b) => b.s - a.s).map(x => x.f);
+  for (const f of list){
+    const p = f.properties, lon = f.geometry.coordinates[0], lat = f.geometry.coordinates[1];
+    const name = stripPrefix(p.name) || p.name;
+    const parts = [];
+    [p.city, p.county, p.state].forEach(x => { if (!x) return; const v = shortAdm(x); if (fold(stripPrefix(v)) !== fold(name) && !parts.some(u => fold(stripPrefix(u)) === fold(stripPrefix(v)))) parts.push(v); });
+    const region = [...parts.slice(-2), p.countrycode === 'ID' ? '' : p.country].filter(Boolean).join(', ');
+    if (out.some(o => fold(o.name) === fold(name) && (fold(o.region) === fold(region) || haversine(o.lat, o.lon, lat, lon) < 8))) continue;
+    out.push({ name, region, lat: +lat.toFixed(4), lon: +lon.toFixed(4), cc: p.countrycode });
     if (out.length === 6) break;
   }
   return out;
 }
 async function search(term){
   const id = ++reqId;
-  try{
-    const j = await getJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(term)}&count=25&language=${state.lang}&format=json`, 8000);
-    if (id !== reqId) return;
-    const pop = popularMatches(term);
-    const clean = tidyPlaces(j.results || [], term).filter(r => !pop.some(p => fold(p.name) === fold(r.name) && Math.abs(p.lat - r.lat) < 0.2 && Math.abs(p.lon - r.lon) < 0.2));
-    results = [...pop, ...clean].slice(0, 6);
-    active = results.length ? 0 : -1;
-    drawList();
-  }catch(e){ if (id === reqId){ results = popularMatches(term); if (results.length){ active = 0; drawList(); } else { list.innerHTML = `<li class="empty">${esc(t('searchDown'))}</li>`; list.hidden = false; } } }
+  // Photon is the main search; the Open-Meteo place list runs alongside as a backup and fills gaps
+  const ph = getJSON(`https://photon.komoot.io/api/?q=${encodeURIComponent(term)}&limit=15${state.lang === 'en' ? '&lang=en' : ''}&lat=-2.5&lon=118&zoom=5`, 6000).then(j => tidyPhoton(j.features || [], term)).catch(() => null);
+  const om = getJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(term)}&count=25&language=${state.lang}&format=json`, 8000).then(j => tidyPlaces(j.results || [], term)).catch(() => null);
+  const [a, b] = await Promise.all([ph, om]);
+  if (id !== reqId) return;
+  const pop = popularMatches(term);
+  if (!a && !b && !pop.length){ list.innerHTML = `<li class="empty">${esc(t('searchDown'))}</li>`; list.hidden = false; return; }
+  const merged = [...pop];
+  const same = (x, y) => (fold(x.name) === fold(y.name) && haversine(x.lat, x.lon, y.lat, y.lon) < 15) || haversine(x.lat, x.lon, y.lat, y.lon) < 1.5;
+  const add = r => { if (!merged.some(m => same(m, r))) merged.push(r); };
+  const A = a || [], B = b || [];
+  A.filter(r => r.cc === 'ID').forEach(add); B.filter(r => r.cc === 'ID').forEach(add);
+  A.filter(r => r.cc !== 'ID').forEach(add); B.filter(r => r.cc !== 'ID').forEach(add);
+  results = merged.slice(0, 6);
+  active = results.length ? 0 : -1;
+  drawList();
 }
 function choose(i){ const r = results[i]; if (!r) return; q.value = ''; closeList(); q.blur(); loadPlace(r); }
 q.addEventListener('input', () => {
