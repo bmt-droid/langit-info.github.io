@@ -2649,9 +2649,9 @@ function flightName(cs){
   // no airline code: usually a registration (e.g. PK-XYZ, T7JRG) = private, charter or other non-scheduled flight
   return { code: c || '–', airline: '', priv: !!c && !/^[A-Z]{3}\d/.test(c) };
 }
-async function loadPlanes(){
+async function loadPlanes(quiet){
   const card = $('#planeCard'); if (!card || !BMKG_PROXY) return;
-  card.innerHTML = planeHtml('loading');
+  if (!quiet) card.innerHTML = planeHtml('loading');
   try{
     const p = state.place;
     // our Worker asks adsb.lol, then ADSB One, and keeps a recent copy when both are busy
@@ -2664,6 +2664,8 @@ async function loadPlanes(){
     state.planes = { key: placeKey(p), at: j.now && j.now <= Date.now() + 60000 ? j.now : Date.now(), list, src: j.src || 'adsb.lol' };
   }catch(e){ state.planes = { key: placeKey(state.place), at: Date.now(), error: true, why: String(e.message || '').slice(0, 120) }; }
   const c = $('#planeCard'); if (c) c.innerHTML = planeHtml();
+  // the section only shows once plane data has actually arrived (always shown with ?debug)
+  const sec = $('#planeSec'); if (sec && quiet) sec.hidden = !!state.planes.error && !DEBUG;
 }
 function planeHtml(mode){
   const L = state.lang === 'id';
@@ -2692,8 +2694,11 @@ function planeHtml(mode){
 function renderPlaneSection(){
   const sec = $('#planeSec'); if (!sec || !state.data || !BMKG_PROXY) return;
   $('#h-plane').textContent = state.lang === 'id' ? '✈️ Pesawat di atas kita' : '✈️ Planes above us';
+  const P = state.planes && state.planes.key === placeKey(state.place) ? state.planes : null;
   $('#planeCard').innerHTML = planeHtml();
-  sec.hidden = false;
+  sec.hidden = !(DEBUG || (P && !P.error));
+  // look for planes quietly in the background; a failed try is retried after 5 minutes
+  if (!P || (P.error && Date.now() - P.at > 5 * 60000)) loadPlanes(true);
 }
 document.addEventListener('click', e => { if (e.target.closest('#planeBtn')) loadPlanes(); });
 
