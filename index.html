@@ -2654,17 +2654,14 @@ async function loadPlanes(){
   card.innerHTML = planeHtml('loading');
   try{
     const p = state.place;
-    // straight from adsb.lol first (each phone has its own address, so shared-server limits don't apply); our Worker is the backup
-    let j = null, why = '';
-    try{ j = await getJSON(`https://api.adsb.lol/v2/point/${p.lat.toFixed(2)}/${p.lon.toFixed(2)}/27`, 9000); if (!Array.isArray(j.ac)) j = null; }catch(e){ why = e.name === 'AbortError' ? 'timeout' : e.message; }
-    if (!j){
-      try{ j = await getJSON(`${BMKG_PROXY.replace(/\/+$/, '')}/planes?lat=${p.lat.toFixed(2)}&lon=${p.lon.toFixed(2)}`, 12000); if (!Array.isArray(j.ac)) throw new Error('no aircraft list'); }
-      catch(e){ throw new Error(`${why || 'direct failed'} / backup: ${e.name === 'AbortError' ? 'timeout' : e.message}`); }
-    }
+    // our Worker asks adsb.lol, then ADSB One, and keeps a recent copy when both are busy
+    let j;
+    try{ j = await getJSON(`${BMKG_PROXY.replace(/\/+$/, '')}/planes?lat=${p.lat.toFixed(2)}&lon=${p.lon.toFixed(2)}`, 15000); if (!Array.isArray(j.ac)) throw new Error('no aircraft list'); }
+    catch(e){ throw new Error(e.name === 'AbortError' ? 'timeout' : e.message); }
     const list = (j.ac || []).filter(a => a.lat != null && a.lon != null && a.alt_baro !== 'ground' && !((+a.dbFlags || 0) & 1) && ((+a.alt_baro || 0) > 300 || isHeli(a)))
       .map(a => ({ ...a, km: haversine(p.lat, p.lon, a.lat, a.lon), brg: bearing(p.lat, p.lon, a.lat, a.lon) }))
       .filter(a => a.km <= 50).sort((x, y) => x.km - y.km);
-    state.planes = { key: placeKey(p), at: Date.now(), list };
+    state.planes = { key: placeKey(p), at: j.now && j.now <= Date.now() + 60000 ? j.now : Date.now(), list, src: j.src || 'adsb.lol' };
   }catch(e){ state.planes = { key: placeKey(state.place), at: Date.now(), error: true, why: String(e.message || '').slice(0, 120) }; }
   const c = $('#planeCard'); if (c) c.innerHTML = planeHtml();
 }
@@ -2690,7 +2687,7 @@ function planeHtml(mode){
       <small>${L ? `${Math.round(a.km)} km ke arah ${dir8(a.brg)}` : `${Math.round(a.km)} km to the ${dir8(a.brg)}`} · ${m.toLocaleString(locale())} m${spd ? ' · ' + spd : ''}${a.track != null ? (L ? ` · menuju ${dir8(a.track)}` : ` · heading ${dir8(a.track)}`) : ''}</small>${tag ? `<br><span class="fl-tag">${tag}</span>` : ''}</span></li>`;
   }).join('');
   return head + `<p class="lead">${L ? `${P.list.length} pesawat${P.list.some(isHeli) ? ' dan helikopter' : ''} sedang terbang dalam radius 50 km` : `${P.list.length} aircraft flying within 50 km`}</p><ul class="hol-list">${rows}</ul>
-    <p class="muted small">${L ? `Diperbarui ${ago ? ago + ' menit lalu' : 'baru saja'}. Data: adsb.lol (ODbL), dari penerima ADS-B relawan.` : `Updated ${ago ? ago + ' min ago' : 'just now'}. Data: adsb.lol (ODbL), from volunteer ADS-B receivers.`}</p>` + btn(L ? '🔄 Perbarui' : '🔄 Refresh');
+    <p class="muted small">${L ? `Diperbarui ${ago ? ago + ' menit lalu' : 'baru saja'}. Data: ${P.src === 'adsb.one' ? 'ADSB One' : 'adsb.lol (ODbL)'}, dari penerima ADS-B relawan.` : `Updated ${ago ? ago + ' min ago' : 'just now'}. Data: ${P.src === 'adsb.one' ? 'ADSB One' : 'adsb.lol (ODbL)'}, from volunteer ADS-B receivers.`}</p>` + btn(L ? '🔄 Perbarui' : '🔄 Refresh');
 }
 function renderPlaneSection(){
   const sec = $('#planeSec'); if (!sec || !state.data || !BMKG_PROXY) return;
