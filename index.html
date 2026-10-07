@@ -1247,7 +1247,7 @@ async function loadPlace(place, opts = {}){
 
 async function ensureExtras(){
   const key = placeKey(state.place), p = state.place;
-  const needMarine = (state.mode === 'nelayan' || state.mode === 'wisata') && !state.marine;
+  const needMarine = (state.mode === 'nelayan' || state.mode === 'wisata') && (!state.marine || state.marine.failed);
   const needFarm = (state.mode === 'petani' || state.mode === 'golf') && !state.farm;
   const needMetar = state.mode === 'wisata' && !state.metar;
   const needSeason = state.mode === 'petani' && !state.season;
@@ -1256,8 +1256,13 @@ async function ensureExtras(){
   renderMode(true);
   try{
     if (needMarine){
-      const m = await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${p.lat}&longitude=${p.lon}&timezone=auto&forecast_days=3&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_period,sea_level_height_msl&daily=wave_height_max`)
-        .catch(() => ({ inland:true }));
+      // a failed or slow request is NOT the same as "far from the sea": retry once, then offer a retry button
+      const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${p.lat}&longitude=${p.lon}&timezone=auto&forecast_days=3&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_period,sea_level_height_msl&daily=wave_height_max`;
+      let m = null;
+      for (let a = 0; a < 2 && !m; a++){
+        if (a) await new Promise(r => setTimeout(r, 1500));
+        m = await getJSON(url, 15000).catch(e => /no data|location|land/i.test(e.message || '') ? { inland:true } : (a ? { failed:true } : null));
+      }
       if (placeKey(state.place) === key) state.marine = m;
     }
     if (needFarm){
@@ -1284,6 +1289,7 @@ async function ensureExtras(){
   }
   renderMode();
 }
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#seaRetry')){ state.marine = null; ensureExtras(); } });
 
 const inIndonesia = p => p.lat > -11.5 && p.lat < 6.5 && p.lon > 94.5 && p.lon < 141.5;
 async function loadQuakes(){
@@ -1950,6 +1956,10 @@ function modeNelayan(){
   const nq = inIndonesia(state.place) ? nearestQuake() : null;
   const tsu = nq && tsunamiRisk(nq.q) ? `<p class="alert">${esc(t('tsunami'))}</p>` : '';
   const nTone = !H.is_day[i0] ? 'night' : (H.precipitation_probability[i0] ?? 0) >= 50 ? 'bad' : 'good';
+  if (state.marine && state.marine.failed){
+    const L = state.lang === 'id';
+    return verdict('muted', L ? 'Data gelombang belum termuat' : "Wave data didn't load", `<p class="muted">${L ? 'Koneksi ke layanan prakiraan laut sedang lambat atau terputus. Ini bukan berarti lokasi jauh dari laut.' : "The connection to the marine forecast service was slow or dropped. This doesn't mean the place is far from the sea."}</p><p><button class="pill" id="seaRetry" type="button">${L ? 'Coba lagi' : 'Try again'}</button></p>`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}${safetyCard()}</div>` + official;
+  }
   if (!valid) return verdict('muted', t('nlInland'), `<p class="muted">${t('nlInlandSub')}</p>`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}${safetyCard(false)}</div>` + official;
 
   const M = state.marine.hourly, m0 = mi[H.time[i0]];
@@ -2002,7 +2012,7 @@ function modeWisata(){
 
   // Beach & surf
   const mi = marineIndex();
-  let beach = fact(t('beach'), null, t('noSea'));
+  let beach = fact(t('beach'), null, state.marine && state.marine.failed ? (state.lang === 'id' ? 'Data gelombang belum termuat. Buka lagi sebentar lagi.' : "Wave data didn't load. Try again shortly.") : t('noSea'));
   if (mi && mi[H.time[i0]] != null && state.marine.hourly.wave_height[mi[H.time[i0]]] != null){
     const M = state.marine.hourly, m = mi[H.time[i0]], wave = M.wave_height[m];
     const sw = M.swell_wave_height ? (M.swell_wave_height[m] ?? wave) : wave, sp = M.swell_wave_period ? (M.swell_wave_period[m] ?? 0) : 0;
