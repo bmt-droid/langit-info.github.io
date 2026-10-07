@@ -297,6 +297,8 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .check-list{margin:6px 0 10px;padding-left:1.1em}
 .check-list li{margin:3px 0}
 .sos{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.coast-go{display:flex;flex-wrap:wrap;gap:8px}
+.coast-go small{opacity:.75;font-weight:500}
 .sos-btn{text-decoration:none;font-weight:700;color:var(--ink);border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:9px 14px}
 .ad-slot{margin:30px 0 6px;padding-top:10px;border-top:1px solid var(--line);min-height:110px}
 .ad-slot[hidden]{display:none}
@@ -1991,6 +1993,43 @@ function tideBlock(){
   return `<div class="fact tide-card"><h3>${L ? '🌊 Pasang surut' : '🌊 Tides'}</h3>${trend}<ul class="hol-list">${rows}</ul>
     <p class="muted small">${L ? 'Dari model pasang surut global, tinggi relatif terhadap muka laut rata-rata. Di teluk, muara dan pelabuhan waktunya bisa bergeser 30–60 menit; cocokkan dengan pengalaman setempat.' : 'From a global tide model, height relative to mean sea level. In bays, river mouths and harbours the timing can shift by 30–60 minutes; check against local knowledge.'}</p></div>`;
 }
+/* ---------- Nelayan: nearest coastal towns for inland places ---------- */
+const COAST = [
+  ['Parangtritis','Kab. Bantul, DI Yogyakarta',-8.025,110.33],['Pantai Baron','Kab. Gunungkidul, DI Yogyakarta',-8.13,110.55],['Pangandaran','Kab. Pangandaran, Jawa Barat',-7.70,108.65],
+  ['Pelabuhan Ratu','Kab. Sukabumi, Jawa Barat',-6.99,106.55],['Cilacap','Kab. Cilacap, Jawa Tengah',-7.73,109.01],['Pacitan','Kab. Pacitan, Jawa Timur',-8.21,111.09],
+  ['Prigi','Kab. Trenggalek, Jawa Timur',-8.29,111.73],['Sendang Biru','Kab. Malang, Jawa Timur',-8.43,112.68],['Puger','Kab. Jember, Jawa Timur',-8.38,113.47],
+  ['Muncar','Kab. Banyuwangi, Jawa Timur',-8.43,114.33],['Muara Angke','Kota Jakarta Utara, DKI Jakarta',-6.105,106.77],['Merak','Kota Cilegon, Banten',-5.93,106.00],
+  ['Karangsong','Kab. Indramayu, Jawa Barat',-6.31,108.36],['Cirebon','Kota Cirebon, Jawa Barat',-6.71,108.57],['Tegal','Kota Tegal, Jawa Tengah',-6.85,109.13],
+  ['Pekalongan','Kota Pekalongan, Jawa Tengah',-6.86,109.68],['Tambak Lorok','Kota Semarang, Jawa Tengah',-6.95,110.44],['Jepara','Kab. Jepara, Jawa Tengah',-6.59,110.66],
+  ['Rembang','Kab. Rembang, Jawa Tengah',-6.70,111.34],['Tuban','Kab. Tuban, Jawa Timur',-6.89,112.05],['Brondong','Kab. Lamongan, Jawa Timur',-6.87,112.28],
+  ['Kenjeran','Kota Surabaya, Jawa Timur',-7.24,112.80],['Probolinggo','Kota Probolinggo, Jawa Timur',-7.73,113.22],['Situbondo','Kab. Situbondo, Jawa Timur',-7.70,114.00],
+  ['Sanur','Kota Denpasar, Bali',-8.68,115.265],['Jimbaran','Kab. Badung, Bali',-8.78,115.16],['Pengambengan','Kab. Jembrana, Bali',-8.39,114.58],
+  ['Lovina','Kab. Buleleng, Bali',-8.16,115.03],['Amed','Kab. Karangasem, Bali',-8.34,115.66],['Ampenan','Kota Mataram, NTB',-8.57,116.07],
+  ['Labuhan Lombok','Kab. Lombok Timur, NTB',-8.50,116.67],['Bima','Kota Bima, NTB',-8.45,118.72],['Labuan Bajo','Kab. Manggarai Barat, NTT',-8.50,119.88],
+  ['Maumere','Kab. Sikka, NTT',-8.62,122.21],['Kupang','Kota Kupang, NTT',-10.16,123.58],['Lampulo','Kota Banda Aceh, Aceh',5.57,95.32],
+  ['Sibolga','Kota Sibolga, Sumatera Utara',1.74,98.78],['Belawan','Kota Medan, Sumatera Utara',3.78,98.69],['Padang','Kota Padang, Sumatera Barat',-0.95,100.35],
+  ['Bengkulu','Kota Bengkulu, Bengkulu',-3.80,102.25],['Bandar Lampung','Kota Bandar Lampung, Lampung',-5.45,105.27],['Dumai','Kota Dumai, Riau',1.68,101.45],
+  ['Batam','Kota Batam, Kepulauan Riau',1.13,104.05],['Pangkal Pinang','Kota Pangkal Pinang, Bangka Belitung',-2.12,106.13],['Tanjung Pandan','Kab. Belitung, Bangka Belitung',-2.74,107.63],
+  ['Singkawang','Kota Singkawang, Kalimantan Barat',0.91,108.95],['Kotabaru','Kab. Kotabaru, Kalimantan Selatan',-3.24,116.23],['Balikpapan','Kota Balikpapan, Kalimantan Timur',-1.27,116.83],
+  ['Bontang','Kota Bontang, Kalimantan Timur',0.13,117.50],['Tarakan','Kota Tarakan, Kalimantan Utara',3.30,117.58],['Manado','Kota Manado, Sulawesi Utara',1.49,124.83],
+  ['Bitung','Kota Bitung, Sulawesi Utara',1.44,125.19],['Gorontalo','Kota Gorontalo, Gorontalo',0.51,123.06],['Palu','Kota Palu, Sulawesi Tengah',-0.88,119.84],
+  ['Paotere','Kota Makassar, Sulawesi Selatan',-5.11,119.42],['Parepare','Kota Parepare, Sulawesi Selatan',-4.01,119.62],['Kendari','Kota Kendari, Sulawesi Tenggara',-3.97,122.59],
+  ['Bau-Bau','Kota Baubau, Sulawesi Tenggara',-5.47,122.60],['Luwuk','Kab. Banggai, Sulawesi Tengah',-0.95,122.79],['Ambon','Kota Ambon, Maluku',-3.69,128.18],
+  ['Ternate','Kota Ternate, Maluku Utara',0.79,127.38],['Tual','Kota Tual, Maluku',-5.63,132.75],['Sorong','Kota Sorong, Papua Barat Daya',-0.88,131.25],
+  ['Manokwari','Kab. Manokwari, Papua Barat',-0.86,134.08],['Biak','Kab. Biak Numfor, Papua',-1.18,136.08],['Jayapura','Kota Jayapura, Papua',-2.53,140.71],
+  ['Merauke','Kab. Merauke, Papua Selatan',-8.49,140.39],['Tanjung Pinang','Kota Tanjung Pinang, Kepulauan Riau',0.92,104.45],['Pontianak','Kota Pontianak, Kalimantan Barat',-0.02,109.33]
+];
+function coastSuggest(){
+  const p = state.place, L = state.lang === 'id';
+  const near = COAST.map(c => ({ c, km: haversine(p.lat, p.lon, c[2], c[3]) })).filter(o => o.km >= 5 && o.km <= 250).sort((a, b) => a.km - b.km).slice(0, 2);
+  if (!near.length) return '';
+  return `<p class="muted small">${L ? 'Kota pesisir terdekat:' : 'Nearest coastal towns:'}</p><p class="coast-go">${near.map(o => `<button class="pill sos-btn" type="button" data-coast="${COAST.indexOf(o.c)}">🌊 ${esc(o.c[0])} <small>±${Math.round(o.km)} km</small></button>`).join(' ')}</p>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-coast]'); if (!b) return;
+  const c = COAST[+b.dataset.coast]; if (c) loadPlace({ name: c[0], region: c[1], lat: c[2], lon: c[3] });
+});
+
 function modeNelayan(){
   const d = state.data, H = d.hourly, D = d.daily, i0 = state.i0, end = Math.min(H.time.length, i0 + 48);
   const mi = marineIndex();
@@ -2007,7 +2046,7 @@ function modeNelayan(){
     const L = state.lang === 'id';
     return verdict('muted', L ? 'Data gelombang belum termuat' : "Wave data didn't load", `<p class="muted">${L ? 'Koneksi ke layanan prakiraan laut sedang lambat atau terputus. Ini bukan berarti lokasi jauh dari laut.' : "The connection to the marine forecast service was slow or dropped. This doesn't mean the place is far from the sea."}</p>${state.marine.why ? `<p class="muted small">(${esc(String(state.marine.why).slice(0, 120))})</p>` : ''}<p><button class="pill sos-btn" id="seaRetry" type="button">${L ? 'Coba lagi' : 'Try again'}</button></p>`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}${safetyCard()}</div>` + official;
   }
-  if (!valid) return verdict('muted', t('nlInland'), `<p class="muted">${t('nlInlandSub')}</p>`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}${safetyCard(false)}</div>` + official;
+  if (!valid) return verdict('muted', t('nlInland'), `<p class="muted">${t('nlInlandSub')}</p>${safeExtra(coastSuggest)}`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}${safetyCard(false)}</div>` + official;
 
   const M = state.marine.hourly, m0 = mi[H.time[i0]];
   const st = seaStatus(i0, mi) || 'good';
@@ -3568,8 +3607,14 @@ const POPULAR = [
   ['Dieng', 'Kab. Wonosobo, Jawa Tengah', -7.21, 109.91], ['Borobudur', 'Kab. Magelang, Jawa Tengah', -7.608, 110.204],
   ['Puncak Bogor', 'Kab. Bogor, Jawa Barat', -6.70, 106.99], ['Lembang', 'Kab. Bandung Barat, Jawa Barat', -6.81, 107.62],
   ['Kepulauan Seribu', 'DKI Jakarta (Pulau Pramuka)', -5.745, 106.614], ['Derawan', 'Kab. Berau, Kalimantan Timur', 2.29, 118.25],
-].map(([name, region, lat, lon]) => ({ name, region, lat, lon }));
-const popularMatches = term => { const w = fold(term); return w.length < 2 ? [] : POPULAR.filter(p => fold(p.name).startsWith(w) || fold(p.name).split(' ').some(x => x.startsWith(w))); };
+  ['Yogyakarta', 'DI Yogyakarta', -7.797, 110.370, 'jogja jogjakarta yogya djogja jogya ngayogyakarta diy'],
+  ['Parangtritis', 'Kab. Bantul, DI Yogyakarta', -8.025, 110.330], ['Malioboro', 'Kota Yogyakarta, DI Yogyakarta', -7.793, 110.366],
+  ['Prambanan', 'Kab. Sleman, DI Yogyakarta', -7.752, 110.491], ['Gunungkidul', 'DI Yogyakarta (Pantai Baron)', -8.130, 110.550, 'gunung kidul'],
+  ['Surakarta', 'Jawa Tengah (Solo)', -7.566, 110.817, 'solo'], ['Pangandaran', 'Kab. Pangandaran, Jawa Barat', -7.700, 108.650],
+  ['Makassar', 'Sulawesi Selatan', -5.147, 119.432, 'ujung pandang'], ['Kuta', 'Kab. Badung, Bali', -8.718, 115.169],
+  ['Sanur', 'Kota Denpasar, Bali', -8.688, 115.262], ['Tanah Lot', 'Kab. Tabanan, Bali', -8.621, 115.087],
+].map(([name, region, lat, lon, aka]) => ({ name, region, lat, lon, aka: aka || '' }));
+const popularMatches = term => { const w = fold(term); return w.length < 2 ? [] : POPULAR.filter(p => fold(p.name).startsWith(w) || fold(p.name).split(' ').some(x => x.startsWith(w)) || (p.aka && fold(p.aka).split(' ').some(x => x.startsWith(w)))).map(({ aka, ...p }) => p); };
 function tidyPlaces(raw, term){
   const want = fold(term);
   const named = r => fold(stripPrefix(r.name));
