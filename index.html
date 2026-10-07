@@ -16,7 +16,9 @@
 <title>Langit dan semua yang di atas sana</title>
 <link rel="canonical" href="https://langit.info/">
 <script>/* Langit moved to langit.info: send visitors of the old GitHub address there */
-if (location.hostname === 'bmt-droid.github.io') location.replace('https://langit.info/' + location.hash);</script>
+if (location.hostname === 'bmt-droid.github.io') location.replace('https://langit.info/' + location.hash);
+/* saved light/dark choice, applied before the page is drawn so it never flashes */
+try{ const th = JSON.parse(localStorage.getItem('skyline.theme') || '"auto"'); if (th === 'light' || th === 'dark') document.documentElement.dataset.theme = th; }catch(e){}</script>
 <link rel="preload" href="assets/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
@@ -82,10 +84,12 @@ a{color:inherit}
 .bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .brand{font-family:var(--display);font-weight:700;font-size:1.3rem;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;margin-right:auto}
 .brand svg{width:26px;height:26px}
-.search{position:relative;order:3;flex:1 1 100%}
+.search{position:relative;order:3;flex:1 1 calc(100% - 54px)}
+.theme-btn{order:4}
 @media (min-width:820px){
   .brand{margin-right:0}
   .search{order:0;flex:0 1 420px;margin:0 auto}
+  .theme-btn{order:0;width:40px;height:40px}
 }
 .search input{
   width:100%;padding:11px 16px 11px 42px;border-radius:999px;border:1px solid var(--glass-line);
@@ -113,6 +117,9 @@ a{color:inherit}
 .seg button{border:0;background:transparent;padding:6px 10px;border-radius:999px;font-weight:600;line-height:1}
 .seg button[aria-pressed="true"]{background:var(--glass-on)}
 @media (max-width:420px){ #locate span{display:none} }
+.theme-btn{padding:0;width:46px;height:46px;justify-content:center;line-height:0;flex:0 0 auto}
+.theme-btn svg{width:20px;height:20px}
+
 
 .hero{position:relative;display:grid;grid-template-columns:1fr auto;gap:12px 20px;align-items:start;margin-top:40px}
 .greet{font-family:var(--display);font-weight:500;font-size:1.05rem;opacity:.9;letter-spacing:-.005em}
@@ -282,6 +289,10 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 
 /* fun extras */
 .astro-share{padding-top:6px}
+.ad-slot{margin:30px 0 6px;padding-top:10px;border-top:1px solid var(--line);min-height:110px}
+.ad-slot[hidden]{display:none}
+.ad-label{display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.ad-slot:has(ins[data-ad-status="unfilled"]){display:none}
 .share{display:inline-flex;align-items:center;gap:9px;justify-self:start;background:#1FA855;color:#fff;font-weight:700;padding:12px 18px;border-radius:999px;text-decoration:none;box-shadow:0 6px 16px rgba(31,168,85,.28)}
 .share svg{width:22px;height:22px}
 .pantun{font-family:var(--display);font-size:1.08rem;line-height:1.55;color:var(--ink)!important}
@@ -494,6 +505,7 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
           <button type="button" data-u="imperial">°F</button>
         </div>
       </div>
+      <button class="pill theme-btn" id="themeBtn" type="button"></button>
     </div>
 
     <div id="heroArea"><p class="status">…</p></div>
@@ -519,6 +531,7 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
         <div class="tiles" id="tiles"></div>
       </section>
     </div>
+    <aside class="ad-slot" id="adMid" hidden aria-label="Iklan"></aside>
     <section id="planeSec" class="plane-sec" hidden aria-labelledby="h-plane">
       <h2 id="h-plane"></h2>
       <div class="fact" id="planeCard"></div>
@@ -531,6 +544,7 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
       <h2 id="h-quake"></h2>
       <div id="quakeBody"></div>
     </section>
+    <aside class="ad-slot" id="adEnd" hidden aria-label="Iklan"></aside>
     <footer id="footer"></footer>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -545,6 +559,10 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
 (() => {
 // ===== SETTING: paste your Cloudflare Worker address between the quotes, e.g. 'https://langit-bmkg.yourname.workers.dev'
 const BMKG_PROXY = 'https://api.langit.info';
+// ===== SETTING: Google AdSense. Ads stay off until 'client' is filled in.
+// client: your publisher ID from AdSense, e.g. 'ca-pub-1234567890123456'
+// slotMid / slotEnd: ad unit IDs (numbers) from AdSense → Ads → By ad unit → Display ads
+const ADS = { client: '', slotMid: '', slotEnd: '' };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const store = {
@@ -1103,6 +1121,7 @@ function skyFx(time, kind, cc, day){
   if (kind === 'fog') h += '<div class="fx-fog"></div><div class="fx-fog f2"></div>';
   return h;
 }
+let skyTime = null;
 function paintSky(p, time, bi, fx){
   $('#sky').dataset.pale = 'no';
   $('#skyfx').innerHTML = fx != null ? fx : skyFx(time, 'clear', 0, time === 'day');
@@ -1113,7 +1132,9 @@ function paintSky(p, time, bi, fx){
   sky.style.setProperty('--sky-ink', '#F5F8FC');
   sky.dataset.tone = 'dark';
   sky.dataset.time = time;
-  document.documentElement.dataset.theme = time === 'day' ? 'light' : 'dark';
+  skyTime = time;
+  const chosen = store.get('skyline.theme', 'auto');   // the visitor's own choice wins over day/night
+  document.documentElement.dataset.theme = chosen === 'light' || chosen === 'dark' ? chosen : (time === 'day' ? 'light' : 'dark');
   $('#brandIcon').innerHTML = BRAND_ICONS[bi];
   document.querySelector('meta[name="theme-color"]').content = p[0];
 }
@@ -1334,6 +1355,7 @@ function render(animate){
   renderAstroSection();
   renderQuakeSection();
   $('#sheet').classList.remove('loading', 'nodata');
+  initAds();
   // installed app: Chrome already puts "Langit" in front of the title, so don't repeat it
   const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   document.title = standalone ? `${tFmt(c.temperature_2m)} ${label}, ${state.place.name}` : `${tFmt(c.temperature_2m)} ${label}, ${state.place.name} — Langit`;
@@ -3196,10 +3218,10 @@ function applyStatic(){
   document.documentElement.lang = state.lang;
   if ($('#brandTag')) $('#brandTag').textContent = state.lang === 'id' ? 'dan semua yang di atas sana' : 'and everything up there';
   q.placeholder = t('search'); q.setAttribute('aria-label', t('search'));
-  $('#locate span').textContent = t('locate'); $('#locate').setAttribute('aria-label', t('locate'));
+  $('#locate span').textContent = t('locate'); $('#locate').setAttribute('aria-label', t('locate')); try{ applyTheme(store.get('skyline.theme', 'auto'), false); }catch(e){ /* theme button not ready yet */ }
   $('#h-hourly').textContent = t('h48'); $('#h-daily').textContent = t('d10'); $('#h-now').textContent = t('cond');
   $('#hourly').setAttribute('aria-label', t('hourlyLabel'));
-  $('#footer').innerHTML = `<p class="tagline">${state.lang === 'id' ? '☁️ Langit dan semua yang di atas sana' : '☁️ Langit and everything up there'}</p><p class="credits">${t('footer')}</p><p class="copy">&copy; ${new Date().getFullYear()} BMT | Berkat Maha Tinggi</p>`;
+  $('#footer').innerHTML = `<p class="tagline">${state.lang === 'id' ? '☁️ Langit dan semua yang di atas sana' : '☁️ Langit and everything up there'}</p><p class="credits">${t('footer')}</p><p class="copy">&copy; ${new Date().getFullYear()} BMT | Berkat Maha Tinggi${ADS.client ? ` · <a href="privacy.html">${state.lang === 'id' ? 'Kebijakan Privasi' : 'Privacy Policy'}</a>` : ''}</p>`;
   if (typeof renderInstallLink === 'function') renderInstallLink();
   document.querySelectorAll('#langSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === state.lang));
   document.querySelectorAll('#unitSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.u === state.units));
@@ -3217,6 +3239,46 @@ document.querySelectorAll('#unitSeg button').forEach(b => b.onclick = () => {
 window.addEventListener('hashchange', () => { const m = location.hash.slice(1); if (MODES.includes(m) && m !== state.mode) setMode(m); });
 
 
+
+
+/* ================= Light / dark theme (Otomatis → Terang → Gelap) ================= */
+const THEME_ICONS = {
+  auto:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg>',
+  light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>',
+  dark:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>',
+};
+const THEME_NAMES = { id: { auto: 'Otomatis (terang siang, gelap malam)', light: 'Selalu terang', dark: 'Selalu gelap' }, en: { auto: 'Automatic (light by day, dark at night)', light: 'Always light', dark: 'Always dark' } };
+function applyTheme(th, announce){
+  document.documentElement.dataset.theme = th === 'light' || th === 'dark' ? th : (skyTime ? (skyTime === 'day' ? 'light' : 'dark') : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  const b = $('#themeBtn'); if (!b) return;
+  const nm = (THEME_NAMES[state.lang] || THEME_NAMES.id)[th];
+  b.innerHTML = THEME_ICONS[th];
+  const lbl = (state.lang === 'id' ? 'Tema: ' : 'Theme: ') + nm;
+  b.setAttribute('aria-label', lbl); b.title = lbl;
+  if (announce) toast(lbl, 2500);
+}
+$('#themeBtn').onclick = () => {
+  const order = ['auto', 'light', 'dark'], cur = store.get('skyline.theme', 'auto');
+  const next = order[(order.indexOf(cur) + 1) % order.length];
+  store.set('skyline.theme', next); applyTheme(next, true);
+};
+applyTheme(store.get('skyline.theme', 'auto'), false);
+/* ================= Google AdSense (only when ADS.client is set) ================= */
+let adsStarted = false;
+function initAds(){
+  if (adsStarted || !ADS.client || !/^ca-pub-\d{10,20}$/.test(ADS.client) || location.protocol !== 'https:') return;
+  adsStarted = true;
+  const sc = document.createElement('script');
+  sc.async = true; sc.crossOrigin = 'anonymous';
+  sc.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADS.client;
+  document.head.appendChild(sc);
+  [['adMid', ADS.slotMid], ['adEnd', ADS.slotEnd]].forEach(([id, slot]) => {
+    const box = document.getElementById(id); if (!box || !/^\d{6,}$/.test(String(slot))) return;
+    box.innerHTML = `<span class="ad-label">${state.lang === 'id' ? 'Iklan' : 'Advertisement'}</span><ins class="adsbygoogle" style="display:block" data-ad-client="${ADS.client}" data-ad-slot="${slot}" data-ad-format="auto" data-full-width-responsive="true"></ins>`;
+    box.hidden = false;
+    try{ (window.adsbygoogle = window.adsbygoogle || []).push({}); }catch(e){}
+  });
+}
 /* ================= Installable app (PWA) ================= */
 let installEvt = null;
 const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
