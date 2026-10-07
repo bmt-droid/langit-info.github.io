@@ -418,7 +418,10 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .maritime{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:16px}
 .maritime h3{margin:0;font-size:.92rem;font-weight:600;color:var(--muted)}
 .ship-wrap{overflow-x:auto}
-.ships{width:100%;border-collapse:collapse;min-width:420px}
+.ships{width:100%;border-collapse:collapse}
+.ships td{white-space:nowrap;width:1%}
+.ships td .lvl-chip{font-size:.8rem;padding:4px 10px}
+@media (max-width:420px){.ships th,.ships td{padding:9px 4px}}
 .ships th,.ships td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
 .ships thead th{font-size:.85rem;color:var(--muted);font-weight:600}
 .ships tbody th{font-weight:600}
@@ -884,14 +887,14 @@ Object.assign(STR.en, {
   ssnErr:'No seasonal outlook available for this place yet.'
 });
 Object.assign(STR.id, {
-  mar:'Info maritim', marShip:'Keselamatan pelayaran', marNow:'Sekarang', mar24:'24 jam ke depan', marSafe:'Aman', marRisk:'Berisiko',
+  mar:'Info maritim', marShip:'Keselamatan pelayaran', marNow:'Sekarang', mar24:'24 jam', marSafe:'Aman', marRisk:'Waspada',
   marShips:['Perahu nelayan','Kapal tongkang','Kapal feri','Kapal besar (kargo/pesiar)'],
   marRule:(kt,m)=>`Waspada jika angin ≥ ${kt} knot atau gelombang ≥ ${m} m`, marBasis:'Ambang batas mengikuti kategori risiko pelayaran BMKG. Angin dan gelombang adalah prakiraan model untuk titik ini.',
   mar3:'Gelombang maksimum 3 hari', marCur:'Arus laut', marCurV:(sp,d)=>`${sp} ke arah ${d}`, marSst:'Suhu permukaan laut', marWindKt:(k,s)=>`${k} knot (${s})`,
   marOfficial:'Prakiraan resmi per wilayah perairan dan pelabuhan diterbitkan oleh BMKG Maritim.'
 });
 Object.assign(STR.en, {
-  mar:'Marine info', marShip:'Shipping safety', marNow:'Now', mar24:'Next 24 hours', marSafe:'Safe', marRisk:'At risk',
+  mar:'Marine info', marShip:'Shipping safety', marNow:'Now', mar24:'Next 24 h', marSafe:'Safe', marRisk:'Caution',
   marShips:['Fishing boat','Barge','Ferry','Large ship (cargo/cruise)'],
   marRule:(kt,m)=>`Caution if wind ≥ ${kt} knots or waves ≥ ${m} m`, marBasis:"Thresholds follow BMKG's shipping risk categories. Wind and waves are model forecasts for this point.",
   mar3:'3-day maximum waves', marCur:'Ocean current', marCurV:(sp,d)=>`${sp} towards the ${d}`, marSst:'Sea surface temperature', marWindKt:(k,s)=>`${k} knots (${s})`,
@@ -1327,7 +1330,7 @@ function windows(pred, from, to, minLen = 1){
   }
   return out;
 }
-const winLabel = w => { const H = state.data.hourly; return `${dayLabel(H.time[w.a])} ${hourStr(H.time[w.a])}–${endHourStr(H.time[w.b])}`; };
+const winLabel = w => { const H = state.data.hourly, a = H.time[w.a], b = H.time[w.b]; return `${dayLabel(a)} ${hourStr(a)}–${b.slice(0, 10) !== a.slice(0, 10) ? dayLabel(b) + ' ' : ''}${endHourStr(b)}`; };
 
 /* ================= Render: core ================= */
 function render(animate){
@@ -3068,10 +3071,10 @@ function maritimeBlock(){
   const waveAt = i => { const m = mi[H.time[i]]; return m != null ? M.hourly.wave_height[m] : null; };
   const w0 = waveAt(i0); if (w0 == null) return '';
   let wMax = 0, kMax = 0;
-  for (let i = i0; i < Math.min(H.time.length, i0 + 24); i++){ const w = waveAt(i); if (w != null) wMax = Math.max(wMax, w); kMax = Math.max(kMax, (H.wind_speed_10m[i] || 0) / 1.852, (H.wind_gusts_10m[i] || 0) / 1.852 * 0.8); }
+  for (let i = i0; i < Math.min(H.time.length, i0 + 24); i++){ const w = waveAt(i); if (w != null) wMax = Math.max(wMax, w); kMax = Math.max(kMax, (H.wind_speed_10m[i] || 0) / 1.852); }
   const k0 = (H.wind_speed_10m[i0] || 0) / 1.852;
   const SHIPS = [[15, 1.25], [16, 1.5], [21, 2.5], [27, 4]];
-  const chip = risk => `<span class="lvl-chip s-${risk ? 'bad' : 'good'}">${risk ? t('marRisk') : t('marSafe')}</span>`;
+  const chip = risk => `<span class="lvl-chip s-${risk ? 'ok' : 'good'}">${risk ? t('marRisk') : t('marSafe')}</span>`;
   const rows = SHIPS.map(([kt, m], k) => `<tr><th>${t('marShips')[k]}<small>${esc(t('marRule', kt, String(m).replace('.', state.lang === 'id' ? ',' : '.')))}</small></th><td>${chip(k0 >= kt || w0 >= m)}</td><td>${chip(kMax >= kt || wMax >= m)}</td></tr>`).join('');
   const dm = M.daily && M.daily.wave_height_max ? M.daily.wave_height_max.slice(0, 3) : [];
   const days = dm.map((v, k) => v == null ? '' : `<div class="wday"><b>${esc(k === 0 ? t('today') : k === 1 ? t('tomorrow') : (M.daily.time && M.daily.time[k] ? weekday(M.daily.time[k], true) : d.daily.time[k] ? weekday(d.daily.time[k], true) : ''))}</b><span class="val">${meters(v)}</span><span class="lvl-chip s-${['good','good','ok','poor','bad','bad'][waveCat(v)]}">${t('waveCats')[waveCat(v)]}</span></div>`).join('');
