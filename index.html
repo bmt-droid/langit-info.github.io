@@ -1894,14 +1894,17 @@ function familyShare(st, ret){
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8L3.5 20.5l4.3-1.1A8.5 8.5 0 1 0 12 3.5z" fill="#fff"/><path d="M9.2 8.2c.3-.4.7-.4.9 0l.8 1.8c.1.3 0 .6-.2.8l-.5.6c.6 1.2 1.6 2.2 2.8 2.8l.6-.5c.2-.2.5-.3.8-.2l1.8.8c.4.2.4.6 0 .9-.6.7-1.5 1-2.4.7a8.4 8.4 0 0 1-5.2-5.2c-.3-.9 0-1.8.6-2.5z" fill="#1FA855"/></svg>
     ${L ? 'Kabari keluarga sebelum melaut' : 'Tell your family before you go'}</a>`;
 }
-function safetyCard(){
+function safetyCard(sea = true){
   const L = state.lang === 'id';
-  const items = L
+  const items = sea ? (L
     ? ['Pakai pelampung (life jacket) selama di laut', 'HP diisi penuh dan dibungkus plastik kedap air; bawa radio jika ada', 'BBM cadangan, air minum, senter dan lampu', 'Beri tahu keluarga rencana pulang (tombol hijau di atas)', 'Jangan melaut sendirian jika cuaca meragukan']
-    : ['Wear a life jacket the whole time at sea', 'Fully charged phone in a waterproof bag; take a radio if you have one', 'Spare fuel, drinking water, torch and lights', 'Tell family when you plan to return (green button above)', "Don't go out alone when the weather looks doubtful"];
+    : ['Wear a life jacket the whole time at sea', 'Fully charged phone in a waterproof bag; take a radio if you have one', 'Spare fuel, drinking water, torch and lights', 'Tell family when you plan to return (green button above)', "Don't go out alone when the weather looks doubtful"])
+    : (L
+    ? ['Pakai pelampung (life jacket) saat di perahu atau air dalam', 'HP diisi penuh dan dibungkus plastik kedap air', 'Bawa air minum, senter, dan jas hujan', 'Beri tahu keluarga tujuan dan jam pulang', 'Menjauh dari air terbuka jika terdengar guntur; waspada air sungai naik tiba-tiba setelah hujan di hulu']
+    : ['Wear a life jacket in a boat or deep water', 'Fully charged phone in a waterproof bag', 'Take drinking water, a torch and a raincoat', 'Tell family where you are going and when you will be back', 'Get away from open water when you hear thunder; watch for rivers rising suddenly after rain upstream']);
   return `<div class="fact safety-card"><h3>${L ? '🛟 Sebelum berangkat' : '🛟 Before you go'}</h3><ul class="check-list">${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
     <div class="sos"><a class="pill sos-btn" href="tel:115">📞 Basarnas 115</a><a class="pill sos-btn" href="tel:112">📞 ${L ? 'Darurat' : 'Emergency'} 112</a></div>
-    <p class="muted small">${L ? 'Basarnas (Badan SAR Nasional) untuk kecelakaan di laut; 112 untuk semua keadaan darurat.' : 'Basarnas (national search and rescue) for accidents at sea; 112 for any emergency.'}</p></div>`;
+    <p class="muted small">${L ? 'Basarnas (Badan SAR Nasional) untuk kecelakaan di laut, sungai dan danau; 112 untuk semua keadaan darurat.' : 'Basarnas (national search and rescue) for accidents at sea, on rivers and lakes; 112 for any emergency.'}</p></div>`;
 }
 // first light / last light: the sun 6° below the horizon (civil twilight)
 function twilight(k){
@@ -1944,7 +1947,7 @@ function modeNelayan(){
   const nq = inIndonesia(state.place) ? nearestQuake() : null;
   const tsu = nq && tsunamiRisk(nq.q) ? `<p class="alert">${esc(t('tsunami'))}</p>` : '';
   const nTone = !H.is_day[i0] ? 'night' : (H.precipitation_probability[i0] ?? 0) >= 50 ? 'bad' : 'good';
-  if (!valid) return verdict('muted', t('nlInland'), `<p class="muted">${t('nlInlandSub')}</p>`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}${safetyCard()}</div>` + official;
+  if (!valid) return verdict('muted', t('nlInland'), `<p class="muted">${t('nlInlandSub')}</p>`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}${safetyCard(false)}</div>` + official;
 
   const M = state.marine.hourly, m0 = mi[H.time[i0]];
   const st = seaStatus(i0, mi) || 'good';
