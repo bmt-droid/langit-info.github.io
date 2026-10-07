@@ -289,6 +289,15 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 
 /* fun extras */
 .astro-share{padding-top:6px}
+.sea-warn{margin:4px 0 0}
+.sea-warn .hz b{color:var(--ink)}
+.sea-warn .hz-storm b{color:var(--bad)}
+.sea-return{margin:10px 0 0}
+.family-share{margin:2px 0 4px}
+.check-list{margin:6px 0 10px;padding-left:1.1em}
+.check-list li{margin:3px 0}
+.sos{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.sos-btn{text-decoration:none;font-weight:700;color:var(--ink);border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:9px 14px}
 .ad-slot{margin:30px 0 6px;padding-top:10px;border-top:1px solid var(--line);min-height:110px}
 .ad-slot[hidden]{display:none}
 .ad-label{display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
@@ -635,7 +644,7 @@ id: {
   fmSub:'Semprot, siram, jemur hasil panen dan atur jam kerja berdasarkan cuaca 48 jam ke depan.',
   // Nelayan
   nlSafe:'Aman melaut', nlCaution:'Hati-hati melaut', nlDanger:'Jangan melaut dulu',
-  nlSafeSub:'Gelombang dan angin bersahabat untuk perahu kecil.', nlCautionSub:'Gelombang atau angin cukup kuat dan berbahaya bagi perahu kecil.', nlDangerSub:'Gelombang tinggi atau angin kencang. Tunda pelayaran.',
+  nlSafeSub:'Gelombang dan angin bersahabat untuk perahu kecil.', nlCautionSub:'Gelombang di atas 1,25 m, angin di atas 15 knot, hujan lebat atau kabut. Berisiko bagi perahu nelayan kecil.', nlDangerSub:'Gelombang tinggi, angin kencang atau hujan petir. Tunda pelayaran.',
   nlInland:'Lokasi ini jauh dari laut', nlInlandSub:'Pilih kota pesisir untuk melihat prakiraan gelombang.',
   nlBest:w=>`Waktu melaut terbaik: ${w}.`, nlNoBest:'Belum ada jendela aman 4 jam berturut-turut dalam 36 jam ke depan.',
   wave:'Gelombang', waveCats:['Tenang','Rendah','Sedang','Tinggi','Sangat tinggi','Ekstrem'], period:s=>`Periode ${s} detik`, waveFrom:d=>`dari ${d}`, waveMax:(a,b)=>`Maksimum hari ini ${a}, besok ${b}.`,
@@ -727,7 +736,7 @@ en: {
   heavy:'Heavy rain', heavyWarn:(d,v)=>`Heavy rain expected ${d} (${v}). Check drainage and hold off on fertilising.`, heavyNone:'No heavy rain in the next 7 days.',
   fmSub:'Spraying, watering, drying the harvest and work hours, based on the next 48 hours.',
   nlSafe:'Safe to go out', nlCaution:'Go out with caution', nlDanger:"Don't go out yet",
-  nlSafeSub:'Waves and wind are friendly for small boats.', nlCautionSub:'Waves or wind are strong enough to be risky for small boats.', nlDangerSub:'High waves or strong wind. Postpone the trip.',
+  nlSafeSub:'Waves and wind are friendly for small boats.', nlCautionSub:'Waves above 1.25 m, wind above 15 knots, heavy rain or fog. Risky for small fishing boats.', nlDangerSub:'High waves, strong wind or thunderstorms. Postpone the trip.',
   nlInland:'This place is far from the sea', nlInlandSub:'Pick a coastal town to see the wave forecast.',
   nlBest:w=>`Best time to head out: ${w}.`, nlNoBest:'No 4-hour safe window in the next 36 hours.',
   wave:'Waves', waveCats:['Calm','Slight','Moderate','Rough','Very rough','Extreme'], period:s=>`${s} s period`, waveFrom:d=>`from the ${d}`, waveMax:(a,b)=>`Max today ${a}, tomorrow ${b}.`,
@@ -1164,7 +1173,7 @@ function forecastUrl(place){
     latitude: place.lat, longitude: place.lon, timezone: 'auto',
     forecast_days: 10, forecast_hours: 48, forecast_minutely_15: 8,
     current: 'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,dew_point_2m,uv_index,visibility',
-    hourly: 'pressure_msl,temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,precipitation,weather_code,is_day,cloud_cover,wind_speed_10m,wind_gusts_10m,shortwave_radiation,uv_index',
+    hourly: 'pressure_msl,temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,precipitation,weather_code,is_day,cloud_cover,wind_speed_10m,wind_gusts_10m,shortwave_radiation,uv_index,visibility',
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max,precipitation_sum,daylight_duration',
     minutely_15: 'precipitation'
   });
@@ -1244,7 +1253,7 @@ async function ensureExtras(){
   renderMode(true);
   try{
     if (needMarine){
-      const m = await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${p.lat}&longitude=${p.lon}&timezone=auto&forecast_days=3&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_period&daily=wave_height_max`)
+      const m = await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${p.lat}&longitude=${p.lon}&timezone=auto&forecast_days=3&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_period,sea_level_height_msl&daily=wave_height_max`)
         .catch(() => ({ inland:true }));
       if (placeKey(state.place) === key) state.marine = m;
     }
@@ -1791,10 +1800,21 @@ function seaStatus(i, mi){
   const H = state.data.hourly, M = state.marine.hourly, m = mi[H.time[i]];
   const wave = m != null ? M.wave_height[m] : null;
   if (wave == null) return null;
-  const w = H.wind_speed_10m[i], g = H.wind_gusts_10m[i];
-  if (wave >= 2.5 || w >= 40 || g >= 55) return 'bad';
-  if (wave >= 1.25 || w >= 28 || g >= 40) return 'ok';
+  const w = H.wind_speed_10m[i], g = H.wind_gusts_10m[i], hz = seaHazards(i);
+  if (wave >= 2.5 || w >= 40 || g >= 55 || hz.storm) return 'bad';
+  if (wave >= 1.25 || w >= 28 || g >= 40 || hz.rain || hz.fog) return 'ok';
   return 'good';
+}
+// weather hazards for small boats in hour i (thunderstorm, heavy rain, sudden gusts, poor visibility)
+function seaHazards(i){
+  const H = state.data.hourly, code = H.weather_code[i], pp = H.precipitation_probability[i] ?? 0, pr = H.precipitation[i] ?? 0;
+  const w = H.wind_speed_10m[i] ?? 0, g = H.wind_gusts_10m[i] ?? 0, vis = H.visibility ? H.visibility[i] : null;
+  return {
+    storm: wmo(code)[1] === 'storm' && pp >= 30,
+    rain: pr >= 4 || ((code === 65 || code === 82) && pp >= 40),
+    gust: g >= 40 && g - w >= 18,
+    fog: vis != null && vis < 1000,
+  };
 }
 // Sun–moon angle (elongation), accurate to well under an hour for phase times
 function elongation(ms){
@@ -1825,6 +1845,93 @@ function moonEvents(fromMs = Date.now()){
   }
   return out;
 }
+
+/* ---------- Nelayan: safety at sea ---------- */
+const HZ_TXT = {
+  storm: ['⚡', 'Waspada hujan petir', 'Thunderstorm risk', 'Petir sangat berbahaya di perahu terbuka. Segera menuju darat jika langit menghitam atau terdengar guntur.', 'Lightning is very dangerous in an open boat. Head for shore as soon as the sky darkens or you hear thunder.'],
+  rain:  ['🌧️', 'Hujan lebat', 'Heavy rain', 'Jarak pandang turun dan angin bisa tiba-tiba kencang.', 'Visibility drops and squalls can arrive suddenly.'],
+  gust:  ['💨', 'Angin kencang mendadak', 'Sudden strong gusts', 'Hembusan jauh lebih kuat dari angin rata-rata; kurangi muatan dan jaga keseimbangan perahu.', 'Gusts are much stronger than the average wind; lighten the load and keep the boat balanced.'],
+  fog:   ['🌫️', 'Jarak pandang rendah', 'Poor visibility', 'Kabut atau hujan membuat daratan dan perahu lain sulit terlihat; nyalakan lampu dan bawa kompas atau GPS.', 'Fog or rain makes land and other boats hard to see; use lights and carry a compass or GPS.'],
+};
+const HZ_ORDER = ['storm', 'rain', 'gust', 'fog'];
+function seaWarnings(i0, hours){
+  const H = state.data.hourly, end = Math.min(H.time.length, i0 + hours), L = state.lang === 'id', out = [];
+  for (const k of HZ_ORDER){
+    let a = -1, b = -1;
+    for (let i = i0; i < end; i++){ if (seaHazards(i)[k]){ if (a < 0) a = i; b = i; } else if (a >= 0) break; }
+    if (a < 0) continue;
+    const T = HZ_TXT[k], gustV = k === 'gust' ? ` ${L ? 'hingga' : 'up to'} ${speed(Math.max(...H.wind_gusts_10m.slice(a, b + 1)))}` : '';
+    out.push(`<li class="hz hz-${k}"><span class="hi-ic">${T[0]}</span><span><b>${L ? T[1] : T[2]}${gustV}</b> · ${a === i0 ? (L ? 'sekarang' : 'now') : dayLabel(H.time[a]) + ' ' + hourStr(H.time[a])}–${endHourStr(H.time[b])}<br><small>${L ? T[3] : T[4]}</small></span></li>`);
+  }
+  return out.length ? `<ul class="hol-list sea-warn">${out.join('')}</ul>` : '';
+}
+// when conditions turn bad later, say when to be back ashore
+function seaReturn(i0, mi){
+  const H = state.data.hourly, L = state.lang === 'id', end = Math.min(H.time.length, i0 + 14);
+  const now = seaStatus(i0, mi); if (now === 'bad') return null;
+  for (let i = i0 + 1; i < end; i++){
+    const s = seaStatus(i, mi);
+    if (s === 'bad'){
+      const hz = seaHazards(i), why = hz.storm ? (L ? 'hujan petir' : 'thunderstorms') : (L ? 'gelombang atau angin' : 'waves or wind');
+      const back = localToMs(H.time[i]) - 3600000;
+      return { ms: back, text: L ? `Kondisi memburuk sekitar ${hourStr(H.time[i])} (${why}). Usahakan sudah di darat sebelum pukul ${clockStr(msToLocal(back))}.` : `Conditions turn bad around ${hourStr(H.time[i])} (${why}). Aim to be back ashore by ${clockStr(msToLocal(back))}.` };
+    }
+  }
+  return { ms: null, text: L ? `Kondisi laut diperkirakan tidak memburuk hingga ${dayLabel(H.time[end - 1])} ${hourStr(H.time[end - 1])}.` : `Sea conditions are not expected to turn bad before ${dayLabel(H.time[end - 1])} ${hourStr(H.time[end - 1])}.` };
+}
+// WhatsApp "float plan" so family knows when to expect you back
+function familyShare(st, ret){
+  const H = state.data.hourly, i0 = state.i0, L = state.lang === 'id', M = state.marine && state.marine.hourly, mi = marineIndex();
+  const nowMs = Date.now(), plan = ret && ret.ms && ret.ms > nowMs + 3600000 ? Math.min(ret.ms, nowMs + 10 * 3600000) : nowMs + 6 * 3600000;
+  const planStr = clockStr(msToLocal(Math.round(plan / 1800000) * 1800000)), alarm = clockStr(msToLocal(Math.round((plan + 2 * 3600000) / 1800000) * 1800000));
+  const wave = mi && M && mi[H.time[i0]] != null ? M.wave_height[mi[H.time[i0]]] : null;
+  const cond = { good: L ? 'aman' : 'safe', ok: L ? 'hati-hati' : 'caution', bad: L ? 'berbahaya' : 'dangerous' }[st] || '';
+  const n = localNow();
+  const msg = L
+    ? `🛶 Saya melaut dari ${state.place.name}, berangkat pukul ${clock(n.h, n.m)}.\nRencana pulang: sekitar pukul ${planStr}.\nKondisi menurut Langit: ${cond}${wave != null ? `, gelombang ${meters(wave)}` : ''}, angin ${speed(H.wind_speed_10m[i0])}.\n\nKalau sampai pukul ${alarm} belum ada kabar, tolong hubungi Basarnas 115.`
+    : `🛶 I'm going out to sea from ${state.place.name}, leaving at ${clock(n.h, n.m)}.\nPlanned return: around ${planStr}.\nConditions according to Langit: ${cond}${wave != null ? `, waves ${meters(wave)}` : ''}, wind ${speed(H.wind_speed_10m[i0])}.\n\nIf you haven't heard from me by ${alarm}, please call Basarnas (Indonesian search and rescue) on 115.`;
+  return `<a class="share" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8L3.5 20.5l4.3-1.1A8.5 8.5 0 1 0 12 3.5z" fill="#fff"/><path d="M9.2 8.2c.3-.4.7-.4.9 0l.8 1.8c.1.3 0 .6-.2.8l-.5.6c.6 1.2 1.6 2.2 2.8 2.8l.6-.5c.2-.2.5-.3.8-.2l1.8.8c.4.2.4.6 0 .9-.6.7-1.5 1-2.4.7a8.4 8.4 0 0 1-5.2-5.2c-.3-.9 0-1.8.6-2.5z" fill="#1FA855"/></svg>
+    ${L ? 'Kabari keluarga sebelum melaut' : 'Tell your family before you go'}</a>`;
+}
+function safetyCard(){
+  const L = state.lang === 'id';
+  const items = L
+    ? ['Pakai pelampung (life jacket) selama di laut', 'HP diisi penuh dan dibungkus plastik kedap air; bawa radio jika ada', 'BBM cadangan, air minum, senter dan lampu', 'Beri tahu keluarga rencana pulang (tombol hijau di atas)', 'Jangan melaut sendirian jika cuaca meragukan']
+    : ['Wear a life jacket the whole time at sea', 'Fully charged phone in a waterproof bag; take a radio if you have one', 'Spare fuel, drinking water, torch and lights', 'Tell family when you plan to return (green button above)', "Don't go out alone when the weather looks doubtful"];
+  return `<div class="fact safety-card"><h3>${L ? '🛟 Sebelum berangkat' : '🛟 Before you go'}</h3><ul class="check-list">${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+    <div class="sos"><a class="pill sos-btn" href="tel:115">📞 Basarnas 115</a><a class="pill sos-btn" href="tel:112">📞 ${L ? 'Darurat' : 'Emergency'} 112</a></div>
+    <p class="muted small">${L ? 'Basarnas (Badan SAR Nasional) untuk kecelakaan di laut; 112 untuk semua keadaan darurat.' : 'Basarnas (national search and rescue) for accidents at sea; 112 for any emergency.'}</p></div>`;
+}
+// first light / last light: the sun 6° below the horizon (civil twilight)
+function twilight(k){
+  const D = state.data.daily, p = state.place, alt = ms => { const s = sunRaDec(ms); return altAz(s.ra, s.dec, ms, p.lat, p.lon).alt; };
+  if (!D.sunrise[k] || !D.sunset[k]) return null;
+  let first = null, last = null;
+  for (let ms = localToMs(D.sunrise[k]) - 90 * 60000; ms <= localToMs(D.sunrise[k]); ms += 60000) if (alt(ms) >= -6){ first = ms; break; }
+  for (let ms = localToMs(D.sunset[k]); ms <= localToMs(D.sunset[k]) + 90 * 60000; ms += 60000) if (alt(ms) < -6){ last = ms; break; }
+  return first && last ? { first, last } : null;
+}
+// tides from the marine model: next highs and lows
+function tideBlock(){
+  const M = state.marine, L = state.lang === 'id';
+  if (!M || M.inland || !M.hourly || !M.hourly.sea_level_height_msl) return '';
+  const T = M.hourly.time, Y = M.hourly.sea_level_height_msl, now = Date.now(), ev = [];
+  for (let i = 1; i < Y.length - 1; i++){
+    const a = Y[i - 1], b = Y[i], c = Y[i + 1]; if (a == null || b == null || c == null) continue;
+    const hi = b > a && b >= c, lo = b < a && b <= c; if (!hi && !lo) continue;
+    const den = a - 2 * b + c, off = den ? Math.max(-0.5, Math.min(0.5, (a - c) / (2 * den))) : 0;   // refine between the hours
+    const ms = localToMs(T[i]) + off * 3600000, h = b - (a - c) * off / 4;
+    if (ms > now - 1800000 && ms < now + 30 * 3600000) ev.push({ ms, h, hi });
+  }
+  if (!ev.length) return '';
+  const fmtH = v => `${v >= 0 ? '+' : '−'}${metric() ? Math.abs(v).toFixed(2).replace('.', L ? ',' : '.') + ' m' : Math.round(Math.abs(v) * 3.28084 * 10) / 10 + ' ft'}`;
+  const iNow = T.findIndex(x => localToMs(x) > now), rising = iNow > 0 && Y[iNow] != null && Y[iNow - 1] != null ? Y[iNow] > Y[iNow - 1] : null;
+  const rows = ev.slice(0, 4).map(e => { const lt = msToLocal(e.ms); return `<li><span class="hi-ic">${e.hi ? '🌊' : '🏖️'}</span><span><b>${e.hi ? (L ? 'Pasang' : 'High tide') : (L ? 'Surut' : 'Low tide')}</b> ${esc(dayLabel(lt))} ${clockStr(lt)} <small class="muted">· ${fmtH(e.h)}</small></span></li>`; }).join('');
+  const trend = rising == null ? '' : `<p>${rising ? (L ? '↗️ Air sedang <b>naik</b> sekarang.' : '↗️ The water is <b>rising</b> now.') : (L ? '↘️ Air sedang <b>surut</b> sekarang.' : '↘️ The water is <b>falling</b> now.')}</p>`;
+  return `<div class="fact tide-card"><h3>${L ? '🌊 Pasang surut' : '🌊 Tides'}</h3>${trend}<ul class="hol-list">${rows}</ul>
+    <p class="muted small">${L ? 'Dari model pasang surut global, tinggi relatif terhadap muka laut rata-rata. Di teluk, muara dan pelabuhan waktunya bisa bergeser 30–60 menit; cocokkan dengan pengalaman setempat.' : 'From a global tide model, height relative to mean sea level. In bays, river mouths and harbours the timing can shift by 30–60 minutes; check against local knowledge.'}</p></div>`;
+}
 function modeNelayan(){
   const d = state.data, H = d.hourly, D = d.daily, i0 = state.i0, end = Math.min(H.time.length, i0 + 48);
   const mi = marineIndex();
@@ -1832,11 +1939,12 @@ function modeNelayan(){
   const valid = mi && H.time.slice(i0, end).some(x => mi[x] != null && state.marine.hourly.wave_height[mi[x]] != null);
   const mp = moonPhase();
   const moonFact = fact(t('moon'), t('moonNames')[mp.idx], esc(`${t('moonLit', mp.lit)} ${mp.lit < 30 ? t('moonDark') : mp.lit > 75 ? t('moonBright') : ''}`));
-  const sunFact = fact(t('sunTimes'), t('sunTimesV', clockStr(D.sunrise[0]), clockStr(D.sunset[0])), '');
+  const tw = safeExtra(() => twilight(0)) || null;
+  const sunFact = fact(t('sunTimes'), t('sunTimesV', clockStr(D.sunrise[0]), clockStr(D.sunset[0])), tw ? esc(state.lang === 'id' ? `Langit mulai terang ${clockStr(msToLocal(tw.first))}, gelap total ${clockStr(msToLocal(tw.last))}. Nyalakan lampu navigasi di luar jam ini.` : `First light ${clockStr(msToLocal(tw.first))}, last light ${clockStr(msToLocal(tw.last))}. Use navigation lights outside these times.`) : '');
   const nq = inIndonesia(state.place) ? nearestQuake() : null;
   const tsu = nq && tsunamiRisk(nq.q) ? `<p class="alert">${esc(t('tsunami'))}</p>` : '';
   const nTone = !H.is_day[i0] ? 'night' : (H.precipitation_probability[i0] ?? 0) >= 50 ? 'bad' : 'good';
-  if (!valid) return verdict('muted', t('nlInland'), `<p class="muted">${t('nlInlandSub')}</p>`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}</div>` + official;
+  if (!valid) return verdict('muted', t('nlInland'), `<p class="muted">${t('nlInlandSub')}</p>`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}${safetyCard()}</div>` + official;
 
   const M = state.marine.hourly, m0 = mi[H.time[i0]];
   const st = seaStatus(i0, mi) || 'good';
@@ -1848,15 +1956,18 @@ function modeNelayan(){
   const lg = t('nlLegend');
   const wave = M.wave_height[m0], per = M.wave_period ? M.wave_period[m0] : null, wdir = M.wave_direction ? M.wave_direction[m0] : null;
   const dm = state.marine.daily && state.marine.daily.wave_height_max;
-  return verdict(st, title, `<p>${esc(sub)}</p><p class="muted">${esc(best ? t('nlBest', winLabel(best)) : t('nlNoBest'))}</p>`, sceneNelayan(st === 'bad' && nTone !== 'night' ? 'bad' : nTone, st))
-    + tsu
+  const ret = seaReturn(i0, mi), warn = seaWarnings(i0, 18);
+  const hzNow = seaHazards(i0), sub2 = hzNow.storm ? (state.lang === 'id' ? 'Ada risiko hujan petir. Petir sangat berbahaya di perahu terbuka.' : 'There is a thunderstorm risk. Lightning is very dangerous in an open boat.') : sub;
+  return verdict(st, title, `<p>${esc(sub2)}</p><p class="muted">${esc(best ? t('nlBest', winLabel(best)) : t('nlNoBest'))}</p>${ret ? `<p class="sea-return"><b>${state.lang === 'id' ? '⏱️ Pulang:' : '⏱️ Return:'}</b> ${esc(ret.text)}</p>` : ''}`, sceneNelayan(st === 'bad' && nTone !== 'night' ? 'bad' : nTone, st))
+    + tsu + warn
+    + `<div class="family-share">${familyShare(st, ret)}</div>`
     + strip(items, t('nlStrip'), [['good', lg[0]], ['ok', lg[1]], ['bad', lg[2]]])
     + `<div class="facts">
       ${fact(t('wave'), `${meters(wave)} <small>${t('waveCats')[waveCat(wave)]}</small>`, esc([per != null ? t('period', Math.round(per)) : '', wdir != null ? t('waveFrom', dir8(wdir)) : ''].filter(Boolean).join(', ') + (dm ? '. ' + t('waveMax', meters(dm[0] ?? wave), meters(dm[1] ?? wave)) : '')))}
       ${fact(t('wind'), speed(H.wind_speed_10m[i0]), esc(`${t('windFrom', dir8(d.current.wind_direction_10m))}. ${t('gusts', speed(H.wind_gusts_10m[i0]))}`))}
       ${moonFact}
       ${sunFact}
-    </div>` + official;
+    </div>` + `<div class="facts">${safeExtra(tideBlock)}${safetyCard()}</div>` + official;
 }
 
 /* ---------- Wisata (travel) ---------- */
@@ -2967,8 +3078,9 @@ function maritimeBlock(){
     const j = S.hourly.time.findIndex(x => x.slice(0, 13) === H.time[i0].slice(0, 13)), k = j < 0 ? 0 : j;
     const cv = S.hourly.ocean_current_velocity ? S.hourly.ocean_current_velocity[k] : null, cd = S.hourly.ocean_current_direction ? S.hourly.ocean_current_direction[k] : null;
     const sst = S.hourly.sea_surface_temperature ? S.hourly.sea_surface_temperature[k] : null;
-    if (cv != null && cd != null) sea += fact(t('marCur'), esc(t('marCurV', speed(cv), dir8(cd))), '');
-    if (sst != null) sea += fact(t('marSst'), tFmt(sst), '');
+    const L = state.lang === 'id';
+    if (cv != null && cd != null) sea += fact(t('marCur'), esc(t('marCurV', speed(cv), dir8(cd))), esc(cv >= 2 ? (L ? 'Arus cukup kuat: pakai pemberat lebih berat dan perhatikan perahu yang hanyut.' : 'Fairly strong current: use heavier sinkers and watch your drift.') : cv < 0.7 ? (L ? 'Arus lemah, umpan mudah dijaga di tempat.' : 'Weak current, bait stays in place easily.') : (L ? 'Arus sedang.' : 'Moderate current.')));
+    if (sst != null) sea += fact(t('marSst'), tFmt(sst), esc(sst < 27 ? (L ? 'Air relatif sejuk, sering tanda arus naik (upwelling) yang kaya makanan. Ikan pelagis seperti cakalang dan tongkol cenderung lebih aktif.' : 'Relatively cool water, often a sign of nutrient-rich upwelling. Pelagic fish such as skipjack and tuna tend to be more active.') : sst > 29.5 ? (L ? 'Air hangat: siang hari ikan cenderung turun lebih dalam. Coba subuh atau sore, atau umpan lebih dalam.' : 'Warm water: fish tend to go deeper in the middle of the day. Try dawn or late afternoon, or fish deeper.') : (L ? 'Suhu normal untuk perairan tropis.' : 'Normal temperature for tropical waters.')));
   }
   return `<div class="maritime"><h3>${t('mar')}</h3>
     <div class="ship-wrap"><table class="ships"><thead><tr><th>${t('marShip')}</th><th>${t('marNow')}</th><th>${t('mar24')}</th></tr></thead><tbody>${rows}</tbody></table></div>
