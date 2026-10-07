@@ -15,8 +15,19 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Langit">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="Langit dan semua yang di atas sana: prakiraan cuaca Indonesia per jam, mode jemuran, petani, nelayan dan wisata. Data Open-Meteo dan BMKG.">
-<title>Langit dan semua yang di atas sana</title>
+<meta name="description" content="Prakiraan cuaca per jam untuk seluruh Indonesia: suhu, hujan, angin, UV, gelombang laut, gempa, hingga satelit dan planet. Langit dan semua yang di atas sana.">
+<title>Langit – Prakiraan Cuaca Indonesia &amp; Info Langit Hari Ini</title>
+<link rel="canonical" href="https://langit.info/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Langit">
+<meta property="og:locale" content="id_ID">
+<meta property="og:url" content="https://langit.info/">
+<meta property="og:title" content="Langit – Prakiraan Cuaca Indonesia &amp; Info Langit Hari Ini">
+<meta property="og:description" content="Prakiraan cuaca per jam untuk seluruh Indonesia: suhu, hujan, angin, UV, gelombang laut, gempa, hingga satelit dan planet. Langit dan semua yang di atas sana.">
+<meta property="og:image" content="https://langit.info/icon-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta name="twitter:card" content="summary">
 <link rel="canonical" href="https://langit.info/">
 <script>/* Langit moved to langit.info: send visitors of the old GitHub address there */
 if (location.hostname === 'bmt-droid.github.io') location.replace('https://langit.info/' + location.hash);
@@ -481,6 +492,10 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .evt-pick label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted);font-weight:600}
 .evt-pick select{font:inherit;font-size:.95rem;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 6px;width:100%;min-width:0}
 .evt-list li span:last-child{font-size:.95rem}
+.about{max-width:760px;margin:36px 0 0;padding:0;color:var(--muted);font-size:.92rem;line-height:1.6}
+.about h2{font-size:1rem;color:var(--ink);margin:0 0 8px}
+.about p{margin:0 0 10px}
+.about strong{color:var(--ink)}
 .xing{list-style:none;margin:0;padding:0;display:grid;gap:14px}
 .xing li{display:flex;flex-direction:column;gap:6px}
 .xcells{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:360px}
@@ -614,6 +629,13 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
       <div id="quakeBody"></div>
     </section>
     <aside class="ad-slot" id="adEnd" hidden aria-label="Iklan"></aside>
+    <section class="about" id="tentang" aria-labelledby="h-about">
+      <h2 id="h-about">Tentang Langit</h2>
+      <div id="aboutText">
+      <p><strong>Langit.info</strong> menyajikan prakiraan cuaca untuk seluruh Indonesia beserta pengaruhnya pada kehidupan sehari-hari. Mulai dari perubahan suhu, tutupan awan, curah hujan, arah dan kecepatan angin, hingga intensitas sinar matahari dan indeks UV, semuanya disajikan dalam bahasa yang mudah dipahami dan langsung bisa dipakai: kapan waktu terbaik menjemur pakaian, bertani, melaut, berwisata, bermain golf, atau menggelar acara di luar ruangan.</p>
+      <p>Karena langit begitu luas, Langit.info tidak berhenti pada cuaca. Situs ini juga mengajak Anda menjelajahi benda-benda langit, baik yang alami maupun buatan manusia: fase bulan, planet yang terlihat malam ini, hujan meteor, gerhana, asteroid yang melintas dekat Bumi, stasiun luar angkasa yang lewat di atas kota Anda, hingga jadwal peluncuran roket. Dari situlah lahir semboyan kami: <strong>"Langit dan semua yang di atas sana."</strong></p>
+      </div>
+    </section>
     <footer id="footer"></footer>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -3094,6 +3116,7 @@ function tickCountdowns(){
 setInterval(tickCountdowns, 30000);
 
 const SHARE_EMOJI = { umum:'🌤️', jemuran:'👕', petani:'🌾', nelayan:'🎣', wisata:'🏝️', golf:'⛳' };
+const ABOUT_EN = `<p><strong>Langit.info</strong> brings you weather forecasts for all of Indonesia and what they mean for everyday life. From changing temperatures, cloud cover, rainfall, wind direction and speed to sunshine strength and the UV index, everything is explained in plain language you can act on: the best time to dry laundry, farm, go fishing, travel, play golf or hold an outdoor event.</p><p>Because the sky is so vast, Langit.info doesn't stop at the weather. It also invites you to explore what's up there, natural and human-made: the moon's phases, planets visible tonight, meteor showers, eclipses, asteroids passing close to Earth, space stations flying over your town and upcoming rocket launches. Hence our tagline: <strong>"Langit and everything up there."</strong></p>`;
 const siteUrl = mode => (location.protocol.startsWith('http') ? location.origin + location.pathname : 'https://langit.info/') + (mode ? '#' + mode : '');
 function shareBlock(el){
   const h = el.querySelector('.verdict h2'), p = el.querySelector('.verdict p');
@@ -4007,6 +4030,7 @@ function applyStatic(){
   $('#locate span').textContent = t('locate'); $('#locate').setAttribute('aria-label', t('locate')); try{ applyTheme(store.get('skyline.theme', 'auto'), false); }catch(e){ /* theme button not ready yet */ }
   $('#h-hourly').textContent = t('h48'); $('#h-daily').textContent = t('d10'); $('#h-now').textContent = t('cond');
   $('#hourly').setAttribute('aria-label', t('hourlyLabel'));
+  { const ab = $('#aboutText'), ah = $('#h-about'); if (ab && ah){ if (!ab.dataset.id) ab.dataset.id = ab.innerHTML; ah.textContent = state.lang === 'id' ? 'Tentang Langit' : 'About Langit'; ab.innerHTML = state.lang === 'id' ? ab.dataset.id : ABOUT_EN; } }
   $('#footer').innerHTML = `<p class="tagline">${state.lang === 'id' ? '☁️ Langit dan semua yang di atas sana' : '☁️ Langit and everything up there'}</p><p class="credits">${t('footer')}</p><p class="copy">&copy; ${new Date().getFullYear()} BMT | Berkat Maha Tinggi${ADS.client ? ` · <a href="privacy.html">${state.lang === 'id' ? 'Kebijakan Privasi' : 'Privacy Policy'}</a>` : ''}</p>`;
   if (typeof renderInstallLink === 'function') renderInstallLink();
   document.querySelectorAll('#langSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === state.lang));
