@@ -470,6 +470,13 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .ternak-pick .pill{font-size:.85rem;padding:6px 12px}
 .ternak-pick .pill{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
 .ternak-pick .pill.on{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
+.evt-wrap{margin-top:22px}
+.evt-card p{margin:0}
+.evt-card{gap:8px}
+.evt-pick{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:8px;max-width:420px}
+.evt-pick label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted);font-weight:600}
+.evt-pick select{font:inherit;font-size:.95rem;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 6px;width:100%;min-width:0}
+.evt-list li span:last-child{font-size:.95rem}
 .xing{list-style:none;margin:0;padding:0;display:grid;gap:14px}
 .xing li{display:flex;flex-direction:column;gap:6px}
 .xcells{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:360px}
@@ -1654,6 +1661,7 @@ function renderMode(loading){
       + (EXTRAS[state.mode] ? safeExtra(EXTRAS[state.mode]) : '');
     el.insertAdjacentHTML('beforeend', shareBlock(el));
     tickCountdowns();
+    if (state.mode === 'umum'){ const ev = evtPlan(); if (!evtCache.get(`${placeKey(state.place)}|${ev.d}`)) evtRefresh(); }
   }catch(e){
     el.innerHTML = `<p>${t('extraErr')}</p>`;
   }
@@ -3089,6 +3097,86 @@ const OUTFIT_SVG = {
   jas:'<path d="M8 3h8l1 2 4 3v12h-3v-9l-1-1V21H7V10l-1 1v9H3V8l4-3z" fill="#F2C14E"/><path d="M9 3a3 3 0 0 0 6 0" fill="#E0A82E"/>',
   sandal:'<ellipse cx="9" cy="13" rx="3.4" ry="7" fill="#E8833A"/><ellipse cx="16" cy="13" rx="3.4" ry="7" fill="#E8833A"/><path d="M7 11l2 2 2-2M14 11l2 2 2-2" stroke="#9C4F1C" stroke-width="1.3" fill="none" stroke-linecap="round"/>'
 };
+/* ---------- Umum: outdoor event planner (workshops, shows, parties, concerts) ---------- */
+const evtCache = new Map(), evtInflight = new Map();
+function evtPlan(){
+  const D = state.data.daily.time, now = localNow();
+  let e = store.get('skyline.event', null);
+  if (!e || !D.includes(e.d)) e = { d: D[now.h >= 16 ? 1 : 0], a: 16, b: 22 };
+  e.a = clamp(+e.a || 16, 0, 23); e.b = clamp(+e.b || 22, e.a + 1, 24);
+  return e;
+}
+async function evtLoad(){
+  const p = state.place, e = evtPlan(), k = `${placeKey(p)}|${e.d}`;
+  const c = evtCache.get(k);
+  if (c && Date.now() - c.at < 20 * 60000) return c.d;
+  if (evtInflight.has(k)) return evtInflight.get(k);
+  const job = getJSON(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&timezone=auto&start_date=${e.d}&end_date=${e.d}&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,uv_index,is_day`, 12000)
+    .then(d => { evtCache.set(k, { at: Date.now(), d }); return d; }).finally(() => evtInflight.delete(k));
+  evtInflight.set(k, job);
+  return job;
+}
+function evtJudge(d, e){
+  const H = d.hourly, L = state.lang === 'id', idx = [];
+  H.time.forEach((x, i) => { const h = +x.slice(11, 13); if (h >= e.a && h < e.b) idx.push(i); });
+  if (!idx.length) return null;
+  const r = [], at = (lv, ic, txt) => r.push({ lv, ic, txt });
+  const hrs = f => idx.filter(f), span = list => list.length ? `${String(+H.time[list[0]].slice(11, 13)).padStart(2, '0')}.00–${String(+H.time[list[list.length - 1]].slice(11, 13) + 1).padStart(2, '0')}.00` : '';
+  const storm = hrs(i => wmo(H.weather_code[i])[1] === 'storm' && (H.precipitation_probability[i] ?? 0) >= 30);
+  const gMax = Math.max(...idx.map(i => H.wind_gusts_10m[i] ?? 0));
+  const heavy = hrs(i => (H.precipitation[i] ?? 0) >= 5 || ([65, 82].includes(H.weather_code[i]) && (H.precipitation_probability[i] ?? 0) >= 40));
+  const ppMax = Math.max(...idx.map(i => H.precipitation_probability[i] ?? 0)), mm = idx.reduce((s, i) => s + (H.precipitation[i] ?? 0), 0);
+  const hot = Math.max(...idx.filter(i => H.is_day[i]).map(i => H.apparent_temperature[i] ?? 0), 0), uv = Math.max(...idx.map(i => H.uv_index[i] ?? 0));
+  if (storm.length) at(3, '⚡', L ? `Hujan petir sekitar ${span(storm)}. Panggung, rangka logam dan penonton di lapangan terbuka berisiko tersambar petir. Hentikan acara saat terdengar guntur dan tunggu 30 menit setelah guntur terakhir.` : `Thunderstorms around ${span(storm)}. Stages, metal rigging and crowds in open fields are at risk of lightning. Stop the show when you hear thunder and wait 30 minutes after the last one.`);
+  if (gMax >= 60) at(3, '💨', L ? `Hembusan angin hingga ${speed(gMax)}: tenda, atap panggung, spanduk dan tower speaker bisa roboh. Jangan pasang struktur tinggi.` : `Gusts up to ${speed(gMax)}: tents, stage roofs, banners and speaker towers can come down. Do not put up tall structures.`);
+  else if (gMax >= 40) at(2, '💨', L ? `Hembusan angin hingga ${speed(gMax)}: ikat dan beri pemberat pada tenda, turunkan spanduk besar, siapkan petugas untuk menurunkan atap tenda jika angin menguat.` : `Gusts up to ${speed(gMax)}: tie down and weight tents, take down big banners, and have crew ready to lower tent roofs if it picks up.`);
+  if (heavy.length) at(2, '🌧️', L ? `Hujan lebat sekitar ${span(heavy)}: lindungi kabel, genset dan sound system dari air, siapkan alas untuk tanah becek.` : `Heavy rain around ${span(heavy)}: keep cables, generators and the sound system dry, and plan for muddy ground.`);
+  else if (ppMax >= 70 && mm >= 2) at(2, '🌧️', L ? `Hujan hampir pasti turun (peluang ${ppMax}%, sekitar ${Math.round(mm)} mm). Sebaiknya pindah ke dalam ruangan atau gunakan tenda tertutup.` : `Rain is very likely (${ppMax}% chance, about ${Math.round(mm)} mm). Better move indoors or use closed tents.`);
+  else if (ppMax >= 35) at(1, '☂️', L ? `Peluang hujan hingga ${ppMax}%. Siapkan tenda, terpal untuk peralatan dan rencana B.` : `Up to ${ppMax}% chance of rain. Have tents, tarps for equipment and a plan B ready.`);
+  if (hot >= 40) at(2, '🌡️', L ? `Sangat panas (terasa ${tFmt(hot)}): risiko pingsan di kerumunan. Sediakan banyak air minum, tempat teduh dan tim P3K.` : `Very hot (feels like ${tFmt(hot)}): fainting risk in crowds. Provide plenty of water, shade and a first-aid team.`);
+  else if (hot >= 35) at(1, '🌡️', L ? `Panas (terasa ${tFmt(hot)}): sediakan air minum, tempat teduh dan tim P3K.` : `Hot (feels like ${tFmt(hot)}): provide drinking water, shade and first aid.`);
+  if (uv >= 8) at(0, '🧴', L ? 'UV sangat tinggi: sediakan tenda peneduh dan ingatkan tamu memakai tabir surya.' : 'Very high UV: provide shade tents and remind guests about sunscreen.');
+  const lv = r.length ? Math.max(...r.map(x => x.lv)) : 0;
+  return { lv, r, ppMax };
+}
+function eventCard(){
+  const L = state.lang === 'id', e = evtPlan(), D = state.data.daily;
+  const k = D.time.indexOf(e.d);
+  const dayOpts = D.time.slice(0, 10).map((s, i) => `<option value="${s}"${s === e.d ? ' selected' : ''}>${esc(i === 0 ? t('today') : i === 1 ? t('tomorrow') : dShort(s))}</option>`).join('');
+  const hOpt = (from, to, sel) => { let o = ''; for (let h = from; h <= to; h++) o += `<option value="${h}"${h === sel ? ' selected' : ''}>${String(h % 24).padStart(2, '0')}.00</option>`; return o; };
+  const pick = `<div class="evt-pick"><label>${L ? 'Tanggal' : 'Date'}<select id="evtD">${dayOpts}</select></label><label>${L ? 'Mulai' : 'From'}<select id="evtA">${hOpt(5, 23, e.a)}</select></label><label>${L ? 'Selesai' : 'Until'}<select id="evtB">${hOpt(e.a + 1, 24, e.b)}</select></label></div>`;
+  const head = `<h3>${L ? '🎪 Acara di luar ruangan' : '🎪 Outdoor event'}</h3><p class="muted small">${L ? 'Workshop, pertunjukan, pesta, konser atau resepsi? Pilih waktunya.' : 'Workshop, show, party, concert or reception? Pick the time.'}</p>${pick}`;
+  const c = evtCache.get(`${placeKey(state.place)}|${e.d}`);
+  if (!c) return `<div class="fact evt-card">${head}<p class="muted">${L ? 'Memeriksa cuaca…' : 'Checking the weather…'}</p></div>`;
+  const j = evtJudge(c.d, e);
+  if (!j) return `<div class="fact evt-card">${head}</div>`;
+  const names = L ? ['Aman untuk acara di luar', 'Siapkan tenda dan rencana B', 'Sebaiknya di dalam ruangan', 'Tunda atau pindahkan acara'] : ['Good to go outdoors', 'Have tents and a plan B ready', 'Better hold it indoors', 'Postpone or move the event'];
+  const cls = ['good', 'ok', 'poor', 'bad'][j.lv];
+  const conf = k <= 2 ? (L ? 'Keyakinan prakiraan: tinggi.' : 'Forecast confidence: high.') : k <= 5 ? (L ? 'Keyakinan prakiraan: sedang. Cek lagi H-1.' : 'Forecast confidence: medium. Check again the day before.') : (L ? 'Keyakinan prakiraan: rendah, masih bisa berubah. Cek lagi H-2 dan H-1.' : 'Forecast confidence: low, it can still change. Check again 2 days and 1 day before.');
+  const ssH = D.sunset[k] ? +D.sunset[k].slice(11, 13) : 99;
+  const ss = D.sunset[k] && e.b > ssH ? (L ? `Matahari terbenam ${clockStr(D.sunset[k])}: siapkan lampu sebelumnya.` : `Sunset ${clockStr(D.sunset[k])}: have lights ready before then.`) : '';
+  const list = j.r.length ? `<ul class="hol-list evt-list">${j.r.map(x => `<li><span class="hi-ic">${x.ic}</span><span>${esc(x.txt)}</span></li>`).join('')}</ul>` : `<p>${L ? 'Tidak ada hujan, petir atau angin kencang yang diperkirakan pada jam ini.' : 'No rain, lightning or strong wind expected in this window.'}</p>`;
+  const when = `${k === 0 ? t('today') : k === 1 ? t('tomorrow') : dShort(e.d)}, ${String(e.a).padStart(2, '0')}.00–${String(e.b % 24).padStart(2, '0')}.00`;
+  const msg = (L ? `🎪 Cek cuaca acara di ${state.place.name}\n${when}\n\n${names[j.lv]}` : `🎪 Event weather check for ${state.place.name}\n${when}\n\n${names[j.lv]}`) + (j.r.length ? '\n' + j.r.map(x => `${x.ic} ${x.txt}`).join('\n') : '') + `\n\n${conf}\n${L ? 'Sumber' : 'Source'}: langit.info`;
+  return `<div class="fact evt-card">${head}<p><span class="lvl-chip s-${cls}">${esc(names[j.lv])}</span></p>${list}<p class="small">${esc(conf)}${ss ? ' ' + esc(ss) : ''}</p>
+    <a class="share" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8L3.5 20.5l4.3-1.1A8.5 8.5 0 1 0 12 3.5z" fill="#fff"/><path d="M9.2 8.2c.3-.4.7-.4.9 0l.8 1.8c.1.3 0 .6-.2.8l-.5.6c.6 1.2 1.6 2.2 2.8 2.8l.6-.5c.2-.2.5-.3.8-.2l1.8.8c.4.2.4.6 0 .9-.6.7-1.5 1-2.4.7a8.4 8.4 0 0 1-5.2-5.2c-.3-.9 0-1.8.6-2.5z" fill="#1FA855"/></svg>${L ? 'Bagikan ke tim' : 'Share with the team'}</a></div>`;
+}
+function evtRefresh(){
+  const box = $('#evtBox'); if (!box) return;
+  box.innerHTML = safeExtra(eventCard);
+  const key = placeKey(state.place);
+  evtLoad().then(() => { if (placeKey(state.place) === key){ const b = $('#evtBox'); if (b) b.innerHTML = safeExtra(eventCard); } }).catch(() => {
+    const b = $('#evtBox'); if (b) b.innerHTML = `<div class="fact evt-card"><h3>${state.lang === 'id' ? '🎪 Acara di luar ruangan' : '🎪 Outdoor event'}</h3><p class="muted">${state.lang === 'id' ? 'Prakiraan acara belum bisa dimuat. Coba lagi nanti ya.' : 'The event forecast couldn’t load. Please try again later.'}</p></div>`;
+  });
+}
+document.addEventListener('change', e => {
+  if (!['evtD', 'evtA', 'evtB'].includes(e.target.id)) return;
+  const cur = evtPlan(), d = $('#evtD').value, a = +$('#evtA').value; let b = +$('#evtB').value;
+  if (b <= a) b = Math.min(24, a + 4);
+  store.set('skyline.event', { ...cur, d, a, b });
+  evtRefresh();
+});
+
 function extrasUmum(){
   const d = state.data, H = d.hourly, D = d.daily, c = d.current, i0 = state.i0, end = Math.min(H.time.length, i0 + 12);
   const kind = wmo(c.weather_code)[1], day = !!c.is_day;
@@ -3119,7 +3207,7 @@ function extrasUmum(){
     <div class="fact"><h3>${t('outfit')}</h3><div class="outfit">${items.map(([k, n]) => `<span><svg viewBox="0 0 24 24" aria-hidden="true">${OUTFIT_SVG[k]}</svg>${esc(n)}</span>`).join('')}</div><p>${esc(t('ofSay', joined))}</p></div>
     ${safeExtra(holidayCard)}
     <div class="fact"><h3>${t('mosq')}</h3><div class="val"><span class="lvl lvl${ml}">${t('mosqLv')[ml]}</span></div><p>${t('mosqNote')}</p></div>
-  </div>`;
+  </div><div id="evtBox" class="evt-wrap">${safeExtra(eventCard)}</div>`;
 }
 
 /* ---------- Jemuran: score + live countdown ---------- */
