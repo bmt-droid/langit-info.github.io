@@ -463,6 +463,12 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .cmp-res{display:flex;flex-direction:column;gap:6px}
 .cmp-pick{text-align:left;border:1px solid var(--line);background:none;color:inherit;border-radius:10px;padding:8px 12px;cursor:pointer;font:inherit}
 .cmp-pick:hover{background:rgba(127,127,127,.12)}
+.ternak-box{display:contents}
+.ternak-card p{margin:0}
+.ternak-pick{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}
+.ternak-pick .pill{font-size:.85rem;padding:6px 12px}
+.ternak-pick .pill{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.ternak-pick .pill.on{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
 .xing{list-style:none;margin:0;padding:0;display:grid;gap:14px}
 .xing li{display:flex;flex-direction:column;gap:6px}
 .xcells{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:360px}
@@ -3139,6 +3145,69 @@ function extrasJemuran(){
 }
 
 /* ---------- Petani: disease risk + season hint ---------- */
+/* ---------- Petani: heat stress for livestock (THI) ---------- */
+// Temperature-Humidity Index, the standard livestock heat-stress measure: THI = (1.8T+32) − (0.55 − 0.0055·RH)(1.8T − 26)
+const thi = (t, rh) => (1.8 * t + 32) - (0.55 - 0.0055 * rh) * (1.8 * t - 26);
+const TERNAK = {
+  sapi:    { ic: '🐄', id: 'Sapi', en: 'Cattle', lv: (t, rh) => { const x = thi(t, rh); return x >= 89 ? 3 : x >= 80 ? 2 : x >= 75 ? 1 : 0; } },
+  kambing: { ic: '🐐', id: 'Kambing', en: 'Goats', lv: (t, rh) => { const x = thi(t, rh); return x >= 90 ? 3 : x >= 82 ? 2 : x >= 76 ? 1 : 0; } },
+  // chickens: rough guide from air temperature, one step worse in very humid air
+  ayam:    { ic: '🐔', id: 'Ayam', en: 'Chickens', lv: (t, rh) => { let l = t >= 35 ? 3 : t >= 32 ? 2 : t >= 29 ? 1 : 0; if (rh >= 75 && t >= 29) l = Math.min(3, l + 1); return l; } },
+};
+const TERNAK_TIP = {
+  id: [
+    'Kondisi nyaman. Tetap sediakan air minum bersih sepanjang hari.',
+    'Stres panas ringan: pastikan air minum cukup dan ada naungan. Beri pakan di pagi atau sore hari.',
+    'Stres panas sedang: tambah tempat minum, semprot atau siram atap kandang, kurangi kepadatan. Hindari menggiring atau mengangkut ternak di jam panas.',
+    'Stres panas berat: ternak bisa sakit atau mati. Air dingin dan naungan wajib, nyalakan kipas di kandang ayam, jangan pindahkan ternak siang hari, dan pantau yang terengah-engah.'
+  ],
+  en: [
+    'Comfortable. Keep clean drinking water available all day.',
+    'Mild heat stress: make sure there is enough water and shade. Feed in the morning or evening.',
+    'Moderate heat stress: add drinkers, spray or wet the shed roof, reduce crowding. Do not herd or transport animals in the hot hours.',
+    'Severe heat stress: animals can fall ill or die. Cool water and shade are a must, run fans in poultry houses, do not move animals at midday, and watch for heavy panting.'
+  ]
+};
+function ternakCard(){
+  const L = state.lang === 'id', H = state.data.hourly, i0 = state.i0, sp = store.get('skyline.ternak', 'sapi'), S = TERNAK[sp] || TERNAK.sapi;
+  const now = localNow(), day = now.h >= 18 ? 1 : 0;
+  const date = state.data.daily.time[day];
+  const idx = []; H.time.forEach((x, i) => { if (x.slice(0, 10) === date && (day || i >= i0) && H.temperature_2m[i] != null) idx.push(i); });
+  if (!idx.length) return '';
+  const lv = idx.map(i => S.lv(H.temperature_2m[i], H.relative_humidity_2m[i] ?? 70));
+  const peak = Math.max(...lv);
+  const heat = idx.map(i => thi(H.temperature_2m[i], H.relative_humidity_2m[i] ?? 70)), pk = idx[heat.indexOf(Math.max(...heat))];
+  const hot = peak ? idx.filter((_, k) => lv[k] === peak) : [];   // the hours when it is worst
+  const allDay = hot.length && hot[0] === idx[0] && hot[hot.length - 1] === idx[idx.length - 1];
+  const names = L ? ['Nyaman', 'Stres panas ringan', 'Stres panas sedang', 'Stres panas berat'] : ['Comfortable', 'Mild heat stress', 'Moderate heat stress', 'Severe heat stress'];
+  const cls = ['good', 'ok', 'poor', 'bad'][peak];
+  const range = hot.length ? `${hourStr(H.time[hot[0]])}–${endHourStr(H.time[hot[hot.length - 1]])}` : '';
+  const dayTxt = day ? t('tomorrow') : t('today');
+  const when = allDay ? (L ? `${dayTxt} sepanjang hari, terberat sekitar ${hourStr(H.time[pk])}` : `${dayTxt} all day, worst around ${hourStr(H.time[pk])}`) : hot.length ? (L ? `${dayTxt} ${range}, terberat sekitar ${hourStr(H.time[pk])}` : `${dayTxt} ${range}, worst around ${hourStr(H.time[pk])}`) : (L ? `${dayTxt} tidak ada jam yang panas bagi ${S.id.toLowerCase()}.` : `${dayTxt}: no hot hours for ${S.en.toLowerCase()}.`);
+  const best = hot.length && !allDay ? (L ? `Waktu terbaik memberi pakan dan bekerja dengan ternak: sebelum ${hourStr(H.time[hot[0]])} dan setelah ${endHourStr(H.time[hot[hot.length - 1]])}.` : `Best times to feed and handle animals: before ${hourStr(H.time[hot[0]])} and after ${endHourStr(H.time[hot[hot.length - 1]])}.`) : '';
+  // wet spell (hoof rot, flies, worms) and dry spell (grass and water), from the last and next 7 days of rain
+  const extra = [];
+  if (state.farm && state.farm.daily){
+    const P = state.farm.daily.precipitation_sum, sum = (a, b) => P.slice(a, b).reduce((x, y) => x + (y || 0), 0);
+    if (sum(4, 8) >= 30) extra.push(L ? '🌧️ Beberapa hari terakhir banyak hujan: jaga kandang tetap kering, waspada busuk kuku, lalat dan cacingan.' : '🌧️ Lots of rain in recent days: keep pens dry and watch for hoof rot, flies and worms.');
+    if (sum(8, 15) < 5 && sum(0, 7) < 10) extra.push(L ? '☀️ Seminggu ke depan diperkirakan kering: siapkan cadangan air minum dan pakan hijauan.' : '☀️ The coming week looks dry: line up spare drinking water and green fodder.');
+  }
+  const btns = Object.entries(TERNAK).map(([k, v]) => `<button type="button" class="pill${k === sp ? ' on' : ''}" data-ternak="${k}" aria-pressed="${k === sp}">${v.ic} ${L ? v.id : v.en}</button>`).join('');
+  return `<div class="fact ternak-card"><h3>${L ? '🐄 Stres panas ternak' : '🐄 Livestock heat stress'}</h3>
+    <div class="ternak-pick">${btns}</div>
+    <p><span class="lvl-chip s-${cls}">${esc(names[peak])}</span></p>
+    <p>${esc(when)}</p>
+    <p>${esc(TERNAK_TIP[L ? 'id' : 'en'][peak])}</p>
+    ${best ? `<p class="small">${esc(best)}</p>` : ''}
+    ${extra.map(x => `<p class="small">${esc(x)}</p>`).join('')}
+    <p class="muted small">${L ? 'Dihitung dari suhu dan kelembapan (indeks THI). Sapi perah (FH) lebih peka panas daripada sapi lokal. Untuk ayam, ini panduan kasar; kandang tertutup bisa lebih panas.' : 'Worked out from temperature and humidity (THI index). Dairy cattle (Holstein) feel heat sooner than local breeds. For chickens this is a rough guide; closed houses can be hotter.'}</p></div>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-ternak]'); if (!b) return;
+  store.set('skyline.ternak', b.dataset.ternak);
+  const c = $('#ternakBox'); if (c) c.innerHTML = safeExtra(ternakCard);
+});
+
 function extrasPetani(){
   const H = state.data.hourly, i0 = state.i0, end = Math.min(H.time.length, i0 + 48);
   let wetH = 0;
@@ -3152,6 +3221,7 @@ function extrasPetani(){
     season = `<div class="fact"><h3>${t('fmSeason')}</h3><p>${esc(msg)} ${esc(t('fmSeasonDays', past, next))}</p><p>${t('fmSeasonOfficial')}</p></div>`;
   }
   return safeExtra(seasonBlock) + `<div class="facts">
+    <div id="ternakBox" class="ternak-box">${safeExtra(ternakCard)}</div>
     <div class="fact"><h3>${t('fmDisease')}</h3><div class="val"><span class="lvl lvl${dl}">${t('fmDiseaseLv')[dl]}</span></div><p>${esc(t('fmDiseaseHours', wetH))} ${t('fmDiseaseTip')[dl]}</p></div>
     ${season}
   </div>`;
