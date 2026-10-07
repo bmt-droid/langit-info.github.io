@@ -820,13 +820,17 @@ Object.assign(STR.en, {
 });
 Object.assign(STR.id, {
   instTitle:'Pasang Langit di HP', instTitlePc:'Pasang Langit di komputer ini', instSubPc:'Buka langsung dari desktop atau taskbar, tetap bisa dilihat saat offline.', instSub:'Buka lebih cepat dari layar utama, tetap bisa dilihat saat offline.', instGo:'Pasang', instLater:'Nanti', instFooter:'Pasang aplikasi Langit',
-  instIos:'Ketuk tombol Bagikan, lalu pilih "Tambah ke Layar Utama".', instIosGo:'Mengerti',
+  instIos:'Di Safari: ketuk ikon Bagikan (kotak dengan panah ke atas; di iOS terbaru ada di menu ⋯), lalu pilih "Tambah ke Layar Utama".', instIosGo:'Mengerti',
+  instIosApp:'Anda membuka Langit di dalam aplikasi lain (misalnya WhatsApp). Buka dulu di Safari lewat menu ⋯ → "Buka di Safari", lalu ketuk Bagikan → "Tambah ke Layar Utama".',
+  instMac:'Di Safari Mac: klik menu File di bagian atas layar, lalu pilih "Tambahkan ke Dock" (Add to Dock).',
   instManual:'Ketuk menu ⋮ di pojok kanan atas browser, lalu pilih "Instal aplikasi" atau "Tambahkan ke layar utama".',
   offline:'Anda sedang offline. Menampilkan data terakhir yang tersimpan.', online:'Kembali online. Data diperbarui.'
 });
 Object.assign(STR.en, {
   instTitle:'Install Langit on your phone', instTitlePc:'Install Langit on this computer', instSubPc:'Open it straight from your desktop or taskbar, and still see it offline.', instSub:'Open it faster from your home screen, and still see it offline.', instGo:'Install', instLater:'Later', instFooter:'Install the Langit app',
-  instIos:'Tap the Share button, then choose "Add to Home Screen".', instIosGo:'Got it',
+  instIos:'In Safari: tap the Share icon (a square with an up arrow; on the newest iOS it is inside the ⋯ menu), then choose "Add to Home Screen".', instIosGo:'Got it',
+  instIosApp:'You opened Langit inside another app (such as WhatsApp). Open it in Safari first via the ⋯ menu → "Open in Safari", then tap Share → "Add to Home Screen".',
+  instMac:'In Safari on Mac: open the File menu at the top of the screen and choose "Add to Dock".',
   instManual:'Tap the ⋮ menu at the top right of your browser, then choose "Install app" or "Add to Home screen".',
   offline:"You're offline. Showing the last saved data.", online:'Back online. Data refreshed.'
 });
@@ -3283,17 +3287,21 @@ function initAds(){
 let installEvt = null;
 const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const isPhone = () => /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent) || (window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 1024);
+// Safari on a Mac (Safari 17+ can "Add to Dock"); Chrome/Edge on Mac use the normal install button instead
+// iPhone in-app browsers (WhatsApp, Instagram, Facebook…) can't add to the home screen themselves
+const isIOSInApp = () => isIOS() && !/Safari\//.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+const isMacSafari = () => /Macintosh/.test(navigator.userAgent) && /Safari\//.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|Edg|OPR|Firefox|FxiOS/.test(navigator.userAgent) && navigator.maxTouchPoints === 0;
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 function showInstall(force){
   if (isStandalone()) return;
   if (!force && (store.get('skyline.installLater', 0) > Date.now())) return;
-  const ios = isIOS() && !installEvt;
-  if (!installEvt && !ios) return;
+  const ios = isIOS() && !installEvt, mac = !installEvt && isMacSafari();
+  if (!installEvt && !ios && !mac) return;
   $('#installTitle').textContent = isPhone() ? t('instTitle') : t('instTitlePc');
-  $('#installSub').textContent = ios ? t('instIos') : isPhone() ? t('instSub') : t('instSubPc');
-  $('#installGo').textContent = ios ? t('instIosGo') : t('instGo');
+  $('#installSub').textContent = ios ? (isIOSInApp() ? t('instIosApp') : t('instIos')) : mac ? t('instMac') : isPhone() ? t('instSub') : t('instSubPc');
+  $('#installGo').textContent = ios || mac ? t('instIosGo') : t('instGo');
   $('#installLater').textContent = t('instLater');
-  $('#installLater').hidden = ios;
+  $('#installLater').hidden = ios || mac;
   $('#install').hidden = false;
 }
 function hideInstall(snoozeDays){
@@ -3326,19 +3334,21 @@ $('#installGo').onclick = async () => {
     }catch(e){ showManualInstall(); }
     renderInstallLink();
   }
-  else if (isIOS()) hideInstall(30);
+  else if (isIOS() || isMacSafari()) hideInstall(30);
   else showManualInstall();
 };
 $('#installLater').onclick = () => hideInstall(7);
 function renderInstallLink(){
   const f = $('#footer'); if (!f) return;
   let a = f.querySelector('.install-link');
-  const can = !isStandalone() && (installEvt || isIOS());
+  const can = !isStandalone() && (installEvt || isIOS() || isMacSafari());
   if (!can){ if (a) a.remove(); return; }
   if (!a){ a = document.createElement('button'); a.type = 'button'; a.className = 'install-link'; a.onclick = () => showInstall(true); f.appendChild(a); }
   a.textContent = (isPhone() ? '📲 ' : '💻 ') + t('instFooter');
 }
 if (isIOS() && !isStandalone()) setTimeout(() => showInstall(false), 2000);
+if (isMacSafari() && !isStandalone()) setTimeout(() => showInstall(false), 4000);
+renderInstallLink();
 if ('serviceWorker' in navigator && location.protocol === 'https:'){
   window.addEventListener('load', () => {
     const hadController = !!navigator.serviceWorker.controller;
