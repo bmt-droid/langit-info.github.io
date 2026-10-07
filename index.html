@@ -472,6 +472,7 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .ternak-pick .pill.on{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
 .evt-wrap{margin-top:22px}
 .evt-card p{margin:0}
+.evt-card .share{align-self:flex-start;margin-top:6px}
 .evt-card{gap:8px}
 .evt-pick{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:8px;max-width:420px}
 .evt-pick label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted);font-weight:600}
@@ -3145,7 +3146,7 @@ function eventCard(){
   const dayOpts = D.time.slice(0, 10).map((s, i) => `<option value="${s}"${s === e.d ? ' selected' : ''}>${esc(i === 0 ? t('today') : i === 1 ? t('tomorrow') : dShort(s))}</option>`).join('');
   const hOpt = (from, to, sel) => { let o = ''; for (let h = from; h <= to; h++) o += `<option value="${h}"${h === sel ? ' selected' : ''}>${String(h % 24).padStart(2, '0')}.00</option>`; return o; };
   const pick = `<div class="evt-pick"><label>${L ? 'Tanggal' : 'Date'}<select id="evtD">${dayOpts}</select></label><label>${L ? 'Mulai' : 'From'}<select id="evtA">${hOpt(5, 23, e.a)}</select></label><label>${L ? 'Selesai' : 'Until'}<select id="evtB">${hOpt(e.a + 1, 24, e.b)}</select></label></div>`;
-  const head = `<h3>${L ? '🎪 Acara di luar ruangan' : '🎪 Outdoor event'}</h3><p class="muted small">${L ? 'Workshop, pertunjukan, pesta, konser atau resepsi? Pilih waktunya.' : 'Workshop, show, party, concert or reception? Pick the time.'}</p>${pick}`;
+  const head = `<h3>${L ? '🎪 Acara di luar ruangan' : '🎪 Outdoor event'}</h3><p class="muted small">${L ? 'Pameran, workshop, pertunjukan, pesta, konser atau resepsi? Pilih waktunya.' : 'Exhibition, workshop, show, party, concert or reception? Pick the time.'}</p>${pick}`;
   const c = evtCache.get(`${placeKey(state.place)}|${e.d}`);
   if (!c) return `<div class="fact evt-card">${head}<p class="muted">${L ? 'Memeriksa cuaca…' : 'Checking the weather…'}</p></div>`;
   const j = evtJudge(c.d, e);
