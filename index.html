@@ -1271,6 +1271,20 @@ async function loadPlace(place, opts = {}){
   }
 }
 
+// one marine request with a retry; a failed or slow request is NOT the same as "far from the sea"
+async function fetchMarineAt(lat, lon){
+  const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&timezone=auto&forecast_days=3&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_period,sea_level_height_msl&daily=wave_height_max`;
+  // second try leaves out the tide variable, in case that is what the service rejects for this sea area
+  const urls = [url, url.replace(',sea_level_height_msl', '')];
+  let m = null, why = '';
+  for (let a = 0; a < 2 && !m; a++){
+    if (a) await new Promise(r => setTimeout(r, 1500));
+    m = await getJSON(urls[a], 15000).catch(e => { why = e.name === 'AbortError' ? 'timeout' : (e.message || 'error'); return /no data|location/i.test(why) ? { inland:true } : (a ? { failed:true, why } : null); });
+  }
+  return m;
+}
+const seaEmpty = m => !!m && !m.failed && (m.inland || !m.hourly || !m.hourly.wave_height || !m.hourly.wave_height.some(v => v != null));
+
 async function ensureExtras(){
   const key = placeKey(state.place), p = state.place;
   if (state.mode === 'wisata' && !state.wis) loadWisata();
@@ -1283,14 +1297,17 @@ async function ensureExtras(){
   renderMode(true);
   try{
     if (needMarine){
-      // a failed or slow request is NOT the same as "far from the sea": retry once, then offer a retry button
-      const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${p.lat}&longitude=${p.lon}&timezone=auto&forecast_days=3&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_period,sea_level_height_msl&daily=wave_height_max`;
-      // second try leaves out the tide variable, in case that is what the service rejects for this sea area
-      const urls = [url, url.replace(',sea_level_height_msl', '')];
-      let m = null, why = '';
-      for (let a = 0; a < 2 && !m; a++){
-        if (a) await new Promise(r => setTimeout(r, 1500));
-        m = await getJSON(urls[a], 15000).catch(e => { why = e.name === 'AbortError' ? 'timeout' : (e.message || 'error'); return /no data|location/i.test(why) ? { inland:true } : (a ? { failed:true, why } : null); });
+      let m = await fetchMarineAt(p.lat, p.lon);
+      // a coastal town whose own grid square counts as land: look for the nearest sea within about 25 km
+      if (seaEmpty(m)){
+        const pts = [];
+        for (const d of [0.1, 0.2]) for (let k = 0; k < 8; k++){ const a = k * Math.PI / 4; pts.push([+(p.lat + d * Math.cos(a)).toFixed(3), +(p.lon + d * Math.sin(a) / Math.cos(p.lat * Math.PI / 180)).toFixed(3)]); }
+        const r = await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${pts.map(x => x[0]).join(',')}&longitude=${pts.map(x => x[1]).join(',')}&hourly=wave_height&forecast_days=1`, 15000).catch(() => null);
+        const best = r ? (Array.isArray(r) ? r : [r]).map((d, k) => ({ k, ok: d && d.hourly && d.hourly.wave_height && d.hourly.wave_height.some(v => v != null), km: haversine(p.lat, p.lon, pts[k][0], pts[k][1]) })).filter(o => o.ok).sort((a, b) => a.km - b.km)[0] : null;
+        if (best){
+          const m2 = await fetchMarineAt(pts[best.k][0], pts[best.k][1]);
+          if (m2 && !m2.failed && !seaEmpty(m2)){ m = m2; m.nearKm = Math.max(1, Math.round(best.km)); m.pt = pts[best.k]; }
+        }
       }
       if (placeKey(state.place) === key) state.marine = m;
     }
@@ -1309,7 +1326,8 @@ async function ensureExtras(){
     if (placeKey(state.place) === key) state.metar = res;
   }
   if (needSea){
-    const sea = await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${p.lat}&longitude=${p.lon}&timezone=auto&forecast_days=1&hourly=ocean_current_velocity,ocean_current_direction,sea_surface_temperature`).catch(() => ({ error: true }));
+    const sp = (state.marine && state.marine.pt) || [p.lat, p.lon];
+    const sea = await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${sp[0]}&longitude=${sp[1]}&timezone=auto&forecast_days=1&hourly=ocean_current_velocity,ocean_current_direction,sea_surface_temperature`).catch(() => ({ error: true }));
     if (placeKey(state.place) === key) state.sea = sea;
   }
   if (needSeason){
@@ -2003,7 +2021,7 @@ function modeNelayan(){
   const dm = state.marine.daily && state.marine.daily.wave_height_max;
   const ret = seaReturn(i0, mi), warn = seaWarnings(i0, 18);
   const hzNow = seaHazards(i0), sub2 = hzNow.storm ? (state.lang === 'id' ? 'Ada risiko hujan petir. Petir sangat berbahaya di perahu terbuka.' : 'There is a thunderstorm risk. Lightning is very dangerous in an open boat.') : sub;
-  return verdict(st, title, `<p>${esc(sub2)}</p><p class="muted">${esc(best ? t('nlBest', winLabel(best)) : t('nlNoBest'))}</p>${ret ? `<p class="sea-return"><b>${state.lang === 'id' ? '⏱️ Pulang:' : '⏱️ Return:'}</b> ${esc(ret.text)}</p>` : ''}`, sceneNelayan(st === 'bad' && nTone !== 'night' ? 'bad' : nTone, st))
+  return verdict(st, title, `<p>${esc(sub2)}</p><p class="muted">${esc(best ? t('nlBest', winLabel(best)) : t('nlNoBest'))}</p>${state.marine.nearKm ? `<p class="muted small">${state.lang === 'id' ? `📍 Data gelombang dari laut terdekat, ±${state.marine.nearKm} km dari titik kota.` : `📍 Wave data from the nearest open water, about ${state.marine.nearKm} km from the town centre.`}</p>` : ''}${ret ? `<p class="sea-return"><b>${state.lang === 'id' ? '⏱️ Pulang:' : '⏱️ Return:'}</b> ${esc(ret.text)}</p>` : ''}`, sceneNelayan(st === 'bad' && nTone !== 'night' ? 'bad' : nTone, st))
     + tsu + warn
     + `<div class="family-share">${familyShare(st, ret)}</div>`
     + strip(items, t('nlStrip'), [['good', lg[0]], ['ok', lg[1]], ['bad', lg[2]]])
@@ -2047,7 +2065,7 @@ function modeWisata(){
     const sw = M.swell_wave_height ? (M.swell_wave_height[m] ?? wave) : wave, sp = M.swell_wave_period ? (M.swell_wave_period[m] ?? 0) : 0;
     const swim = wave < .8 ? t('swimOk') : wave < 1.5 ? t('swimCare') : t('swimNo');
     const surf = sw < .5 ? t('surfFlat') : sw < 1.2 ? t('surfBeginner') : sw <= 2.5 && sp >= 9 ? t('surfGood') : sw > 2.5 ? t('surfBig') : t('surfBeginner');
-    beach = fact(t('beach'), `${meters(wave)} <small>${t('waveCats')[waveCat(wave)]}</small>`, esc(`${swim} ${surf} ${t('swell', meters(sw), Math.round(sp))}`));
+    beach = fact(t('beach'), `${meters(wave)} <small>${t('waveCats')[waveCat(wave)]}</small>`, esc(`${swim} ${surf} ${t('swell', meters(sw), Math.round(sp))}` + (state.marine.nearKm ? (state.lang === 'id' ? ` (laut terdekat, ±${state.marine.nearKm} km)` : ` (nearest open water, about ${state.marine.nearKm} km)`) : '')));
   }
 
   // UV window
