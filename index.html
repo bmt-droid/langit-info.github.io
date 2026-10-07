@@ -3651,6 +3651,7 @@ function tidyPlaces(raw, term){
 // Photon (OpenStreetMap) results: towns, villages, islands, beaches, mountains and landmarks, with tidy names
 const PH_KEEP = /^(place|boundary|natural|tourism|leisure|aeroway|historic)$/;
 const PH_SKIP = /^(hotel|guest_house|hostel|motel|apartment|chalet|camp_site|caravan_site|picnic_site|information|artwork|yes|house|tree|stone|wetland|scrub|wood|grassland)$/;
+const PH_ISLAND = /^(java|jawa|sumatra|sumatera|borneo|kalimantan|sulawesi|celebes|lesser sunda islands|kepulauan sunda kecil|nusa tenggara|moluccas|kepulauan maluku|maluku islands|new guinea|papua island)$/i;
 const PH_RANK = { city:300, town:260, municipality:250, island:240, state:220, administrative:200, county:200, volcano:200, beach:200, peak:180, national_park:180, village:140, suburb:120, region:120, attraction:150, aerodrome:150, bay:120, islet:120, quarter:90, neighbourhood:60, hamlet:50 };
 function tidyPhoton(feats, term){
   const want = fold(term), out = [];
@@ -3661,8 +3662,8 @@ function tidyPhoton(feats, term){
     const p = f.properties, lon = f.geometry.coordinates[0], lat = f.geometry.coordinates[1];
     const name = stripPrefix(p.name) || p.name;
     const parts = [];
-    [p.city, p.county, p.state].forEach(x => { if (!x) return; const v = shortAdm(x); if (fold(stripPrefix(v)) !== fold(name) && !parts.some(u => fold(stripPrefix(u)) === fold(stripPrefix(v)))) parts.push(v); });
-    const region = [...parts.slice(-2), p.countrycode === 'ID' ? '' : p.country].filter(Boolean).join(', ');
+    [p.city, p.county, p.state].forEach(x => { if (!x || PH_ISLAND.test(x)) return; const v = shortAdm(x); if (fold(stripPrefix(v)) !== fold(name) && !parts.some(u => fold(stripPrefix(u)) === fold(stripPrefix(v)))) parts.push(v); });
+    const region = [...parts.slice(-2), p.countrycode === 'ID' ? '' : p.country].filter(Boolean).join(', ') || p.country || '';
     if (out.some(o => fold(o.name) === fold(name) && (fold(o.region) === fold(region) || haversine(o.lat, o.lon, lat, lon) < 8))) continue;
     out.push({ name, region, lat: +lat.toFixed(4), lon: +lon.toFixed(4), cc: p.countrycode });
     if (out.length === 6) break;
@@ -3671,22 +3672,29 @@ function tidyPhoton(feats, term){
 }
 async function search(term){
   const id = ++reqId;
-  // Photon is the main search; the Open-Meteo place list runs alongside as a backup and fills gaps
-  const ph = getJSON(`https://photon.komoot.io/api/?q=${encodeURIComponent(term)}&limit=15${state.lang === 'en' ? '&lang=en' : ''}&lat=-2.5&lon=118&zoom=5`, 6000).then(j => tidyPhoton(j.features || [], term)).catch(() => null);
-  const om = getJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(term)}&count=25&language=${state.lang}&format=json`, 8000).then(j => tidyPlaces(j.results || [], term)).catch(() => null);
-  const [a, b] = await Promise.all([ph, om]);
-  if (id !== reqId) return;
+  // popular places show at once; Photon (main) and the Open-Meteo list (backup) are added as each answers
   const pop = popularMatches(term);
-  if (!a && !b && !pop.length){ list.innerHTML = `<li class="empty">${esc(t('searchDown'))}</li>`; list.hidden = false; return; }
-  const merged = [...pop];
+  let A = null, B = null, doneA = false, doneB = false, drawn = false;
   const same = (x, y) => (fold(x.name) === fold(y.name) && haversine(x.lat, x.lon, y.lat, y.lon) < 15) || haversine(x.lat, x.lon, y.lat, y.lon) < 1.5;
-  const add = r => { if (!merged.some(m => same(m, r))) merged.push(r); };
-  const A = a || [], B = b || [];
-  A.filter(r => r.cc === 'ID').forEach(add); B.filter(r => r.cc === 'ID').forEach(add);
-  A.filter(r => r.cc !== 'ID').forEach(add); B.filter(r => r.cc !== 'ID').forEach(add);
-  results = merged.slice(0, 6);
-  active = results.length ? 0 : -1;
-  drawList();
+  const update = () => {
+    if (id !== reqId) return;
+    const base = drawn ? results.slice() : pop.slice();
+    const add = r => { if (base.length < 6 && !base.some(m => same(m, r))) base.push(r); };
+    const a = A || [], b = B || [];
+    a.filter(r => r.cc === 'ID').forEach(add); b.filter(r => r.cc === 'ID').forEach(add);
+    a.filter(r => r.cc !== 'ID').forEach(add); b.filter(r => r.cc !== 'ID').forEach(add);
+    if (!base.length){
+      if (!(doneA && doneB)) return;                 // still waiting for the other search
+      if (!A && !B){ list.innerHTML = `<li class="empty">${esc(t('searchDown'))}</li>`; list.hidden = false; return; }
+    }
+    results = base; if (active < 0 || active >= results.length) active = results.length ? 0 : -1;
+    drawn = results.length > 0; drawList();
+  };
+  if (pop.length){ results = pop.slice(0, 6); active = 0; drawn = true; drawList(); }
+  getJSON(`https://photon.komoot.io/api/?q=${encodeURIComponent(term)}&limit=15&lang=${state.lang === 'en' ? 'en' : 'default'}&lat=-2.5&lon=118&zoom=5`, 6000)
+    .then(j => { A = tidyPhoton(j.features || [], term); }).catch(() => {}).then(() => { doneA = true; update(); });
+  getJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(term)}&count=25&language=${state.lang}&format=json`, 8000)
+    .then(j => { B = tidyPlaces(j.results || [], term); }).catch(() => {}).then(() => { doneB = true; update(); });
 }
 function choose(i){ const r = results[i]; if (!r) return; q.value = ''; closeList(); q.blur(); loadPlace(r); }
 q.addEventListener('input', () => {
