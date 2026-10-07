@@ -6,18 +6,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#3E8FD8">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Langit">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="Langit dan semua yang di atas sana: prakiraan cuaca Indonesia per jam, mode jemuran, petani, nelayan dan wisata. Data Open-Meteo dan BMKG.">
-<title>Langit dan semua yang di atas sana</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="description" content="Prakiraan cuaca per jam untuk seluruh Indonesia: suhu, hujan, angin, UV, gelombang laut, gempa, hingga satelit dan planet. Langit dan semua yang di atas sana.">
+<title>Langit – Prakiraan Cuaca Indonesia dan Info Langit Hari Ini</title>
+<link rel="canonical" href="https://langit.info/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Langit">
+<meta property="og:locale" content="id_ID">
+<meta property="og:url" content="https://langit.info/">
+<meta property="og:title" content="Langit – Prakiraan Cuaca Indonesia dan Info Langit Hari Ini">
+<meta property="og:description" content="Prakiraan cuaca per jam untuk seluruh Indonesia: suhu, hujan, angin, UV, gelombang laut, gempa, hingga satelit dan planet. Langit dan semua yang di atas sana.">
+<meta property="og:image" content="https://langit.info/icon-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://langit.info/">
+<script>/* Langit moved to langit.info: send visitors of the old GitHub address there */
+if (location.hostname === 'bmt-droid.github.io') location.replace('https://langit.info/' + location.hash);
+/* saved light/dark choice, applied before the page is drawn so it never flashes */
+try{ const th = JSON.parse(localStorage.getItem('skyline.theme') || '"auto"'); if (th === 'light' || th === 'dark') document.documentElement.dataset.theme = th; }catch(e){}</script>
+<link rel="preload" href="assets/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+/* Fonts are hosted on langit.info itself (SIL Open Font License), no outside requests */
+@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-display:swap;font-weight:200 800;src:url(assets/bricolage-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-display:swap;font-weight:200 800;src:url(assets/bricolage-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Figtree';font-style:normal;font-display:swap;font-weight:300 900;src:url(assets/figtree-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Figtree';font-style:normal;font-display:swap;font-weight:300 900;src:url(assets/figtree-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 :root{
   --paper:#F6F8F9; --ink:#16212C; --muted:#5D6B79; --line:#DDE3E8; --soft:#E7ECF0;
   --rain:#2C6BD9; --focus:#2C6BD9;
@@ -75,10 +98,12 @@ a{color:inherit}
 .bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .brand{font-family:var(--display);font-weight:700;font-size:1.3rem;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;margin-right:auto}
 .brand svg{width:26px;height:26px}
-.search{position:relative;order:3;flex:1 1 100%}
+.search{position:relative;order:3;flex:1 1 calc(100% - 54px)}
+.theme-btn{order:4}
 @media (min-width:820px){
   .brand{margin-right:0}
   .search{order:0;flex:0 1 420px;margin:0 auto}
+  .theme-btn{order:0;width:40px;height:40px}
 }
 .search input{
   width:100%;padding:11px 16px 11px 42px;border-radius:999px;border:1px solid var(--glass-line);
@@ -106,6 +131,9 @@ a{color:inherit}
 .seg button{border:0;background:transparent;padding:6px 10px;border-radius:999px;font-weight:600;line-height:1}
 .seg button[aria-pressed="true"]{background:var(--glass-on)}
 @media (max-width:420px){ #locate span{display:none} }
+.theme-btn{padding:0;width:46px;height:46px;justify-content:center;line-height:0;flex:0 0 auto}
+.theme-btn svg{width:20px;height:20px}
+
 
 .hero{position:relative;display:grid;grid-template-columns:1fr auto;gap:12px 20px;align-items:start;margin-top:40px}
 .greet{font-family:var(--display);font-weight:500;font-size:1.05rem;opacity:.9;letter-spacing:-.005em}
@@ -161,6 +189,9 @@ a{color:inherit}
 /* ---------- Sheet ---------- */
 .sheet{position:relative;margin-top:-46px;background:var(--paper);border-radius:30px 30px 0 0;padding:30px 20px calc(48px + env(safe-area-inset-bottom,0px))}
 .sheet.loading{opacity:.45;transition:opacity .2s}
+body::before{content:"";position:fixed;top:0;left:0;height:3px;width:40%;z-index:100;background:linear-gradient(90deg,transparent,#7CC4FF,#fff,transparent);transform:translateX(-100%);opacity:0;pointer-events:none}
+body.busy::before{opacity:1;animation:busybar 1.1s ease-in-out infinite}
+@keyframes busybar{from{transform:translateX(-100%)}to{transform:translateX(260%)}}
 .sheet.nodata{display:none}
 section{margin-bottom:40px}
 h2{font-family:var(--display);font-size:1.2rem;font-weight:650;letter-spacing:-.015em;margin:0 0 14px}
@@ -271,6 +302,22 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* fun extras */
+.astro-share{padding-top:6px}
+.sea-warn{margin:4px 0 0}
+.sea-warn .hz b{color:var(--ink)}
+.sea-warn .hz-storm b{color:var(--bad)}
+.sea-return{margin:10px 0 0}
+.family-share{margin:2px 0 4px}
+.check-list{margin:6px 0 10px;padding-left:1.1em}
+.check-list li{margin:3px 0}
+.sos{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.coast-go{display:flex;flex-wrap:wrap;gap:8px}
+.coast-go small{opacity:.75;font-weight:500}
+.sos-btn{text-decoration:none;font-weight:700;color:var(--ink);border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:9px 14px}
+.ad-slot{margin:30px 0 6px;padding-top:10px;border-top:1px solid var(--line);min-height:110px}
+.ad-slot[hidden]{display:none}
+.ad-label{display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.ad-slot:has(ins[data-ad-status="unfilled"]){display:none}
 .share{display:inline-flex;align-items:center;gap:9px;justify-self:start;background:#1FA855;color:#fff;font-weight:700;padding:12px 18px;border-radius:999px;text-decoration:none;box-shadow:0 6px 16px rgba(31,168,85,.28)}
 .share svg{width:22px;height:22px}
 .pantun{font-family:var(--display);font-size:1.08rem;line-height:1.55;color:var(--ink)!important}
@@ -340,7 +387,7 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .install-later{background:var(--soft)}
 .install-go{background:#0A57C2;color:#fff}
 .install-link{margin-top:10px;border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 14px;font-weight:600;color:var(--ink)}
-@media (display-mode: standalone){ .install, .install-link{display:none!important} }
+@media (display-mode: standalone){ .install:not(.namebox), .install-link{display:none!important} }
 
 /* gempa section */
 .quake-sec[hidden]{display:none}
@@ -366,6 +413,7 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .metar-head{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
 .plane{font-size:1.6rem}
 .lvl-chip{justify-self:start;color:#fff;font-weight:700;font-size:.85rem;padding:5px 12px;border-radius:999px}
+.lvl-chip.s-ok,.lvl-chip.s-poor{color:#1d1a12}
 .metar dl{display:grid;grid-template-columns:minmax(110px,auto) 1fr;gap:6px 14px;margin:0}
 .metar dt{color:var(--muted);font-size:.9rem}
 .metar dd{margin:0;font-weight:500}
@@ -387,7 +435,10 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .maritime{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:16px}
 .maritime h3{margin:0;font-size:.92rem;font-weight:600;color:var(--muted)}
 .ship-wrap{overflow-x:auto}
-.ships{width:100%;border-collapse:collapse;min-width:420px}
+.ships{width:100%;border-collapse:collapse}
+.ships td{white-space:nowrap;width:1%}
+.ships td .lvl-chip{font-size:.8rem;padding:4px 10px}
+@media (max-width:420px){.ships th,.ships td{padding:9px 4px}}
 .ships th,.ships td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
 .ships thead th{font-size:.85rem;color:var(--muted);font-weight:600}
 .ships tbody th{font-weight:600}
@@ -403,9 +454,65 @@ footer{color:var(--muted);font-size:.85rem;padding-top:8px;border-top:1px solid 
 .moon-fact.romantic{border-top-color:#E2B23A}
 
 .holchip{background:linear-gradient(135deg,rgba(255,255,255,.38),rgba(255,255,255,.18))}
+.wis-card{border-top:1px solid var(--line);padding-top:14px;margin-top:22px;display:flex;flex-direction:column;gap:10px}
+.wis-card h3,.wis-card p{margin:0}
+.wis-card .wdays .wday svg{margin:2px 0}
+.lw{background:rgba(127,127,127,.08);border-radius:12px;padding:10px 12px}
+.cmp{width:100%;border-collapse:collapse}
+.cmp th,.cmp td{padding:8px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.cmp thead th{font-size:.85rem;color:var(--muted);font-weight:600}
+.cmp tbody th{font-weight:600}
+.cmp tbody th small{display:block;font-weight:500}
+.cmp td{white-space:nowrap;width:1%}
+.cmp td svg{vertical-align:middle}
+.cmp td span{margin:0 4px;font-weight:600}
+.cmp-best th small:last-child{color:var(--good)}
+.cmp td.cmp-x{width:1%;padding-left:6px}
+.cmp-del{border:0;background:rgba(127,127,127,.15);color:inherit;width:22px;height:22px;border-radius:50%;font-size:.7rem;line-height:22px;padding:0;cursor:pointer;vertical-align:middle}
+.cmp-del:hover{background:rgba(232,90,79,.35)}
+.cmp-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.linkish{border:0;background:none;color:var(--muted);text-decoration:underline;cursor:pointer;font:inherit;font-size:.9rem;padding:4px}
+.cmp-form{display:flex;flex-direction:column;gap:8px;max-width:420px}
+.cmp-form[hidden]{display:none}
+.cmp-form input{font:inherit;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(127,127,127,.08);color:inherit}
+.cmp-res{display:flex;flex-direction:column;gap:6px}
+.cmp-pick{text-align:left;border:1px solid var(--line);background:none;color:inherit;border-radius:10px;padding:8px 12px;cursor:pointer;font:inherit}
+.cmp-pick:hover{background:rgba(127,127,127,.12)}
+.ternak-box{display:contents}
+.ternak-card p{margin:0}
+.ternak-pick{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}
+.ternak-pick .pill{font-size:.85rem;padding:6px 12px}
+.ternak-pick .pill{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.ternak-pick .pill.on{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
+.evt-wrap{margin-top:22px}
+.evt-card p{margin:0}
+.evt-card .share{align-self:flex-start;margin-top:6px}
+.evt-card{gap:8px}
+.evt-pick{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:8px;max-width:420px}
+.evt-pick label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted);font-weight:600}
+.evt-pick select{font:inherit;font-size:.95rem;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 6px;width:100%;min-width:0}
+.evt-list li span:last-child{font-size:.95rem}
+.about{max-width:760px;margin:36px 0 0;padding:0;color:var(--muted);font-size:.92rem;line-height:1.6}
+.about h2{font-size:1rem;color:var(--ink);margin:0 0 8px}
+.about p{margin:0 0 10px}
+.about strong{color:var(--ink)}
+.xing{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.xing li{display:flex;flex-direction:column;gap:6px}
+.xcells{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:360px}
+.xc{border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;min-width:0}
+.wis-card .lvl-chip,#wisX .fact .lvl-chip{display:inline-block;white-space:nowrap;margin:2px 4px 2px 0}
+.xc .lvl-chip{white-space:normal;margin:0}
+.xc b{font-size:1.05rem}
+.clim{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;align-items:end;height:84px}
+.cb{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%}
+.cb i{display:block;width:100%;max-width:22px;border-radius:5px 5px 2px 2px}
+.cb small{font-size:.72rem;color:var(--muted)}
+.cb.now small{color:inherit;font-weight:700}
+.cb.now i{outline:2px solid currentColor;outline-offset:1px}
 .hol-list{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:10px}
 .hol-list li{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
 .hi-ic{font-size:1.45rem;line-height:1.2}
+.st-ic{width:1.5em;height:1.5em;display:block;margin:-.1em 0 0 -.05em}
 .holiday-fact p{margin:0}
 
 button.greet{border:0;background:none;padding:0;color:inherit;cursor:pointer;text-align:left}
@@ -425,6 +532,7 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
 @media (min-width:820px){.brand-tag{display:block;font-family:var(--body);font-size:.72rem;font-weight:500;opacity:.8;letter-spacing:0;margin-top:2px}}
 .plane-btn{justify-self:start;align-self:flex-start;margin-top:8px;border:0;border-radius:999px;padding:10px 16px;font-weight:700;background:#0A57C2;color:#fff}
 .fl-tag{display:inline-block;margin-top:4px;padding:2px 9px;border-radius:999px;background:var(--soft);font-size:.8rem;font-weight:600}
+.st-good{color:var(--good);font-weight:600}.st-ok{color:var(--ok);font-weight:600}.st-poor{color:var(--poor);font-weight:600}.st-bad{color:var(--bad);font-weight:600}
 .plane-sec[hidden]{display:none}
 .plane-sec #planeCard{border-top:0;padding-top:0;max-width:640px}
 /* icons */
@@ -446,8 +554,8 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
   .hero-icon{position:absolute;right:0;top:0}
   .hero-icon svg{width:88px}
   .day{grid-template-columns:3.4rem 26px 2.4rem 2.2rem 1fr 2.2rem;gap:8px}
-  .verdict.art{grid-template-columns:96px 1fr}
-  .line-art{width:96px}
+  .verdict.art{grid-template-columns:1fr;gap:10px}
+  .line-art{width:104px}
   .mode-panel{padding:18px 16px}
 }
 </style>
@@ -481,6 +589,7 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
           <button type="button" data-u="imperial">°F</button>
         </div>
       </div>
+      <button class="pill theme-btn" id="themeBtn" type="button"></button>
     </div>
 
     <div id="heroArea"><p class="status">…</p></div>
@@ -506,6 +615,7 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
         <div class="tiles" id="tiles"></div>
       </section>
     </div>
+    <aside class="ad-slot" id="adMid" hidden aria-label="Iklan"></aside>
     <section id="planeSec" class="plane-sec" hidden aria-labelledby="h-plane">
       <h2 id="h-plane"></h2>
       <div class="fact" id="planeCard"></div>
@@ -517,6 +627,14 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
     <section id="quakeSec" class="quake-sec" hidden aria-labelledby="h-quake">
       <h2 id="h-quake"></h2>
       <div id="quakeBody"></div>
+    </section>
+    <aside class="ad-slot" id="adEnd" hidden aria-label="Iklan"></aside>
+    <section class="about" id="tentang" aria-labelledby="h-about">
+      <h2 id="h-about">Tentang Langit</h2>
+      <div id="aboutText">
+      <p><strong>Langit.info</strong> menyajikan prakiraan cuaca untuk seluruh Indonesia beserta pengaruhnya pada kehidupan sehari-hari. Mulai dari perubahan suhu, tutupan awan, curah hujan, arah dan kecepatan angin, hingga intensitas sinar matahari dan indeks UV, semuanya disajikan dalam bahasa yang mudah dipahami dan langsung bisa dipakai: kapan waktu terbaik menjemur pakaian, bertani, melaut, berwisata, bermain golf, atau menggelar acara di luar ruangan.</p>
+      <p>Karena langit begitu luas, Langit.info tidak berhenti pada cuaca. Situs ini juga mengajak Anda menjelajahi benda-benda langit, baik yang alami maupun buatan manusia: fase bulan, planet yang terlihat malam ini, hujan meteor, gerhana, asteroid yang melintas dekat Bumi, stasiun luar angkasa yang lewat di atas kota Anda, hingga jadwal peluncuran roket. Dari situlah lahir semboyan kami: "Langit dan semua yang di atas sana."</p>
+      </div>
     </section>
     <footer id="footer"></footer>
   </div>
@@ -531,7 +649,13 @@ footer .tagline{font-family:var(--display);font-size:1.05rem;font-weight:600;col
 <script>
 (() => {
 // ===== SETTING: paste your Cloudflare Worker address between the quotes, e.g. 'https://langit-bmkg.yourname.workers.dev'
-const BMKG_PROXY = 'https://langit-bmkg.bosminyaktondano.workers.dev';
+const BMKG_PROXY = 'https://api.langit.info';
+// technical error details only for us: open langit.info/?debug
+const DEBUG = /[?&]debug\b/.test(location.search);
+// ===== SETTING: Google AdSense. Ads stay off until 'client' is filled in.
+// client: your publisher ID from AdSense, e.g. 'ca-pub-1234567890123456'
+// slotMid / slotEnd: ad unit IDs (numbers) from AdSense → Ads → By ad unit → Display ads
+const ADS = { client: '', slotMid: '', slotEnd: '' };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const store = {
@@ -580,7 +704,7 @@ id: {
   vis:'Jarak pandang', visClear:'Pandangan jelas.', visHaze:'Sedikit berkabut atau berasap.', visLow:'Berkurang karena kabut, asap atau hujan.',
   quake:'Gempa terkini (BMKG)', quakeNear:km=>`${km} dari lokasi ini.`, quakeDepth:d=>`Kedalaman ${d}.`,
   ago:h=>h<1?'Kurang dari 1 jam lalu':h<48?`${h} jam lalu`:`${Math.round(h/24)} hari lalu`,
-  footer:'Data prakiraan, kelautan dan kualitas udara: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0). Data gempa: <a href="https://www.bmkg.go.id/" target="_blank" rel="noopener">BMKG</a>. Diperbarui setiap 15 menit.',
+  footer:'Data prakiraan, kelautan dan kualitas udara: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0). Data gempa: <a href="https://www.bmkg.go.id/" target="_blank" rel="noopener">BMKG</a>. Pencarian lokasi: © kontributor OpenStreetMap. Diperbarui setiap 15 menit.',
   modes:{umum:'Umum',jemuran:'Jemuran',petani:'Petani',nelayan:'Nelayan',wisata:'Wisata',golf:'Golf'},
   loadingExtra:'Memuat data tambahan…', extraErr:'Data tambahan tidak bisa dimuat. Coba lagi nanti.',
   // Jemuran
@@ -604,7 +728,7 @@ id: {
   fmSub:'Semprot, siram, jemur hasil panen dan atur jam kerja berdasarkan cuaca 48 jam ke depan.',
   // Nelayan
   nlSafe:'Aman melaut', nlCaution:'Hati-hati melaut', nlDanger:'Jangan melaut dulu',
-  nlSafeSub:'Gelombang dan angin bersahabat untuk perahu kecil.', nlCautionSub:'Gelombang atau angin cukup kuat dan berbahaya bagi perahu kecil.', nlDangerSub:'Gelombang tinggi atau angin kencang. Tunda pelayaran.',
+  nlSafeSub:'Gelombang dan angin bersahabat untuk perahu kecil.', nlCautionSub:'Gelombang di atas 1,25 m, angin di atas 15 knot, hujan lebat atau kabut. Berisiko bagi perahu nelayan kecil.', nlDangerSub:'Gelombang tinggi, angin kencang atau hujan petir. Tunda pelayaran.',
   nlInland:'Lokasi ini jauh dari laut', nlInlandSub:'Pilih kota pesisir untuk melihat prakiraan gelombang.',
   nlBest:w=>`Waktu melaut terbaik: ${w}.`, nlNoBest:'Belum ada jendela aman 4 jam berturut-turut dalam 36 jam ke depan.',
   wave:'Gelombang', waveCats:['Tenang','Rendah','Sedang','Tinggi','Sangat tinggi','Ekstrem'], period:s=>`Periode ${s} detik`, waveFrom:d=>`dari ${d}`, waveMax:(a,b)=>`Maksimum hari ini ${a}, besok ${b}.`,
@@ -631,7 +755,7 @@ id: {
   gfGood:'Cuaca ideal untuk golf', gfOk:'Masih bisa main, siapkan diri', gfBad:'Kurang cocok main sekarang', gfStorm:'Ada petir, jangan ke lapangan', gfNight:'Lapangan sudah gelap',
   gfGoodSub:'Angin tenang dan tidak ada hujan dalam beberapa jam ke depan.', gfOkSub:'Ada angin, panas atau peluang hujan. Bawa payung dan air.', gfBadSub:'Hujan atau angin kencang akan mengganggu permainan.',
   gfStormSub:'Hujan petir diperkirakan dalam 6 jam. Petir sangat berbahaya di lapangan terbuka, segera cari tempat berlindung jika terdengar guntur.', gfNightSub:'Matahari sudah terbenam.',
-  gfTee:(w,e)=>`Tee time terbaik untuk 18 hole: ${w}, selesai sekitar pukul ${e}.`, gfAlt:w=>`Alternatif: ${w}.`, gfNoTee:'Belum ada waktu yang nyaman untuk 18 hole dalam 36 jam ke depan.',
+  gfTee:(w,e)=>`Tee time terbaik untuk 18 hole: ${w}, selesai sekitar pukul ${e}.`, gfAlt:w=>`Alternatif: ${w}.`, gfAltBetter:w=>`Lebih sejuk dan nyaman: ${w}.`, gfNoTee:'Belum ada waktu yang nyaman untuk 18 hole dalam 36 jam ke depan.',
   gfWind:'Angin dan pilihan klub', gfWindV:(sp,d)=>`${sp} dari ${d}`, gfClub0:'Angin hampir tidak berpengaruh pada pukulan.',
   gfClub:(h,tl)=>`Melawan angin, tambah sekitar ${h} klub. Searah angin, kurangi sekitar ${tl} klub, karena angin dari belakang membantu lebih sedikit daripada angin dari depan menghambat.`,
   clubWords:{0.5:'setengah',1:'1',1.5:'satu setengah',2:'2',2.5:'dua setengah',3:'3'},
@@ -675,7 +799,7 @@ en: {
   vis:'Visibility', visClear:'Clear view to the horizon.', visHaze:'Slight haze.', visLow:'Reduced by haze, fog or rain.',
   quake:'Latest earthquake (BMKG)', quakeNear:km=>`${km} from this place.`, quakeDepth:d=>`Depth ${d}.`,
   ago:h=>h<1?'Less than an hour ago':h<48?`${h} hours ago`:`${Math.round(h/24)} days ago`,
-  footer:'Forecast, marine and air-quality data from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0). Earthquake data from <a href="https://www.bmkg.go.id/" target="_blank" rel="noopener">BMKG</a>. Refreshes every 15 minutes.',
+  footer:'Forecast, marine and air-quality data from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0). Earthquake data from <a href="https://www.bmkg.go.id/" target="_blank" rel="noopener">BMKG</a>. Place search: © OpenStreetMap contributors. Refreshes every 15 minutes.',
   modes:{umum:'Overview',jemuran:'Laundry',petani:'Farming',nelayan:'Fishing',wisata:'Travel',golf:'Golf'},
   loadingExtra:'Loading extra data…', extraErr:"Extra data couldn't be loaded. Try again later.",
   jmGood:'Hang it out now!', jmOk:'Hang it out, but watch the sky', jmBad:'Keep the laundry inside', jmNight:"It's dark, hang it out tomorrow",
@@ -696,7 +820,7 @@ en: {
   heavy:'Heavy rain', heavyWarn:(d,v)=>`Heavy rain expected ${d} (${v}). Check drainage and hold off on fertilising.`, heavyNone:'No heavy rain in the next 7 days.',
   fmSub:'Spraying, watering, drying the harvest and work hours, based on the next 48 hours.',
   nlSafe:'Safe to go out', nlCaution:'Go out with caution', nlDanger:"Don't go out yet",
-  nlSafeSub:'Waves and wind are friendly for small boats.', nlCautionSub:'Waves or wind are strong enough to be risky for small boats.', nlDangerSub:'High waves or strong wind. Postpone the trip.',
+  nlSafeSub:'Waves and wind are friendly for small boats.', nlCautionSub:'Waves above 1.25 m, wind above 15 knots, heavy rain or fog. Risky for small fishing boats.', nlDangerSub:'High waves, strong wind or thunderstorms. Postpone the trip.',
   nlInland:'This place is far from the sea', nlInlandSub:'Pick a coastal town to see the wave forecast.',
   nlBest:w=>`Best time to head out: ${w}.`, nlNoBest:'No 4-hour safe window in the next 36 hours.',
   wave:'Waves', waveCats:['Calm','Slight','Moderate','Rough','Very rough','Extreme'], period:s=>`${s} s period`, waveFrom:d=>`from the ${d}`, waveMax:(a,b)=>`Max today ${a}, tomorrow ${b}.`,
@@ -720,7 +844,7 @@ en: {
   gfGood:'Ideal golf weather', gfOk:'Playable, come prepared', gfBad:'Not great for a round right now', gfStorm:'Lightning risk, stay off the course', gfNight:'The course is dark',
   gfGoodSub:'Light wind and no rain for the next few hours.', gfOkSub:'Some wind, heat or a chance of rain. Bring an umbrella and water.', gfBadSub:'Rain or strong wind will spoil the round.',
   gfStormSub:'Thunderstorms are expected within 6 hours. Lightning is very dangerous on open courses; take shelter as soon as you hear thunder.', gfNightSub:'The sun has set.',
-  gfTee:(w,e)=>`Best tee time for 18 holes: ${w}, finishing around ${e}.`, gfAlt:w=>`Alternative: ${w}.`, gfNoTee:'No comfortable time for 18 holes in the next 36 hours.',
+  gfTee:(w,e)=>`Best tee time for 18 holes: ${w}, finishing around ${e}.`, gfAlt:w=>`Alternative: ${w}.`, gfAltBetter:w=>`Cooler and more comfortable: ${w}.`, gfNoTee:'No comfortable time for 18 holes in the next 36 hours.',
   gfWind:'Wind and club choice', gfWindV:(sp,d)=>`${sp} from the ${d}`, gfClub0:'Wind will barely affect your shots.',
   gfClub:(h,tl)=>`Into the wind, take about ${h} more club. Downwind, take about ${tl} less, because a tailwind helps less than a headwind hurts.`,
   clubWords:{0.5:'half a',1:'1',1.5:'one and a half',2:'2',2.5:'two and a half',3:'3'},
@@ -789,12 +913,18 @@ Object.assign(STR.en, {
 });
 Object.assign(STR.id, {
   instTitle:'Pasang Langit di HP', instTitlePc:'Pasang Langit di komputer ini', instSubPc:'Buka langsung dari desktop atau taskbar, tetap bisa dilihat saat offline.', instSub:'Buka lebih cepat dari layar utama, tetap bisa dilihat saat offline.', instGo:'Pasang', instLater:'Nanti', instFooter:'Pasang aplikasi Langit',
-  instIos:'Ketuk tombol Bagikan, lalu pilih "Tambah ke Layar Utama".', instIosGo:'Mengerti',
+  instIos:'Di Safari: ketuk ikon Bagikan (kotak dengan panah ke atas; di iOS terbaru ada di menu ⋯), lalu pilih "Tambah ke Layar Utama".', instIosGo:'Mengerti',
+  instIosApp:'Anda membuka Langit di dalam aplikasi lain (misalnya WhatsApp). Buka dulu di Safari lewat menu ⋯ → "Buka di Safari", lalu ketuk Bagikan → "Tambah ke Layar Utama".',
+  instMac:'Di Safari Mac: klik menu File di bagian atas layar, lalu pilih "Tambahkan ke Dock" (Add to Dock).',
+  instManual:'Ketuk menu ⋮ di pojok kanan atas browser, lalu pilih "Instal aplikasi" atau "Tambahkan ke layar utama".',
   offline:'Anda sedang offline. Menampilkan data terakhir yang tersimpan.', online:'Kembali online. Data diperbarui.'
 });
 Object.assign(STR.en, {
   instTitle:'Install Langit on your phone', instTitlePc:'Install Langit on this computer', instSubPc:'Open it straight from your desktop or taskbar, and still see it offline.', instSub:'Open it faster from your home screen, and still see it offline.', instGo:'Install', instLater:'Later', instFooter:'Install the Langit app',
-  instIos:'Tap the Share button, then choose "Add to Home Screen".', instIosGo:'Got it',
+  instIos:'In Safari: tap the Share icon (a square with an up arrow; on the newest iOS it is inside the ⋯ menu), then choose "Add to Home Screen".', instIosGo:'Got it',
+  instIosApp:'You opened Langit inside another app (such as WhatsApp). Open it in Safari first via the ⋯ menu → "Open in Safari", then tap Share → "Add to Home Screen".',
+  instMac:'In Safari on Mac: open the File menu at the top of the screen and choose "Add to Dock".',
+  instManual:'Tap the ⋮ menu at the top right of your browser, then choose "Install app" or "Add to Home screen".',
   offline:"You're offline. Showing the last saved data.", online:'Back online. Data refreshed.'
 });
 Object.assign(STR.id, {
@@ -838,14 +968,14 @@ Object.assign(STR.en, {
   ssnErr:'No seasonal outlook available for this place yet.'
 });
 Object.assign(STR.id, {
-  mar:'Info maritim', marShip:'Keselamatan pelayaran', marNow:'Sekarang', mar24:'24 jam ke depan', marSafe:'Aman', marRisk:'Berisiko',
+  mar:'Info maritim', marShip:'Keselamatan pelayaran', marNow:'Sekarang', mar24:'24 jam', marSafe:'Aman', marRisk:'Waspada',
   marShips:['Perahu nelayan','Kapal tongkang','Kapal feri','Kapal besar (kargo/pesiar)'],
   marRule:(kt,m)=>`Waspada jika angin ≥ ${kt} knot atau gelombang ≥ ${m} m`, marBasis:'Ambang batas mengikuti kategori risiko pelayaran BMKG. Angin dan gelombang adalah prakiraan model untuk titik ini.',
   mar3:'Gelombang maksimum 3 hari', marCur:'Arus laut', marCurV:(sp,d)=>`${sp} ke arah ${d}`, marSst:'Suhu permukaan laut', marWindKt:(k,s)=>`${k} knot (${s})`,
   marOfficial:'Prakiraan resmi per wilayah perairan dan pelabuhan diterbitkan oleh BMKG Maritim.'
 });
 Object.assign(STR.en, {
-  mar:'Marine info', marShip:'Shipping safety', marNow:'Now', mar24:'Next 24 hours', marSafe:'Safe', marRisk:'At risk',
+  mar:'Marine info', marShip:'Shipping safety', marNow:'Now', mar24:'Next 24 h', marSafe:'Safe', marRisk:'Caution',
   marShips:['Fishing boat','Barge','Ferry','Large ship (cargo/cruise)'],
   marRule:(kt,m)=>`Caution if wind ≥ ${kt} knots or waves ≥ ${m} m`, marBasis:"Thresholds follow BMKG's shipping risk categories. Wind and waves are model forecasts for this point.",
   mar3:'3-day maximum waves', marCur:'Ocean current', marCurV:(sp,d)=>`${sp} towards the ${d}`, marSst:'Sea surface temperature', marWindKt:(k,s)=>`${k} knots (${s})`,
@@ -1088,6 +1218,7 @@ function skyFx(time, kind, cc, day){
   if (kind === 'fog') h += '<div class="fx-fog"></div><div class="fx-fog f2"></div>';
   return h;
 }
+let skyTime = null;
 function paintSky(p, time, bi, fx){
   $('#sky').dataset.pale = 'no';
   $('#skyfx').innerHTML = fx != null ? fx : skyFx(time, 'clear', 0, time === 'day');
@@ -1098,59 +1229,121 @@ function paintSky(p, time, bi, fx){
   sky.style.setProperty('--sky-ink', '#F5F8FC');
   sky.dataset.tone = 'dark';
   sky.dataset.time = time;
-  document.documentElement.dataset.theme = time === 'day' ? 'light' : 'dark';
+  skyTime = time;
+  const chosen = store.get('skyline.theme', 'auto');   // the visitor's own choice wins over day/night
+  document.documentElement.dataset.theme = chosen === 'light' || chosen === 'dark' ? chosen : (time === 'day' ? 'light' : 'dark');
   $('#brandIcon').innerHTML = BRAND_ICONS[bi];
   document.querySelector('meta[name="theme-color"]').content = p[0];
 }
 
 /* ================= Data ================= */
 const placeKey = p => `${(+p.lat).toFixed(2)},${(+p.lon).toFixed(2)}`;
-async function getJSON(url){
-  const r = await fetch(url);
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok || j.error) throw new Error(j.reason || 'Request failed');
-  return j;
+// every request gives up after a while, so a slow or stuck connection can never freeze the page
+async function getJSON(url, ms = 12000){
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
+  try{
+    const r = await fetch(url, { signal: ctl.signal });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || j.error) throw new Error(j.reason || (typeof j.error === 'string' ? j.error : '') || ('HTTP ' + r.status));
+    return j;
+  } finally { clearTimeout(timer); }
 }
-async function loadPlace(place, opts = {}){
-  const changed = !state.place || placeKey(state.place) !== placeKey(place);
-  state.place = place;
-  if (changed){ state.marine = null; state.farm = null; state.metar = null; state.season = null; state.sea = null; state.extraError = false; }
-  if (!opts.quiet){
-    $('#sheet').classList.add('loading');
-    if (!state.data) $('#heroArea').innerHTML = `<p class="status">${esc(t('loading', place.name))}</p>`;
-  }
+let loadSeq = 0;
+// Weather answers are kept for a few minutes per place, so switching back and forth is instant
+const wxCache = new Map(), wxInflight = new Map();
+const FRESH_MS = 10 * 60 * 1000;
+function forecastUrl(place){
   const p = new URLSearchParams({
     latitude: place.lat, longitude: place.lon, timezone: 'auto',
     forecast_days: 10, forecast_hours: 48, forecast_minutely_15: 8,
     current: 'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,dew_point_2m,uv_index,visibility',
-    hourly: 'pressure_msl,temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,precipitation,weather_code,is_day,cloud_cover,wind_speed_10m,wind_gusts_10m,shortwave_radiation,uv_index',
+    hourly: 'pressure_msl,temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,precipitation,weather_code,is_day,cloud_cover,wind_speed_10m,wind_gusts_10m,shortwave_radiation,uv_index,visibility',
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max,precipitation_sum,daylight_duration',
     minutely_15: 'precipitation'
   });
-  try{
-    const [w, a] = await Promise.all([
-      getJSON('https://api.open-meteo.com/v1/forecast?' + p),
-      getJSON(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${place.lat}&longitude=${place.lon}&current=us_aqi,pm2_5,pm10&timezone=auto`).catch(() => null)
-    ]);
-    state.data = w; state.aqi = a; state.lastRefresh = Date.now();
+  return 'https://api.open-meteo.com/v1/forecast?' + p;
+}
+// one shared request per place: a tap that is already loading never starts a second download
+function fetchWeather(place){
+  const k = placeKey(place);
+  if (wxInflight.has(k)) return wxInflight.get(k);
+  const fUrl = forecastUrl(place);
+  const aUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${place.lat}&longitude=${place.lon}&current=us_aqi,pm2_5,pm10&timezone=auto`;
+  const aqi = getJSON(aUrl, 8000).catch(() => null);
+  const job = getJSON(fUrl, 10000).catch(() => getJSON(fUrl, 15000)) // one automatic retry
+    .then(w => { const e = { w, a: null, at: Date.now(), aqi }; wxCache.set(k, e); aqi.then(a => { e.a = a; }); return e; })
+    .finally(() => wxInflight.delete(k));
+  wxInflight.set(k, job);
+  return job;
+}
+// warm up a favourite as soon as a finger touches it
+function prefetchPlace(place){
+  const e = wxCache.get(placeKey(place));
+  if (!e || Date.now() - e.at > FRESH_MS) fetchWeather(place).catch(() => {});
+}
+function setBusy(on){ document.body.classList.toggle('busy', !!on); }
+
+async function loadPlace(place, opts = {}){
+  const changed = !state.place || placeKey(state.place) !== placeKey(place);
+  state.place = place;
+  if (changed){ state.wis = null; state.marine = null; state.farm = null; state.metar = null; state.season = null; state.sea = null; state.extraError = false; }
+  const seq = ++loadSeq; // if the user picks another place meanwhile, this older answer is ignored
+  const k = placeKey(place);
+  const show = (e, animate) => {
+    state.data = e.w; state.aqi = e.a; state.lastRefresh = e.at;
     store.set('skyline.last', place);
-    render(!opts.quiet);
-    loadQuakes();
-    loadNeo();
-    loadIss();
-    ensureExtras();
+    render(animate);
+    loadQuakes(); loadNeo(); loadIss(); loadSpace(); ensureExtras();
+    // air quality may arrive a moment later: fill in just the tiles
+    if (!e.a) e.aqi.then(a => { if (a && seq === loadSeq && state.data === e.w){ state.aqi = a; renderTiles(state.data); } });
+  };
+  const cached = wxCache.get(k);
+  if (cached && !opts.force){
+    show(cached, false);                                   // instant, from memory
+    if (Date.now() - cached.at < FRESH_MS) return;         // still fresh: no download at all
+    opts = { ...opts, quiet: true };                       // older: refresh quietly in the background
+  }
+  if (!opts.quiet){
+    setBusy(true);
+    $('#sheet').classList.add('loading');
+    if (!state.data) $('#heroArea').innerHTML = `<p class="status">${esc(t('loading', place.name))}</p>`;
+    else { const h = $('#heroArea .place'); if (h && h.firstChild) h.firstChild.nodeValue = place.name + ' '; } // show the new name right away
+  }
+  try{
+    if (opts.quiet) wxCache.delete(k);
+    const e = await fetchWeather(place);
+    if (seq !== loadSeq) return;
+    setBusy(false);
+    show(e, !opts.quiet);
   }catch(err){
+    if (seq !== loadSeq) return;
+    setBusy(false);
     if (opts.quiet) return;
     $('#sheet').classList.remove('loading');
     if (!state.data) $('#sheet').classList.add('nodata');
     $('#heroArea').innerHTML = `<div class="status">${esc(t('error'))}<br><button class="pill" id="retry" type="button">${esc(t('retry'))}</button></div>`;
-    $('#retry').onclick = () => loadPlace(place);
+    $('#retry').onclick = () => loadPlace(place, { force: true });
   }
 }
 
+// one marine request with a retry; a failed or slow request is NOT the same as "far from the sea"
+async function fetchMarineAt(lat, lon){
+  const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&timezone=auto&forecast_days=3&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_period,sea_level_height_msl&daily=wave_height_max`;
+  // second try leaves out the tide variable, in case that is what the service rejects for this sea area
+  const urls = [url, url.replace(',sea_level_height_msl', '')];
+  let m = null, why = '';
+  for (let a = 0; a < 2 && !m; a++){
+    if (a) await new Promise(r => setTimeout(r, 1500));
+    m = await getJSON(urls[a], 15000).catch(e => { why = e.name === 'AbortError' ? 'timeout' : (e.message || 'error'); return /no data|location/i.test(why) ? { inland:true } : (a ? { failed:true, why } : null); });
+  }
+  return m;
+}
+const seaEmpty = m => !!m && !m.failed && (m.inland || !m.hourly || !m.hourly.wave_height || !m.hourly.wave_height.some(v => v != null));
+
 async function ensureExtras(){
   const key = placeKey(state.place), p = state.place;
-  const needMarine = (state.mode === 'nelayan' || state.mode === 'wisata') && !state.marine;
+  if (state.mode === 'wisata' && !state.wis) loadWisata();
+  const needMarine = (state.mode === 'nelayan' || state.mode === 'wisata') && (!state.marine || state.marine.failed);
   const needFarm = (state.mode === 'petani' || state.mode === 'golf') && !state.farm;
   const needMetar = state.mode === 'wisata' && !state.metar;
   const needSeason = state.mode === 'petani' && !state.season;
@@ -1159,8 +1352,20 @@ async function ensureExtras(){
   renderMode(true);
   try{
     if (needMarine){
-      const m = await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${p.lat}&longitude=${p.lon}&timezone=auto&forecast_days=3&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_period&daily=wave_height_max`)
-        .catch(() => ({ inland:true }));
+      let m = await fetchMarineAt(p.lat, p.lon);
+      // a coastal town whose own grid square counts as land: look for the nearest sea within about 25 km
+      if (seaEmpty(m)){
+        // the sea grid is coarse (~25 km), so towns known to sit on the coast may use a sea point further away
+        const maxKm = COAST.some(c => haversine(p.lat, p.lon, c[2], c[3]) <= 18) ? 45 : 25;
+        const pts = [];
+        for (const d of [0.1, 0.2, 0.3]) for (let k = 0; k < 8; k++){ const a = k * Math.PI / 4; pts.push([+(p.lat + d * Math.cos(a)).toFixed(3), +(p.lon + d * Math.sin(a) / Math.cos(p.lat * Math.PI / 180)).toFixed(3)]); }
+        const r = await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${pts.map(x => x[0]).join(',')}&longitude=${pts.map(x => x[1]).join(',')}&hourly=wave_height&forecast_days=1`, 15000).catch(() => null);
+        const best = r ? (Array.isArray(r) ? r : [r]).map((d, k) => ({ k, ok: d && d.hourly && d.hourly.wave_height && d.hourly.wave_height.some(v => v != null), km: d && d.latitude != null ? haversine(p.lat, p.lon, d.latitude, d.longitude) : haversine(p.lat, p.lon, pts[k][0], pts[k][1]) })).filter(o => o.ok && o.km <= maxKm).sort((a, b) => a.km - b.km)[0] : null;
+        if (best){
+          const m2 = await fetchMarineAt(pts[best.k][0], pts[best.k][1]);
+          if (m2 && !m2.failed && !seaEmpty(m2)){ m = m2; m.nearKm = Math.max(1, Math.round(m2.latitude != null ? haversine(p.lat, p.lon, m2.latitude, m2.longitude) : best.km)); m.pt = pts[best.k]; }
+        }
+      }
       if (placeKey(state.place) === key) state.marine = m;
     }
     if (needFarm){
@@ -1178,7 +1383,8 @@ async function ensureExtras(){
     if (placeKey(state.place) === key) state.metar = res;
   }
   if (needSea){
-    const sea = await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${p.lat}&longitude=${p.lon}&timezone=auto&forecast_days=1&hourly=ocean_current_velocity,ocean_current_direction,sea_surface_temperature`).catch(() => ({ error: true }));
+    const sp = (state.marine && state.marine.pt) || [p.lat, p.lon];
+    const sea = await getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${sp[0]}&longitude=${sp[1]}&timezone=auto&forecast_days=1&hourly=ocean_current_velocity,ocean_current_direction,sea_surface_temperature`).catch(() => ({ error: true }));
     if (placeKey(state.place) === key) state.sea = sea;
   }
   if (needSeason){
@@ -1187,6 +1393,7 @@ async function ensureExtras(){
   }
   renderMode();
 }
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#seaRetry')){ state.marine = null; ensureExtras(); } });
 
 const inIndonesia = p => p.lat > -11.5 && p.lat < 6.5 && p.lon > 94.5 && p.lon < 141.5;
 async function loadQuakes(){
@@ -1233,7 +1440,7 @@ function windows(pred, from, to, minLen = 1){
   }
   return out;
 }
-const winLabel = w => { const H = state.data.hourly; return `${dayLabel(H.time[w.a])} ${hourStr(H.time[w.a])}–${endHourStr(H.time[w.b])}`; };
+const winLabel = w => { const H = state.data.hourly, a = H.time[w.a], b = H.time[w.b]; return `${dayLabel(a)} ${hourStr(a)}–${b.slice(0, 10) !== a.slice(0, 10) ? dayLabel(b) + ' ' : ''}${endHourStr(b)}`; };
 
 /* ================= Render: core ================= */
 function render(animate){
@@ -1274,6 +1481,7 @@ function render(animate){
   renderAstroSection();
   renderQuakeSection();
   $('#sheet').classList.remove('loading', 'nodata');
+  initAds();
   // installed app: Chrome already puts "Langit" in front of the title, so don't repeat it
   const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   document.title = standalone ? `${tFmt(c.temperature_2m)} ${label}, ${state.place.name}` : `${tFmt(c.temperature_2m)} ${label}, ${state.place.name} — Langit`;
@@ -1479,6 +1687,7 @@ function renderMode(loading){
       + (EXTRAS[state.mode] ? safeExtra(EXTRAS[state.mode]) : '');
     el.insertAdjacentHTML('beforeend', shareBlock(el));
     tickCountdowns();
+    if (state.mode === 'umum'){ const ev = evtPlan(); if (!evtCache.get(`${placeKey(state.place)}|${ev.d}`)) evtRefresh(); }
   }catch(e){
     el.innerHTML = `<p>${t('extraErr')}</p>`;
   }
@@ -1705,10 +1914,21 @@ function seaStatus(i, mi){
   const H = state.data.hourly, M = state.marine.hourly, m = mi[H.time[i]];
   const wave = m != null ? M.wave_height[m] : null;
   if (wave == null) return null;
-  const w = H.wind_speed_10m[i], g = H.wind_gusts_10m[i];
-  if (wave >= 2.5 || w >= 40 || g >= 55) return 'bad';
-  if (wave >= 1.25 || w >= 28 || g >= 40) return 'ok';
+  const w = H.wind_speed_10m[i], g = H.wind_gusts_10m[i], hz = seaHazards(i);
+  if (wave >= 2.5 || w >= 40 || g >= 55 || hz.storm) return 'bad';
+  if (wave >= 1.25 || w >= 28 || g >= 40 || hz.rain || hz.fog) return 'ok';
   return 'good';
+}
+// weather hazards for small boats in hour i (thunderstorm, heavy rain, sudden gusts, poor visibility)
+function seaHazards(i){
+  const H = state.data.hourly, code = H.weather_code[i], pp = H.precipitation_probability[i] ?? 0, pr = H.precipitation[i] ?? 0;
+  const w = H.wind_speed_10m[i] ?? 0, g = H.wind_gusts_10m[i] ?? 0, vis = H.visibility ? H.visibility[i] : null;
+  return {
+    storm: wmo(code)[1] === 'storm' && pp >= 30,
+    rain: pr >= 4 || ((code === 65 || code === 82) && pp >= 40),
+    gust: g >= 40 && g - w >= 18,
+    fog: vis != null && vis < 1000,
+  };
 }
 // Sun–moon angle (elongation), accurate to well under an hour for phase times
 function elongation(ms){
@@ -1739,6 +1959,133 @@ function moonEvents(fromMs = Date.now()){
   }
   return out;
 }
+
+/* ---------- Nelayan: safety at sea ---------- */
+const HZ_TXT = {
+  storm: ['⚡', 'Waspada hujan petir', 'Thunderstorm risk', 'Petir sangat berbahaya di perahu terbuka. Segera menuju darat jika langit menghitam atau terdengar guntur.', 'Lightning is very dangerous in an open boat. Head for shore as soon as the sky darkens or you hear thunder.'],
+  rain:  ['🌧️', 'Hujan lebat', 'Heavy rain', 'Jarak pandang turun dan angin bisa tiba-tiba kencang.', 'Visibility drops and squalls can arrive suddenly.'],
+  gust:  ['💨', 'Angin kencang mendadak', 'Sudden strong gusts', 'Hembusan jauh lebih kuat dari angin rata-rata; kurangi muatan dan jaga keseimbangan perahu.', 'Gusts are much stronger than the average wind; lighten the load and keep the boat balanced.'],
+  fog:   ['🌫️', 'Jarak pandang rendah', 'Poor visibility', 'Kabut atau hujan membuat daratan dan perahu lain sulit terlihat; nyalakan lampu dan bawa kompas atau GPS.', 'Fog or rain makes land and other boats hard to see; use lights and carry a compass or GPS.'],
+};
+const HZ_ORDER = ['storm', 'rain', 'gust', 'fog'];
+function seaWarnings(i0, hours){
+  const H = state.data.hourly, end = Math.min(H.time.length, i0 + hours), L = state.lang === 'id', out = [];
+  for (const k of HZ_ORDER){
+    let a = -1, b = -1;
+    for (let i = i0; i < end; i++){ if (seaHazards(i)[k]){ if (a < 0) a = i; b = i; } else if (a >= 0) break; }
+    if (a < 0) continue;
+    const T = HZ_TXT[k], gustV = k === 'gust' ? ` ${L ? 'hingga' : 'up to'} ${speed(Math.max(...H.wind_gusts_10m.slice(a, b + 1)))}` : '';
+    out.push(`<li class="hz hz-${k}"><span class="hi-ic">${T[0]}</span><span><b>${L ? T[1] : T[2]}${gustV}</b> · ${a === i0 ? (L ? 'sekarang' : 'now') : dayLabel(H.time[a]) + ' ' + hourStr(H.time[a])}–${endHourStr(H.time[b])}<br><small>${L ? T[3] : T[4]}</small></span></li>`);
+  }
+  return out.length ? `<ul class="hol-list sea-warn">${out.join('')}</ul>` : '';
+}
+// when conditions turn bad later, say when to be back ashore
+function seaReturn(i0, mi){
+  const H = state.data.hourly, L = state.lang === 'id', end = Math.min(H.time.length, i0 + 14);
+  const now = seaStatus(i0, mi); if (now === 'bad') return null;
+  for (let i = i0 + 1; i < end; i++){
+    const s = seaStatus(i, mi);
+    if (s === 'bad'){
+      const hz = seaHazards(i), why = hz.storm ? (L ? 'hujan petir' : 'thunderstorms') : (L ? 'gelombang atau angin' : 'waves or wind');
+      const back = localToMs(H.time[i]) - 3600000;
+      return { ms: back, text: L ? `Kondisi memburuk sekitar ${hourStr(H.time[i])} (${why}). Usahakan sudah di darat sebelum pukul ${clockStr(msToLocal(back))}.` : `Conditions turn bad around ${hourStr(H.time[i])} (${why}). Aim to be back ashore by ${clockStr(msToLocal(back))}.` };
+    }
+  }
+  return { ms: null, text: L ? `Kondisi laut diperkirakan tidak memburuk hingga ${dayLabel(H.time[end - 1])} ${hourStr(H.time[end - 1])}.` : `Sea conditions are not expected to turn bad before ${dayLabel(H.time[end - 1])} ${hourStr(H.time[end - 1])}.` };
+}
+// WhatsApp "float plan" so family knows when to expect you back
+function familyShare(st, ret){
+  const H = state.data.hourly, i0 = state.i0, L = state.lang === 'id', M = state.marine && state.marine.hourly, mi = marineIndex();
+  const nowMs = Date.now(), plan = ret && ret.ms && ret.ms > nowMs + 3600000 ? Math.min(ret.ms, nowMs + 10 * 3600000) : nowMs + 6 * 3600000;
+  const planStr = clockStr(msToLocal(Math.round(plan / 1800000) * 1800000)), alarm = clockStr(msToLocal(Math.round((plan + 2 * 3600000) / 1800000) * 1800000));
+  const wave = mi && M && mi[H.time[i0]] != null ? M.wave_height[mi[H.time[i0]]] : null;
+  const cond = { good: L ? 'aman' : 'safe', ok: L ? 'hati-hati' : 'caution', bad: L ? 'berbahaya' : 'dangerous' }[st] || '';
+  const n = localNow();
+  const msg = L
+    ? `🛶 Saya melaut dari ${state.place.name}, berangkat pukul ${clock(n.h, n.m)}.\nRencana pulang: sekitar pukul ${planStr}.\nKondisi menurut Langit: ${cond}${wave != null ? `, gelombang ${meters(wave)}` : ''}, angin ${speed(H.wind_speed_10m[i0])}.\n\nKalau sampai pukul ${alarm} belum ada kabar, tolong hubungi Basarnas 115.\n\nPantau kondisi laut: ${siteUrl('nelayan')}`
+    : `🛶 I'm going out to sea from ${state.place.name}, leaving at ${clock(n.h, n.m)}.\nPlanned return: around ${planStr}.\nConditions according to Langit: ${cond}${wave != null ? `, waves ${meters(wave)}` : ''}, wind ${speed(H.wind_speed_10m[i0])}.\n\nIf you haven't heard from me by ${alarm}, please call Basarnas (Indonesian search and rescue) on 115.\n\nFollow the sea conditions: ${siteUrl('nelayan')}`;
+  return `<a class="share" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8L3.5 20.5l4.3-1.1A8.5 8.5 0 1 0 12 3.5z" fill="#fff"/><path d="M9.2 8.2c.3-.4.7-.4.9 0l.8 1.8c.1.3 0 .6-.2.8l-.5.6c.6 1.2 1.6 2.2 2.8 2.8l.6-.5c.2-.2.5-.3.8-.2l1.8.8c.4.2.4.6 0 .9-.6.7-1.5 1-2.4.7a8.4 8.4 0 0 1-5.2-5.2c-.3-.9 0-1.8.6-2.5z" fill="#1FA855"/></svg>
+    ${L ? 'Kabari keluarga sebelum melaut' : 'Tell your family before you go'}</a>`;
+}
+function safetyCard(sea = true){
+  const L = state.lang === 'id';
+  const items = sea ? (L
+    ? ['Pakai pelampung (life jacket) selama di laut', 'HP diisi penuh dan dibungkus plastik kedap air; bawa radio jika ada', 'BBM cadangan, air minum, senter dan lampu', 'Beri tahu keluarga rencana pulang (tombol hijau di atas)', 'Jangan melaut sendirian jika cuaca meragukan']
+    : ['Wear a life jacket the whole time at sea', 'Fully charged phone in a waterproof bag; take a radio if you have one', 'Spare fuel, drinking water, torch and lights', 'Tell family when you plan to return (green button above)', "Don't go out alone when the weather looks doubtful"])
+    : (L
+    ? ['Pakai pelampung (life jacket) saat di perahu atau air dalam', 'HP diisi penuh dan dibungkus plastik kedap air', 'Bawa air minum, senter, dan jas hujan', 'Beri tahu keluarga tujuan dan jam pulang', 'Menjauh dari air terbuka jika terdengar guntur; waspada air sungai naik tiba-tiba setelah hujan di hulu']
+    : ['Wear a life jacket in a boat or deep water', 'Fully charged phone in a waterproof bag', 'Take drinking water, a torch and a raincoat', 'Tell family where you are going and when you will be back', 'Get away from open water when you hear thunder; watch for rivers rising suddenly after rain upstream']);
+  return `<div class="fact safety-card"><h3>${L ? '🛟 Sebelum berangkat' : '🛟 Before you go'}</h3><ul class="check-list">${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+    <div class="sos"><a class="pill sos-btn" href="tel:115">📞 Basarnas 115</a><a class="pill sos-btn" href="tel:112">📞 ${L ? 'Darurat' : 'Emergency'} 112</a></div>
+    <p class="muted small">${L ? 'Basarnas (Badan SAR Nasional) untuk kecelakaan di laut, sungai dan danau; 112 untuk semua keadaan darurat.' : 'Basarnas (national search and rescue) for accidents at sea, on rivers and lakes; 112 for any emergency.'}</p></div>`;
+}
+// first light / last light: the sun 6° below the horizon (civil twilight)
+function twilight(k){
+  const D = state.data.daily, p = state.place, alt = ms => { const s = sunRaDec(ms); return altAz(s.ra, s.dec, ms, p.lat, p.lon).alt; };
+  if (!D.sunrise[k] || !D.sunset[k]) return null;
+  let first = null, last = null;
+  for (let ms = localToMs(D.sunrise[k]) - 90 * 60000; ms <= localToMs(D.sunrise[k]); ms += 60000) if (alt(ms) >= -6){ first = ms; break; }
+  for (let ms = localToMs(D.sunset[k]); ms <= localToMs(D.sunset[k]) + 90 * 60000; ms += 60000) if (alt(ms) < -6){ last = ms; break; }
+  return first && last ? { first, last } : null;
+}
+// tides from the marine model: next highs and lows
+function tideBlock(){
+  const M = state.marine, L = state.lang === 'id';
+  if (!M || M.inland || !M.hourly || !M.hourly.sea_level_height_msl) return '';
+  const T = M.hourly.time, Y = M.hourly.sea_level_height_msl, now = Date.now(), ev = [];
+  for (let i = 1; i < Y.length - 1; i++){
+    const a = Y[i - 1], b = Y[i], c = Y[i + 1]; if (a == null || b == null || c == null) continue;
+    const hi = b > a && b >= c, lo = b < a && b <= c; if (!hi && !lo) continue;
+    const den = a - 2 * b + c, off = den ? Math.max(-0.5, Math.min(0.5, (a - c) / (2 * den))) : 0;   // refine between the hours
+    const ms = localToMs(T[i]) + off * 3600000, h = b - (a - c) * off / 4;
+    if (ms > now - 1800000 && ms < now + 30 * 3600000) ev.push({ ms, h, hi });
+  }
+  if (!ev.length) return '';
+  const fmtH = v => `${v >= 0 ? '+' : '−'}${metric() ? Math.abs(v).toFixed(2).replace('.', L ? ',' : '.') + ' m' : Math.round(Math.abs(v) * 3.28084 * 10) / 10 + ' ft'}`;
+  const iNow = T.findIndex(x => localToMs(x) > now), rising = iNow > 0 && Y[iNow] != null && Y[iNow - 1] != null ? Y[iNow] > Y[iNow - 1] : null;
+  const rows = ev.slice(0, 4).map(e => { const lt = msToLocal(e.ms); return `<li><span class="hi-ic">${e.hi ? '🌊' : '🏖️'}</span><span><b>${e.hi ? (L ? 'Pasang' : 'High tide') : (L ? 'Surut' : 'Low tide')}</b> ${esc(dayLabel(lt))} ${clockStr(lt)} <small class="muted">· ${fmtH(e.h)}</small></span></li>`; }).join('');
+  const trend = rising == null ? '' : `<p>${rising ? (L ? '↗️ Air sedang <b>naik</b> sekarang.' : '↗️ The water is <b>rising</b> now.') : (L ? '↘️ Air sedang <b>surut</b> sekarang.' : '↘️ The water is <b>falling</b> now.')}</p>`;
+  return `<div class="fact tide-card"><h3>${L ? '🌊 Pasang surut' : '🌊 Tides'}</h3>${trend}<ul class="hol-list">${rows}</ul>
+    <p class="muted small">${L ? 'Dari model pasang surut global, tinggi relatif terhadap muka laut rata-rata. Di teluk, muara dan pelabuhan waktunya bisa bergeser 30–60 menit; cocokkan dengan pengalaman setempat.' : 'From a global tide model, height relative to mean sea level. In bays, river mouths and harbours the timing can shift by 30–60 minutes; check against local knowledge.'}</p></div>`;
+}
+/* ---------- Nelayan: nearest coastal towns for inland places ---------- */
+const COAST = [
+  ['Parangtritis','Kab. Bantul, DI Yogyakarta',-8.025,110.33],['Pantai Baron','Kab. Gunungkidul, DI Yogyakarta',-8.13,110.55],['Pangandaran','Kab. Pangandaran, Jawa Barat',-7.70,108.65],
+  ['Pelabuhan Ratu','Kab. Sukabumi, Jawa Barat',-6.99,106.55],['Cilacap','Kab. Cilacap, Jawa Tengah',-7.73,109.01],['Pacitan','Kab. Pacitan, Jawa Timur',-8.21,111.09],
+  ['Prigi','Kab. Trenggalek, Jawa Timur',-8.29,111.73],['Sendang Biru','Kab. Malang, Jawa Timur',-8.43,112.68],['Puger','Kab. Jember, Jawa Timur',-8.38,113.47],
+  ['Muncar','Kab. Banyuwangi, Jawa Timur',-8.43,114.33],['Muara Angke','Kota Jakarta Utara, DKI Jakarta',-6.105,106.77],['Merak','Kota Cilegon, Banten',-5.93,106.00],
+  ['Karangsong','Kab. Indramayu, Jawa Barat',-6.31,108.36],['Cirebon','Kota Cirebon, Jawa Barat',-6.71,108.57],['Tegal','Kota Tegal, Jawa Tengah',-6.85,109.13],
+  ['Pekalongan','Kota Pekalongan, Jawa Tengah',-6.86,109.68],['Tambak Lorok','Kota Semarang, Jawa Tengah',-6.95,110.44],['Jepara','Kab. Jepara, Jawa Tengah',-6.59,110.66],
+  ['Rembang','Kab. Rembang, Jawa Tengah',-6.70,111.34],['Tuban','Kab. Tuban, Jawa Timur',-6.89,112.05],['Brondong','Kab. Lamongan, Jawa Timur',-6.87,112.28],
+  ['Kenjeran','Kota Surabaya, Jawa Timur',-7.24,112.80],['Probolinggo','Kota Probolinggo, Jawa Timur',-7.73,113.22],['Situbondo','Kab. Situbondo, Jawa Timur',-7.70,114.00],
+  ['Sanur','Kota Denpasar, Bali',-8.68,115.265],['Jimbaran','Kab. Badung, Bali',-8.78,115.16],['Pengambengan','Kab. Jembrana, Bali',-8.39,114.58],
+  ['Lovina','Kab. Buleleng, Bali',-8.16,115.03],['Amed','Kab. Karangasem, Bali',-8.34,115.66],['Ampenan','Kota Mataram, NTB',-8.57,116.07],
+  ['Labuhan Lombok','Kab. Lombok Timur, NTB',-8.50,116.67],['Bima','Kota Bima, NTB',-8.45,118.72],['Labuan Bajo','Kab. Manggarai Barat, NTT',-8.50,119.88],
+  ['Maumere','Kab. Sikka, NTT',-8.62,122.21],['Kupang','Kota Kupang, NTT',-10.16,123.58],['Lampulo','Kota Banda Aceh, Aceh',5.57,95.32],
+  ['Sibolga','Kota Sibolga, Sumatera Utara',1.74,98.78],['Belawan','Kota Medan, Sumatera Utara',3.78,98.69],['Padang','Kota Padang, Sumatera Barat',-0.95,100.35],
+  ['Bengkulu','Kota Bengkulu, Bengkulu',-3.80,102.25],['Bandar Lampung','Kota Bandar Lampung, Lampung',-5.45,105.27],['Dumai','Kota Dumai, Riau',1.68,101.45],
+  ['Batam','Kota Batam, Kepulauan Riau',1.13,104.05],['Pangkal Pinang','Kota Pangkal Pinang, Bangka Belitung',-2.12,106.13],['Tanjung Pandan','Kab. Belitung, Bangka Belitung',-2.74,107.63],
+  ['Singkawang','Kota Singkawang, Kalimantan Barat',0.91,108.95],['Kotabaru','Kab. Kotabaru, Kalimantan Selatan',-3.24,116.23],['Balikpapan','Kota Balikpapan, Kalimantan Timur',-1.27,116.83],
+  ['Bontang','Kota Bontang, Kalimantan Timur',0.13,117.50],['Tarakan','Kota Tarakan, Kalimantan Utara',3.30,117.58],['Manado','Kota Manado, Sulawesi Utara',1.49,124.83],
+  ['Bitung','Kota Bitung, Sulawesi Utara',1.44,125.19],['Gorontalo','Kota Gorontalo, Gorontalo',0.51,123.06],['Palu','Kota Palu, Sulawesi Tengah',-0.88,119.84],
+  ['Paotere','Kota Makassar, Sulawesi Selatan',-5.11,119.42],['Parepare','Kota Parepare, Sulawesi Selatan',-4.01,119.62],['Kendari','Kota Kendari, Sulawesi Tenggara',-3.97,122.59],
+  ['Bau-Bau','Kota Baubau, Sulawesi Tenggara',-5.47,122.60],['Luwuk','Kab. Banggai, Sulawesi Tengah',-0.95,122.79],['Ambon','Kota Ambon, Maluku',-3.69,128.18],
+  ['Ternate','Kota Ternate, Maluku Utara',0.79,127.38],['Tual','Kota Tual, Maluku',-5.63,132.75],['Sorong','Kota Sorong, Papua Barat Daya',-0.88,131.25],
+  ['Manokwari','Kab. Manokwari, Papua Barat',-0.86,134.08],['Biak','Kab. Biak Numfor, Papua',-1.18,136.08],['Jayapura','Kota Jayapura, Papua',-2.53,140.71],
+  ['Merauke','Kab. Merauke, Papua Selatan',-8.49,140.39],['Tanjung Pinang','Kota Tanjung Pinang, Kepulauan Riau',0.92,104.45],['Pontianak','Kota Pontianak, Kalimantan Barat',-0.02,109.33]
+];
+function coastSuggest(){
+  const p = state.place, L = state.lang === 'id';
+  const near = COAST.map(c => ({ c, km: haversine(p.lat, p.lon, c[2], c[3]) })).filter(o => o.km >= 5 && o.km <= 250).sort((a, b) => a.km - b.km).slice(0, 2);
+  if (!near.length) return '';
+  return `<p class="muted small">${L ? 'Kota pesisir terdekat:' : 'Nearest coastal towns:'}</p><p class="coast-go">${near.map(o => `<button class="pill sos-btn" type="button" data-coast="${COAST.indexOf(o.c)}">🌊 ${esc(o.c[0])} <small>±${Math.round(o.km)} km</small></button>`).join(' ')}</p>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-coast]'); if (!b) return;
+  const c = COAST[+b.dataset.coast]; if (c) loadPlace({ name: c[0], region: c[1], lat: c[2], lon: c[3] });
+});
+
 function modeNelayan(){
   const d = state.data, H = d.hourly, D = d.daily, i0 = state.i0, end = Math.min(H.time.length, i0 + 48);
   const mi = marineIndex();
@@ -1746,11 +2093,16 @@ function modeNelayan(){
   const valid = mi && H.time.slice(i0, end).some(x => mi[x] != null && state.marine.hourly.wave_height[mi[x]] != null);
   const mp = moonPhase();
   const moonFact = fact(t('moon'), t('moonNames')[mp.idx], esc(`${t('moonLit', mp.lit)} ${mp.lit < 30 ? t('moonDark') : mp.lit > 75 ? t('moonBright') : ''}`));
-  const sunFact = fact(t('sunTimes'), t('sunTimesV', clockStr(D.sunrise[0]), clockStr(D.sunset[0])), '');
+  const tw = safeExtra(() => twilight(0)) || null;
+  const sunFact = fact(t('sunTimes'), t('sunTimesV', clockStr(D.sunrise[0]), clockStr(D.sunset[0])), tw ? esc(state.lang === 'id' ? `Langit mulai terang ${clockStr(msToLocal(tw.first))}, gelap total ${clockStr(msToLocal(tw.last))}. Nyalakan lampu navigasi di luar jam ini.` : `First light ${clockStr(msToLocal(tw.first))}, last light ${clockStr(msToLocal(tw.last))}. Use navigation lights outside these times.`) : '');
   const nq = inIndonesia(state.place) ? nearestQuake() : null;
   const tsu = nq && tsunamiRisk(nq.q) ? `<p class="alert">${esc(t('tsunami'))}</p>` : '';
   const nTone = !H.is_day[i0] ? 'night' : (H.precipitation_probability[i0] ?? 0) >= 50 ? 'bad' : 'good';
-  if (!valid) return verdict('muted', t('nlInland'), `<p class="muted">${t('nlInlandSub')}</p>`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}</div>` + official;
+  if (state.marine && state.marine.failed){
+    const L = state.lang === 'id';
+    return verdict('muted', L ? 'Data gelombang belum termuat' : "Wave data didn't load", `<p class="muted">${L ? 'Sepertinya sinyal sedang lambat atau layanan prakiraan laut sedang sibuk. Coba lagi sebentar lagi ya.' : "The signal seems slow or the sea forecast service is busy. Please try again in a moment."}</p>${DEBUG && state.marine.why ? `<p class="muted small">(${esc(String(state.marine.why).slice(0, 120))})</p>` : ''}<p><button class="pill sos-btn" id="seaRetry" type="button">${L ? 'Coba lagi' : 'Try again'}</button></p>`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}${safetyCard()}</div>` + official;
+  }
+  if (!valid) return verdict('muted', t('nlInland'), `<p class="muted">${t('nlInlandSub')}</p>${safeExtra(coastSuggest)}`, sceneNelayan(nTone, 'good')) + tsu + `<div class="facts">${moonFact}${sunFact}${safetyCard(false)}</div>` + official;
 
   const M = state.marine.hourly, m0 = mi[H.time[i0]];
   const st = seaStatus(i0, mi) || 'good';
@@ -1762,15 +2114,18 @@ function modeNelayan(){
   const lg = t('nlLegend');
   const wave = M.wave_height[m0], per = M.wave_period ? M.wave_period[m0] : null, wdir = M.wave_direction ? M.wave_direction[m0] : null;
   const dm = state.marine.daily && state.marine.daily.wave_height_max;
-  return verdict(st, title, `<p>${esc(sub)}</p><p class="muted">${esc(best ? t('nlBest', winLabel(best)) : t('nlNoBest'))}</p>`, sceneNelayan(st === 'bad' && nTone !== 'night' ? 'bad' : nTone, st))
-    + tsu
+  const ret = seaReturn(i0, mi), warn = seaWarnings(i0, 18);
+  const hzNow = seaHazards(i0), sub2 = hzNow.storm ? (state.lang === 'id' ? 'Ada risiko hujan petir. Petir sangat berbahaya di perahu terbuka.' : 'There is a thunderstorm risk. Lightning is very dangerous in an open boat.') : sub;
+  return verdict(st, title, `<p>${esc(sub2)}</p><p class="muted">${esc(best ? t('nlBest', winLabel(best)) : t('nlNoBest'))}</p>${state.marine.nearKm ? `<p class="muted small">${state.lang === 'id' ? `📍 Data gelombang dari titik laut terdekat pada model prakiraan (±${state.marine.nearKm} km dari pusat kota). Kondisi di pantai bisa sedikit berbeda.` : `📍 Wave data from the nearest sea point in the forecast model (about ${state.marine.nearKm} km from the town centre). Conditions right at the shore can differ a little.`}</p>` : ''}${ret ? `<p class="sea-return"><b>${state.lang === 'id' ? '⏱️ Pulang:' : '⏱️ Return:'}</b> ${esc(ret.text)}</p>` : ''}`, sceneNelayan(st === 'bad' && nTone !== 'night' ? 'bad' : nTone, st))
+    + tsu + warn
+    + `<div class="family-share">${familyShare(st, ret)}</div>`
     + strip(items, t('nlStrip'), [['good', lg[0]], ['ok', lg[1]], ['bad', lg[2]]])
     + `<div class="facts">
       ${fact(t('wave'), `${meters(wave)} <small>${t('waveCats')[waveCat(wave)]}</small>`, esc([per != null ? t('period', Math.round(per)) : '', wdir != null ? t('waveFrom', dir8(wdir)) : ''].filter(Boolean).join(', ') + (dm ? '. ' + t('waveMax', meters(dm[0] ?? wave), meters(dm[1] ?? wave)) : '')))}
       ${fact(t('wind'), speed(H.wind_speed_10m[i0]), esc(`${t('windFrom', dir8(d.current.wind_direction_10m))}. ${t('gusts', speed(H.wind_gusts_10m[i0]))}`))}
       ${moonFact}
       ${sunFact}
-    </div>` + official;
+    </div>` + `<div class="facts">${safeExtra(tideBlock)}${safetyCard()}</div>` + official;
 }
 
 /* ---------- Wisata (travel) ---------- */
@@ -1799,13 +2154,13 @@ function modeWisata(){
 
   // Beach & surf
   const mi = marineIndex();
-  let beach = fact(t('beach'), null, t('noSea'));
+  let beach = fact(t('beach'), null, state.marine && state.marine.failed ? (state.lang === 'id' ? 'Data gelombang belum termuat. Buka lagi sebentar lagi.' : "Wave data didn't load. Try again shortly.") : t('noSea'));
   if (mi && mi[H.time[i0]] != null && state.marine.hourly.wave_height[mi[H.time[i0]]] != null){
     const M = state.marine.hourly, m = mi[H.time[i0]], wave = M.wave_height[m];
     const sw = M.swell_wave_height ? (M.swell_wave_height[m] ?? wave) : wave, sp = M.swell_wave_period ? (M.swell_wave_period[m] ?? 0) : 0;
     const swim = wave < .8 ? t('swimOk') : wave < 1.5 ? t('swimCare') : t('swimNo');
     const surf = sw < .5 ? t('surfFlat') : sw < 1.2 ? t('surfBeginner') : sw <= 2.5 && sp >= 9 ? t('surfGood') : sw > 2.5 ? t('surfBig') : t('surfBeginner');
-    beach = fact(t('beach'), `${meters(wave)} <small>${t('waveCats')[waveCat(wave)]}</small>`, esc(`${swim} ${surf} ${t('swell', meters(sw), Math.round(sp))}`));
+    beach = fact(t('beach'), `${meters(wave)} <small>${t('waveCats')[waveCat(wave)]}</small>`, esc(`${swim} ${surf} ${t('swell', meters(sw), Math.round(sp))}` + (state.marine.nearKm ? (state.lang === 'id' ? ` (titik laut model terdekat, ±${state.marine.nearKm} km)` : ` (nearest model sea point, about ${state.marine.nearKm} km)`) : '')));
   }
 
   // UV window
@@ -1883,14 +2238,22 @@ function modeGolf(){
     for (let k = i; k <= i + 4; k++){ const sc = hourScore(k); if (sc == null){ ok = false; break; } sum += sc; }
     if (ok) starts.push({ i, sum });
   }
-  starts.sort((a, b) => b.sum - a.sum || a.i - b.i);
-  const best = starts[0], alt = best && starts.find(x => Math.abs(x.i - best.i) >= 4);
-  const startLabel = i => `${dayLabel(H.time[i])} ${hourStr(H.time[i])}`;
-  const finish = i => { const h = (+H.time[i].slice(11, 13) + 4) % 24; return clock(h, 30); };
-  const teeText = best ? t('gfTee', startLabel(best.i), finish(best.i)) + (alt ? ' ' + t('gfAlt', startLabel(alt.i)) : '') : t('gfNoTee');
+  // the soonest playable 18 holes is the recommendation; the most comfortable other slot is the alternative
+  const best = [...starts].sort((a, b) => a.i - b.i)[0];
+  const alt = best && starts.filter(x => Math.abs(x.i - best.i) >= 4).sort((a, b) => b.sum - a.sum || a.i - b.i)[0];
+  const altBetter = alt && alt.sum > best.sum + Math.max(1.5, Math.abs(best.sum) * 0.25);
+  const startLabel = i => { if (i === i0){ const n = localNow(); return `${state.lang === 'id' ? 'sekarang juga' : 'right now'} (${clock(n.h, n.m)})`; } return `${dayLabel(H.time[i])} ${hourStr(H.time[i])}`; };
+  // starting right now uses the real clock time (e.g. 06.19 → finish about 10.50); later starts use the whole hour
+  const startMin = i => { if (i === i0){ const n = localNow(); return n.h * 60 + n.m; } return +H.time[i].slice(11, 13) * 60; };
+  const finish = i => { const m = (startMin(i) + 270) % 1440, r = Math.round(m / 5) * 5 % 1440; return clock(Math.floor(r / 60), r % 60); };
+  const teeText = best ? t('gfTee', startLabel(best.i), finish(best.i)) + (alt ? ' ' + (altBetter ? t('gfAltBetter', startLabel(alt.i)) : t('gfAlt', startLabel(alt.i))) : '') : t('gfNoTee');
 
+  // after dark the strip starts at the next first light, so golfers see tomorrow's playable hours straight away
+  let s0 = i0;
+  if (cur === 'night'){ let k = i0; while (k < end && !H.is_day[k]) k++; if (k < end) s0 = k; }
+  const stripTitle = t('gfStrip') + (s0 !== i0 ? ' · ' + dayLabel(H.time[s0]) : '');
   const items = [];
-  for (let i = i0; i < Math.min(end, i0 + 24); i++){
+  for (let i = s0; i < Math.min(end, s0 + (s0 !== i0 ? 14 : 24)); i++){
     const g = golfAt(i);
     items.push({ cls: { good:'s-good', ok:'s-ok', poor:'s-poor', storm:'s-bad', night:'' }[g], label: i === i0 ? t('now') : hourStr(H.time[i]).replace(/[.:]00$/, ''), tip: hourStr(H.time[i]) });
   }
@@ -1921,7 +2284,7 @@ function modeGolf(){
   for (let i = i0; i < end && H.time[i].slice(0, 10) === today; i++) maxApp = Math.max(maxApp, H.apparent_temperature[i] ?? -99);
   const vt = tone === 'night' ? 'muted' : tone === 'storm' ? 'bad' : tone === 'bad' ? 'poor' : tone;
   return verdict(vt, title, `<p>${esc(sub)}</p><p class="muted">${esc(teeText)}</p>`, sceneGolf(tone, ws))
-    + strip(items, t('gfStrip'), [['good', lg[0]], ['ok', lg[1]], ['poor', lg[2]], ['bad', lg[3]], ['soft', t('night')]])
+    + strip(items, esc(stripTitle), [['good', lg[0]], ['ok', lg[1]], ['poor', lg[2]], ['bad', lg[3]], ['soft', t('night')]])
     + `<div class="facts">
       ${fact(t('gfWind'), esc(t('gfWindV', speed(ws), dir8(c.wind_direction_10m))), esc(windText) + `<br><br>${esc(t('gfWindLocal'))}`)}
       ${fact(t('gfCarry'), len(total), esc(t('gfCarryParts', len(tempM), len(altM), elevStr)) + `<br><br>${esc(t('gfCarryNote'))}`)}
@@ -2150,23 +2513,33 @@ function planetCard(){
 // ISS: orbit from CelesTrak (via the Worker), passes computed in the browser with satellite.js
 let satLibP = null;
 const loadSatLib = () => satLibP || (satLibP = new Promise((res, rej) => { if (window.satellite) return res(window.satellite);
-  const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js'; sc.onload = () => res(window.satellite); sc.onerror = rej; document.head.appendChild(sc); }));
+  const sc = document.createElement('script'); sc.src = 'assets/satellite.min.js'; sc.onload = () => res(window.satellite); sc.onerror = rej; document.head.appendChild(sc); }));
 async function loadIss(){
   if (!BMKG_PROXY || !state.place) return;
   const key = placeKey(state.place);
   if (state.iss && state.iss.key === key && Date.now() - state.iss.at < 3 * 3600000) return;
+  const base = BMKG_PROXY.replace(/\/+$/, '');
+  const tle = path => fetch(base + path).then(r => r.ok ? r.text() : Promise.reject()).then(txt => {
+    const lines = txt.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+    const l1 = lines.find(x => x.startsWith('1 ')), l2 = lines.find(x => x.startsWith('2 '));
+    return l1 && l2 ? [l1, l2] : null;
+  }).catch(() => null);
   try{
-    const [lib, txt] = await Promise.all([loadSatLib(), fetch(BMKG_PROXY.replace(/\/+$/, '') + '/iss').then(r => r.ok ? r.text() : Promise.reject())]);
-    const lines = txt.split(/\r?\n/).map(x => x.trim()).filter(Boolean), l1 = lines.find(x => x.startsWith('1 ')), l2 = lines.find(x => x.startsWith('2 '));
-    if (!l1 || !l2) return;
-    state.iss = { key, at: Date.now(), passes: issPasses(lib, lib.twoline2satrec(l1, l2), state.place) };
+    const [lib, iss, css] = await Promise.all([loadSatLib(), tle('/iss'), tle('/css')]);
+    if (!iss && !css) return;
+    const passes = [];
+    if (iss) issPasses(lib, lib.twoline2satrec(iss[0], iss[1]), state.place).forEach(x => passes.push({ ...x, st: 'ISS' }));
+    if (css) issPasses(lib, lib.twoline2satrec(css[0], css[1]), state.place).forEach(x => passes.push({ ...x, st: 'Tiangong' }));
+    passes.sort((a, b) => a.start - b.start);
+    state.iss = { key, at: Date.now(), passes, has: { iss: !!iss, css: !!css } };
     renderAstroSection();
-  }catch(e){ /* ISS card stays hidden */ }
+    const slot = $('#astroSlot'); if (slot) slot.innerHTML = astroChipHtml();
+  }catch(e){ /* station card stays hidden */ }
 }
 function issPasses(sat, rec, p){
   const obs = { latitude: p.lat * RAD, longitude: p.lon * RAD, height: 0.05 }, out = [], step = 20000, now = Date.now();
   let cur = null;
-  for (let ms = now; ms < now + 4 * 86400000 && out.length < 4; ms += step){
+  for (let ms = now; ms < now + 7 * 86400000 && out.length < 4; ms += step){
     const dt = new Date(ms), pv = sat.propagate(rec, dt); if (!pv.position) continue;
     const g = sat.gstime(dt), look = sat.ecfToLookAngles(obs, sat.eciToEcf(pv.position, g)), el = look.elevation / RAD;
     if (el >= 10){
@@ -2186,10 +2559,98 @@ function issPasses(sat, rec, p){
 }
 function issCard(){
   if (!state.iss || state.iss.key !== placeKey(state.place)) return '';
-  const L = state.lang === 'id', ps = state.iss.passes.slice(0, 3);
+  const L = state.lang === 'id', all = state.iss.passes;
+  let ps = all.slice(0, 4);
+  const firstCss = all.find(x => x.st === 'Tiangong');           // make sure Tiangong gets a row when it has one
+  if (firstCss && !ps.includes(firstCss)) ps = [...ps.slice(0, 3), firstCss];
   const rows = ps.map(x => { const st = msToLocal(x.start), mins = Math.max(1, Math.round((x.end - x.start) / 60000));
-    return `<li><span class="hi-ic">🛰️</span><span><b>${esc(dayLabel(st))} ${clockStr(st)}</b> <small class="muted">(${mins} ${L ? 'menit' : 'min'})</small><br><small>${L ? `Muncul dari ${dir8(x.az0)}, setinggi ${Math.round(x.max)}°, hilang ke ${dir8(x.az1)}.` : `Appears from the ${dir8(x.az0)}, up to ${Math.round(x.max)}°, disappears to the ${dir8(x.az1)}.`}</small></span></li>`; }).join('');
-  return `<div class="fact"><h3>${L ? '🛰️ ISS lewat' : '🛰️ ISS passes'}</h3>${rows ? `<ul class="hol-list">${rows}</ul>` : `<p>${L ? 'Tidak ada lintasan ISS yang terlihat dalam 4 hari ke depan.' : 'No visible ISS passes in the next 4 days.'}</p>`}<p class="muted small">${L ? 'Stasiun Luar Angkasa Internasional terlihat seperti titik terang yang bergerak cepat tanpa berkedip. Data orbit: CelesTrak.' : 'The International Space Station looks like a bright dot moving fast without blinking. Orbit data: CelesTrak.'}</p></div>`;
+    const nm = x.st === 'ISS' ? (L ? 'ISS' : 'ISS') : (L ? 'Tiangong (Tiongkok)' : 'Tiangong (China)');
+    return `<li><span class="hi-ic">${x.st === 'ISS' ? '🛰️' : CSS_ICON}</span><span><b>${esc(dayLabel(st))} ${clockStr(st)}</b> <small class="muted">· ${nm} · ${mins} ${L ? 'menit' : 'min'}</small><br><small>${L ? `Muncul dari ${dir8(x.az0)}, setinggi ${Math.round(x.max)}°, hilang ke ${dir8(x.az1)}.` : `Appears from the ${dir8(x.az0)}, up to ${Math.round(x.max)}°, disappears to the ${dir8(x.az1)}.`}</small></span></li>`; }).join('');
+  return `<div class="fact"><h3>${L ? '🛰️ Stasiun luar angkasa lewat' : '🛰️ Space station passes'}</h3>${rows ? `<ul class="hol-list">${rows}</ul>` : `<p>${L ? 'Tidak ada lintasan ISS atau Tiangong yang terlihat dalam 7 hari ke depan.' : 'No visible ISS or Tiangong passes in the next 7 days.'}</p>`}<p class="muted small">${L ? 'ISS (internasional) dan Tiangong (milik Tiongkok) terlihat seperti titik terang yang bergerak cepat tanpa berkedip, paling mudah dilihat setelah senja atau sebelum subuh. Data orbit: CelesTrak.' : 'The ISS and China’s Tiangong look like bright dots moving fast without blinking, best seen after dusk or before dawn. Orbit data: CelesTrak.'}</p></div>`;
+}
+
+/* ================= Rockets and people in space (The Space Devs, via the Worker) ================= */
+const slimAstrosLocal = j => ({ count: j.count || 0, people: (j.results || []).filter(a => !/^starman$/i.test(a.name || '')).map(a => ({ name: a.name || '', agency: (a.agency && (a.agency.abbrev || a.agency.name)) || '',
+  country: (Array.isArray(a.nationality) ? (a.nationality[0] || {}).alpha_2_code : '') || '' })) });
+const CSS_ICON = '<svg class="st-ic" viewBox="0 0 48 48" aria-hidden="true"> <defs> <linearGradient id="cssHull" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".55" stop-color="#E3E8EE"/><stop offset="1" stop-color="#AEB8C4"/></linearGradient> <linearGradient id="cssPv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3C6FB6"/><stop offset="1" stop-color="#1D3E73"/></linearGradient> </defs> <g transform="rotate(-28 24 24)"> <g stroke="#C9D3DE" stroke-width=".6"> <rect x="18.6" y="2" width="5.4" height="15" rx=".6" fill="url(#cssPv)"/> <rect x="18.6" y="31" width="5.4" height="15" rx=".6" fill="url(#cssPv)"/> <path d="M21.3 2v15M21.3 31v15M18.6 6h5.4M18.6 10h5.4M18.6 14h5.4M18.6 34h5.4M18.6 38h5.4M18.6 42h5.4" stroke="#8FB3E6" stroke-width=".45" opacity=".8"/> </g> <rect x="20.7" y="16.5" width="1.2" height="15" fill="#9AA6B3"/> <rect x="5" y="19.2" width="10" height="9.6" rx="2.2" fill="url(#cssHull)" stroke="#7E8A97" stroke-width=".7"/> <rect x="14" y="17.6" width="16" height="12.8" rx="3" fill="url(#cssHull)" stroke="#7E8A97" stroke-width=".7"/> <rect x="29" y="19.6" width="12" height="8.8" rx="2.2" fill="url(#cssHull)" stroke="#7E8A97" stroke-width=".7"/> <path d="M17 18v12M26.5 18v12M32.5 20v8M8.5 19.5v9" stroke="#B8C2CD" stroke-width=".7"/> <circle cx="42.4" cy="24" r="1.6" fill="#D7A44A" stroke="#7E8A97" stroke-width=".5"/> <rect x="21" y="14.3" width="1.6" height="3.4" fill="#C9D1DA"/> <circle cx="21.8" cy="13.6" r="1.5" fill="#F4F6F8" stroke="#7E8A97" stroke-width=".5"/> </g> </svg>';
+const flagOf = cc => /^[A-Z]{2}$/i.test(cc || '') ? String.fromCodePoint(...[...cc.toUpperCase()].map(c => 127397 + c.charCodeAt(0))) : '';
+// Space data: each visitor's browser asks The Space Devs directly (everyone has their own free allowance),
+// remembered on the device for a while; our Worker is only the backup.
+const TSD = 'https://ll.thespacedevs.com/2.3.0';
+const CREWED_RE = /crew|shenzhou|soyuz ms|gaganyaan|axiom|\bax-\d|polaris|starliner|artemis ii|inspiration4|fram2/i;
+function slimLaunchesLocal(j){
+  return (j.results || []).map(x => {
+    const conf = (x.rocket && x.rocket.configuration) || {}, m = x.mission || {}, pad = x.pad || {}, loc = pad.location || {}, lsp = x.launch_service_provider || {};
+    return { name: x.name || '', rocket: conf.full_name || conf.name || '', mission: m.name || '', type: m.type || '',
+      provider: lsp.name && lsp.name.length <= 18 ? lsp.name : (lsp.abbrev || lsp.name || ''),
+      net: x.net || null, precision: (x.net_precision && x.net_precision.abbrev) || '', status: (x.status && x.status.abbrev) || '',
+      site: loc.name || pad.name || '', country: (pad.country && pad.country.alpha_2_code) || '',
+      crewed: m.type === 'Human Exploration' || CREWED_RE.test(`${x.name} ${conf.name} ${m.name}`), src: 'tsd' };
+  });
+}
+async function spaceGet(key, maxAge, direct, slim, backup){
+  const saved = store.get(key, null);
+  if (saved && Date.now() - saved.at < maxAge) return saved.v;
+  let v = null;
+  try{ v = slim(await getJSON(direct, 10000)); }catch(e){}
+  if (!v || (Array.isArray(v) ? !v.length : !v.people.length)){ try{ v = await getJSON(backup, 10000); }catch(e){ v = null; } }
+  if (v && (Array.isArray(v) ? v.length : v.people && v.people.length)){ store.set(key, { at: Date.now(), v }); return v; }
+  return saved ? saved.v : null;   // nothing new: keep the last good copy on this device
+}
+async function loadSpace(){
+  if (!BMKG_PROXY) return;
+  const base = BMKG_PROXY.replace(/\/+$/, ''), now = Date.now(), jobs = [];
+  if (!state.launches || now - state.launches.at > 30 * 60000)
+    jobs.push(spaceGet('skyline.launches', 30 * 60000, `${TSD}/launches/upcoming/?limit=10&mode=normal&hide_recent_previous=true`, slimLaunchesLocal, base + '/launches')
+      .then(list => { if (Array.isArray(list)) state.launches = { at: now, list: list.filter(x => !/^tbd$/i.test(x.mission) && !/unconfirmed|unknown/i.test(x.rocket)) }; }));
+  if (!state.astros || now - state.astros.at > 3 * 3600000)
+    jobs.push(spaceGet('skyline.astros', 6 * 3600000, `${TSD}/astronauts/?in_space=true&limit=40&mode=normal`, slimAstrosLocal, base + '/astros')
+      .then(j => { if (j && Array.isArray(j.people) && j.people.length) state.astros = { at: now, ...j }; }));
+  if (!jobs.length) return;
+  await Promise.all(jobs);
+  if (state.data){ renderAstroSection(); const slot = $('#astroSlot'); if (slot) slot.innerHTML = astroChipHtml(); }
+}
+const LAUNCH_STATUS = {
+  Go: ['Siap meluncur', 'Go for launch', 'good'], TBC: ['Menunggu konfirmasi', 'To be confirmed', 'ok'], TBD: ['Jadwal belum pasti', 'Date not set', 'ok'],
+  Hold: ['Ditahan sementara', 'On hold', 'poor'], 'In Flight': ['Sedang terbang', 'In flight', 'good'], Success: ['Berhasil', 'Success', 'good'],
+  Failure: ['Gagal', 'Failed', 'bad'], 'Partial Failure': ['Gagal sebagian', 'Partial failure', 'bad'],
+};
+const launchLeft = (ms, L) => { const m = Math.round((ms - Date.now()) / 60000);
+  if (m <= 0) return L ? 'sedang berlangsung' : 'happening now';
+  if (m >= 48 * 60) return L ? `${Math.round(m / 1440)} hari lagi` : `in ${Math.round(m / 1440)} days`;
+  if (m >= 24 * 60){ const hh = Math.round((m - 1440) / 60); return L ? `1 hari ${hh} jam lagi` : `in 1 day ${hh} h`; }
+  const h = Math.floor(m / 60), mm = m % 60; return L ? `${h ? h + ' jam ' : ''}${mm} menit lagi` : `in ${h ? h + ' h ' : ''}${mm} min`; };
+function upcomingLaunches(){
+  if (!state.launches) return [];
+  const now = Date.now();
+  return state.launches.list.filter(x => x.net && Date.parse(x.net) > now - 2 * 3600000 && !/^(Success|Failure|Partial Failure)$/.test(x.status));
+}
+function launchCard(){
+  const list = upcomingLaunches().slice(0, 4); if (!list.length) return '';
+  const L = state.lang === 'id', src = list[0].src === 'rll' ? 'RocketLaunch.live' : 'The Space Devs';
+  const rows = list.map(x => {
+    const ms = Date.parse(x.net), loc = msToLocal(ms), exact = /^(SEC|MIN|HR|H)$/.test(x.precision);
+    const dd = dayDiff(loc), when = exact ? `${dd >= 0 && dd <= 1 ? dayLabel(loc) : longDate(loc)} ${clockStr(loc)}` : (L ? 'sekitar ' : 'around ') + longDate(loc);
+    const st = LAUNCH_STATUS[x.status] || [x.status, x.status, 'ok'];
+    let title = x.mission || (x.name.split('|')[1] || x.name).trim();
+    if (/^unknown payload$/i.test(title)) title = L ? 'Muatan belum diumumkan' : 'Undisclosed payload';
+    return `<li><span class="hi-ic">${x.crewed ? '🧑‍🚀' : '🚀'}</span><span><b>${esc(title)}</b>${x.crewed ? ` <small class="fl-tag">${L ? 'berawak' : 'crewed'}</small>` : ''}<br>
+      <small>${esc(x.rocket)}${x.provider ? ' · ' + esc(x.provider) : ''}</small><br>
+      <small>${esc(when)}${exact ? ` · <span class="lcd" data-to="${ms}">${esc(launchLeft(ms, L))}</span>` : ''}</small><br>
+      <small class="muted">${flagOf(x.country)} ${esc(x.site)} · <span class="st-${st[2]}">${esc(L ? st[0] : st[1])}</span></small></span></li>`;
+  }).join('');
+  return `<div class="fact"><h3>${L ? '🚀 Peluncuran roket berikutnya' : '🚀 Next rocket launches'}</h3><ul class="hol-list">${rows}</ul><p class="muted small">${L ? 'Waktu sesuai zona waktu lokasi ini. Jadwal peluncuran sering bergeser karena cuaca atau teknis. Data: ' + src + '.' : 'Times are in this location’s time zone. Launch times often shift for weather or technical reasons. Data: ' + src + '.'}</p></div>`;
+}
+function astrosCard(){
+  const A0 = state.astros; if (!A0) return '';
+  const A = { ...A0, people: A0.people.filter(p => !/^starman$/i.test(p.name)) };   // the dummy in SpaceX's Tesla isn't a person
+  if (!A.people.length) return '';
+  const L = state.lang === 'id';
+  const cn = p => /^(CMSA|CNSA)$/i.test(p.agency) || p.country === 'CN';
+  const groups = [['ISS', A.people.filter(p => !cn(p))], ['Tiangong', A.people.filter(cn)]].filter(g => g[1].length);
+  const rows = groups.map(([st, ps]) => `<li><span class="hi-ic">${st === 'ISS' ? '🛰️' : CSS_ICON}</span><span><b>${st}</b> <small class="muted">· ${ps.length} ${L ? 'orang' : ps.length > 1 ? 'people' : 'person'}</small><br><small>${ps.map(p => `${flagOf(p.country)} ${esc(p.name)}`).join(', ')}</small></span></li>`).join('');
+  const n = A.people.length;
+  return `<div class="fact"><h3>${L ? '🧑‍🚀 Orang di luar angkasa' : '🧑‍🚀 People in space'}</h3><div class="val">${n} <small>${L ? 'orang saat ini' : n > 1 ? 'people right now' : 'person right now'}</small></div><ul class="hol-list">${rows}</ul><p class="muted small">${L ? 'Pembagian stasiun diperkirakan dari badan antariksanya. Data: The Space Devs.' : 'Station grouping is estimated from each person’s space agency. Data: The Space Devs.'}</p></div>`;
 }
 
 /* ================= Planes overhead (tap to load) ================= */
@@ -2241,18 +2702,23 @@ function flightName(cs){
   // no airline code: usually a registration (e.g. PK-XYZ, T7JRG) = private, charter or other non-scheduled flight
   return { code: c || '–', airline: '', priv: !!c && !/^[A-Z]{3}\d/.test(c) };
 }
-async function loadPlanes(){
+async function loadPlanes(quiet){
   const card = $('#planeCard'); if (!card || !BMKG_PROXY) return;
-  card.innerHTML = planeHtml('loading');
+  if (!quiet) card.innerHTML = planeHtml('loading');
   try{
     const p = state.place;
-    const j = await getJSON(`${BMKG_PROXY.replace(/\/+$/, '')}/planes?lat=${p.lat.toFixed(2)}&lon=${p.lon.toFixed(2)}`);
+    // our Worker asks adsb.lol, then ADSB One, and keeps a recent copy when both are busy
+    let j;
+    try{ j = await getJSON(`${BMKG_PROXY.replace(/\/+$/, '')}/planes?lat=${p.lat.toFixed(2)}&lon=${p.lon.toFixed(2)}`, 15000); if (!Array.isArray(j.ac)) throw new Error('no aircraft list'); }
+    catch(e){ throw new Error(e.name === 'AbortError' ? 'timeout' : e.message); }
     const list = (j.ac || []).filter(a => a.lat != null && a.lon != null && a.alt_baro !== 'ground' && !((+a.dbFlags || 0) & 1) && ((+a.alt_baro || 0) > 300 || isHeli(a)))
       .map(a => ({ ...a, km: haversine(p.lat, p.lon, a.lat, a.lon), brg: bearing(p.lat, p.lon, a.lat, a.lon) }))
       .filter(a => a.km <= 50).sort((x, y) => x.km - y.km);
-    state.planes = { key: placeKey(p), at: Date.now(), list };
-  }catch(e){ state.planes = { key: placeKey(state.place), at: Date.now(), error: true }; }
+    state.planes = { key: placeKey(p), at: j.now && j.now <= Date.now() + 60000 ? j.now : Date.now(), list, src: j.src || 'adsb.lol' };
+  }catch(e){ state.planes = { key: placeKey(state.place), at: Date.now(), error: true, why: String(e.message || '').slice(0, 120) }; }
   const c = $('#planeCard'); if (c) c.innerHTML = planeHtml();
+  // the section only shows once plane data has actually arrived (always shown with ?debug)
+  const sec = $('#planeSec'); if (sec && quiet) sec.hidden = !!state.planes.error && !DEBUG;
 }
 function planeHtml(mode){
   const L = state.lang === 'id';
@@ -2261,7 +2727,7 @@ function planeHtml(mode){
   const P = state.planes && state.planes.key === placeKey(state.place) ? state.planes : null;
   if (mode === 'loading') return head + `<p class="muted">${L ? 'Mencari pesawat di sekitar…' : 'Looking for planes nearby…'}</p>`;
   if (!P) return head + `<p>${L ? 'Lihat pesawat yang sedang terbang dalam radius 50 km dari lokasi ini.' : 'See the planes flying within 50 km of this place right now.'}</p>` + btn(L ? '✈️ Lihat pesawat di atas kita' : '✈️ Show planes above us');
-  if (P.error) return head + `<p class="muted">${L ? 'Data pesawat belum bisa dimuat. Coba lagi sebentar lagi.' : 'Plane data couldn’t be loaded. Try again in a moment.'}</p>` + btn(L ? 'Coba lagi' : 'Try again');
+  if (P.error) return head + `<p class="muted">${L ? 'Data pesawat sedang tidak tersedia. Coba lagi nanti ya.' : 'Plane data isn’t available right now. Please try again later.'}</p>${DEBUG && P.why ? `<p class="muted small">(${esc(P.why)})</p>` : ''}` + btn(L ? 'Coba lagi' : 'Try again');
   const ago = Math.max(0, Math.round((Date.now() - P.at) / 60000));
   if (!P.list.length) return head + `<p>${L ? 'Belum terdeteksi pesawat di sekitar sini saat ini.' : 'No planes detected nearby right now.'}</p><p class="muted small">${L ? 'Data berasal dari penerima ADS-B relawan; di sebagian daerah cakupannya masih terbatas.' : 'Data comes from volunteer ADS-B receivers; coverage is limited in some areas.'}</p>` + btn(L ? '🔄 Perbarui' : '🔄 Refresh');
   const rows = P.list.slice(0, 4).map(a => {
@@ -2276,13 +2742,16 @@ function planeHtml(mode){
       <small>${L ? `${Math.round(a.km)} km ke arah ${dir8(a.brg)}` : `${Math.round(a.km)} km to the ${dir8(a.brg)}`} · ${m.toLocaleString(locale())} m${spd ? ' · ' + spd : ''}${a.track != null ? (L ? ` · menuju ${dir8(a.track)}` : ` · heading ${dir8(a.track)}`) : ''}</small>${tag ? `<br><span class="fl-tag">${tag}</span>` : ''}</span></li>`;
   }).join('');
   return head + `<p class="lead">${L ? `${P.list.length} pesawat${P.list.some(isHeli) ? ' dan helikopter' : ''} sedang terbang dalam radius 50 km` : `${P.list.length} aircraft flying within 50 km`}</p><ul class="hol-list">${rows}</ul>
-    <p class="muted small">${L ? `Diperbarui ${ago ? ago + ' menit lalu' : 'baru saja'}. Data: adsb.lol (ODbL), dari penerima ADS-B relawan.` : `Updated ${ago ? ago + ' min ago' : 'just now'}. Data: adsb.lol (ODbL), from volunteer ADS-B receivers.`}</p>` + btn(L ? '🔄 Perbarui' : '🔄 Refresh');
+    <p class="muted small">${L ? `Diperbarui ${ago ? ago + ' menit lalu' : 'baru saja'}. Data: ${P.src === 'adsb.one' ? 'ADSB One' : 'adsb.lol (ODbL)'}, dari penerima ADS-B relawan.` : `Updated ${ago ? ago + ' min ago' : 'just now'}. Data: ${P.src === 'adsb.one' ? 'ADSB One' : 'adsb.lol (ODbL)'}, from volunteer ADS-B receivers.`}</p>` + btn(L ? '🔄 Perbarui' : '🔄 Refresh');
 }
 function renderPlaneSection(){
   const sec = $('#planeSec'); if (!sec || !state.data || !BMKG_PROXY) return;
   $('#h-plane').textContent = state.lang === 'id' ? '✈️ Pesawat di atas kita' : '✈️ Planes above us';
+  const P = state.planes && state.planes.key === placeKey(state.place) ? state.planes : null;
   $('#planeCard').innerHTML = planeHtml();
-  sec.hidden = false;
+  sec.hidden = !(DEBUG || (P && !P.error));
+  // look for planes quietly in the background; a failed try is retried after 5 minutes
+  if (!P || (P.error && Date.now() - P.at > 5 * 60000)) loadPlanes(true);
 }
 document.addEventListener('click', e => { if (e.target.closest('#planeBtn')) loadPlanes(); });
 
@@ -2336,7 +2805,7 @@ function astroInfo(){
   const met = METEORS.map(m => ({ m, day: `${today.slice(5) <= m[0] ? y : y + 1}-${m[0]}` })).sort((a, b) => a.day < b.day ? -1 : 1)[0];
   return { today, peri, superFull, ecl, eclVis, met, L };
 }
-const dayDiff = s => Math.round((Date.parse(s + 'T00:00Z') - Date.parse(msToLocal(Date.now()).slice(0, 10) + 'T00:00Z')) / 86400000);
+const dayDiff = s => Math.round((Date.parse(String(s).slice(0, 10) + 'T00:00Z') - Date.parse(msToLocal(Date.now()).slice(0, 10) + 'T00:00Z')) / 86400000);
 const longDate = s => new Date(s.slice(0, 10) + 'T12:00:00Z').toLocaleDateString(locale(), { weekday:'long', day:'numeric', month:'long', year: s.slice(0, 4) === String(new Date().getFullYear()) ? undefined : 'numeric', timeZone:'UTC' });
 const inDays = n => state.lang === 'id' ? (n === 0 ? 'hari ini' : n === 1 ? 'besok' : `${n} hari lagi`) : (n === 0 ? 'today' : n === 1 ? 'tomorrow' : `in ${n} days`);
 
@@ -2350,7 +2819,29 @@ function astroChipHtml(){
   else if (a.superFull && dayDiff(msToLocal(a.superFull.ms)) === 0){ ic = '🌕'; txt = L ? 'Supermoon malam ini' : 'Supermoon tonight'; }
   else if (a.met && a.met.m[3] && dayDiff(a.met.day) === 0){ ic = '☄️'; txt = L ? `Puncak hujan meteor ${a.met.m[1]}` : `${a.met.m[1]} meteor shower peaks`; }
   else if (a.peri && dayDiff(msToLocal(a.peri.ms)) === 0){ ic = '🔭'; txt = L ? 'Bulan paling dekat hari ini' : 'Moon at its closest today'; }
-  else if (neo && neo.ld < 1 && Math.abs(dayDiff(neo.date)) <= 1){ ic = '☄️'; txt = L ? 'Asteroid melintas dekat' : 'Asteroid passing close'; }
+  else if (soonNeo()){ const sn = soonNeo(), dd = dayDiff(msToLocal(sn.ms)); ic = '☄️'; txt = L ? `Asteroid melintas dekat ${dd <= 0 ? 'hari ini' : 'besok'}` : `Asteroid passing close ${dd <= 0 ? 'today' : 'tomorrow'}`; }
+  else { const cr = upcomingLaunches().find(x => x.crewed && /^(SEC|MIN|HR|H)$/.test(x.precision) && dayDiff(msToLocal(Date.parse(x.net))) === 0);
+    if (cr){ ic = '🧑‍🚀'; txt = L ? 'Peluncuran berawak hari ini' : 'Crewed launch today'; } }
+  // nothing special today: show the next thing worth looking up for
+  const when = ms => { const lt = msToLocal(ms), dd = dayDiff(lt); return `${dd <= 0 ? (L ? 'pukul' : 'at') : (L ? 'besok' : 'tomorrow')} ${clockStr(lt)}`; };
+  const now = Date.now();
+  if (!txt && state.iss && state.iss.key === placeKey(state.place)){
+    const ps = state.iss.passes.find(x => x.end > now && x.start < now + 14 * 3600000);
+    if (ps){ ic = '🛰️'; txt = L ? `${ps.st} lewat ${when(ps.start)}` : `${ps.st} passes over ${when(ps.start)}`; }
+  }
+  if (!txt){
+    const ln = upcomingLaunches().find(x => /^(SEC|MIN|HR|H)$/.test(x.precision || '') && Date.parse(x.net) > now && Date.parse(x.net) < now + 24 * 3600000);
+    if (ln){ ic = '🚀'; txt = L ? `Roket meluncur ${when(Date.parse(ln.net))}` : `Rocket launch ${when(Date.parse(ln.net))}`; }
+  }
+  if (!txt){
+    const h = localNow().h;
+    if (h >= 16 || h < 5){
+      const pl = safeExtra(planetsTonight) || [], order = ['venus', 'jupiter', 'saturn', 'mars', 'mercury'];
+      const best = order.map(n => pl.find(x => x.name === n)).find(Boolean);
+      const PN = { venus: ['Venus', '✨'], jupiter: ['Jupiter', '🪐'], saturn: ['Saturnus', '🪐'], mars: ['Mars', '🔴'], mercury: ['Merkurius', '✨'] };
+      if (best){ ic = PN[best.name][1]; const nm = L ? PN[best.name][0] : best.name[0].toUpperCase() + best.name.slice(1); txt = L ? `${nm} terlihat malam ini` : `${nm} visible tonight`; }
+    }
+  }
   if (!txt) return '';
   return `<button type="button" class="zodiac astrochip" id="astrochip"><span class="mi">${ic}</span>${esc(txt)}</button>`;
 }
@@ -2374,6 +2865,12 @@ async function loadNeo(){
   if (state.data) renderAstroSection();
   const slot = $('#astroSlot'); if (slot) slot.innerHTML = astroChipHtml();
 }
+// a close pass (under 1 lunar distance) that is coming up or only just happened: from 36 h before until 6 h after
+function soonNeo(){
+  if (!state.neo || !state.neo.list.length) return null;
+  const now = Date.now();
+  return state.neo.list.filter(x => x.ld < 1 && x.ms > now - 6 * 3600000 && x.ms < now + 36 * 3600000).sort((a, b) => a.ms - b.ms)[0] || null;
+}
 function nearestNeo(){
   if (!state.neo || !state.neo.list.length) return null;
   const now = Date.now();
@@ -2383,12 +2880,37 @@ function nearestNeo(){
 const sizeTxt = m => m == null ? '' : m >= 1000 ? `${(m / 1000).toFixed(1).replace('.', state.lang === 'id' ? ',' : '.')} km` : `${Math.round(m / 5) * 5 || 5} m`;
 const sizeCompare = m => { const L = state.lang === 'id'; if (m == null) return ''; return m < 15 ? (L ? 'seukuran bus' : 'about the size of a bus') : m < 50 ? (L ? 'seukuran rumah' : 'about the size of a house') : m < 150 ? (L ? 'seukuran lapangan sepak bola' : 'about the size of a football pitch') : m < 400 ? (L ? 'seukuran Monas' : 'about the size of a tall tower') : (L ? 'sebesar bukit' : 'as big as a hill'); };
 
+// WhatsApp message summarising tonight's sky, built from the cards just shown
+function astroShare(body){
+  const L = state.lang === 'id', clean = v => String(v || '').replace(/\s+/g, ' ').trim();
+  const card = re => [...body.querySelectorAll('.fact')].find(f => re.test(f.querySelector('h3')?.textContent || ''));
+  const lines = [];
+  const moon = card(/Bulan malam|Moon tonight/); if (moon){ const v = moon.querySelector('.val'); if (v) lines.push(clean(v.textContent)); }
+  const pl = card(/Planet/); if (pl){ const n = [...pl.querySelectorAll('li b')].map(b => clean(b.textContent)); if (n.length) lines.push(`🪐 ${L ? 'Planet terlihat' : 'Planets visible'}: ${n.join(', ')}`); }
+  const st = card(/Stasiun|station/i); const sp = st && st.querySelector('li');
+  if (sp) lines.push(`🛰️ ${L ? 'Stasiun luar angkasa lewat' : 'Space station pass'}: ${clean(sp.querySelector('b')?.textContent)} (${clean(sp.querySelector('small.muted')?.textContent).replace(/^·\s*/, '').split('·')[0].trim()})`);
+  const la = card(/Peluncuran|launches/i); const lp = la && la.querySelector('li');
+  if (lp){ const sm = lp.querySelectorAll('small'); lines.push(`🚀 ${L ? 'Peluncuran roket berikutnya' : 'Next rocket launch'}: ${clean(lp.querySelector('b')?.textContent)} · ${clean(sm[sm.length - 2]?.textContent)}`); }
+  const ppl = card(/Orang di luar|People in space/); if (ppl){ const v = ppl.querySelector('.val'); if (v) lines.push(`🧑‍🚀 ${clean(v.textContent)} ${L ? 'di luar angkasa' : 'in space'}`); }
+  const cal = card(/Kalender langit|Sky calendar/); const cp = cal && cal.querySelector('li');
+  if (cp){ const first = document.createElement('div'); first.innerHTML = (cp.querySelector('span:last-child')?.innerHTML || '').split(/<br\s*\/?>/i)[0]; lines.push(`✨ ${clean(first.textContent)}`); }
+  if (!lines.length) return '';
+  const url = location.protocol.startsWith('http') ? location.origin + '/#antariksa' : '';
+  const head = L ? `🌌 Langit malam di ${state.place.name}` : `🌌 Night sky over ${state.place.name}`;
+  const msg = `${head}\n\n${lines.join('\n')}${url ? `\n\n${L ? 'Lihat langit malam di kotamu' : 'See the night sky where you are'}: ${url}` : ''}`;
+  return `<a class="share" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8L3.5 20.5l4.3-1.1A8.5 8.5 0 1 0 12 3.5z" fill="#fff"/><path d="M9.2 8.2c.3-.4.7-.4.9 0l.8 1.8c.1.3 0 .6-.2.8l-.5.6c.6 1.2 1.6 2.2 2.8 2.8l.6-.5c.2-.2.5-.3.8-.2l1.8.8c.4.2.4.6 0 .9-.6.7-1.5 1-2.4.7a8.4 8.4 0 0 1-5.2-5.2c-.3-.9 0-1.8.6-2.5z" fill="#1FA855"/></svg>
+    ${t('share')}</a>`;
+}
 function renderAstroSection(){
   const sec = $('#astroSec'); if (!sec || !state.data) return;
   $('#h-astro').textContent = state.lang === 'id' ? '🌌 Langit malam & antariksa' : '🌌 Night sky & space';
-  const html = safeExtra(moonCard) + safeExtra(planetCard) + safeExtra(issCard) + safeExtra(astroCard);
+  const html = safeExtra(moonCard) + safeExtra(planetCard) + safeExtra(issCard) + safeExtra(launchCard) + safeExtra(astrosCard) + safeExtra(astroCard);
   $('#astroBody').innerHTML = html;
   sec.hidden = !html;
+  if (html){ const sh = safeExtra(() => astroShare($('#astroBody'))); if (sh) $('#astroBody').insertAdjacentHTML('beforeend', `<div class="astro-share">${sh}</div>`); }
+  // opened from a shared link (langit.info/#antariksa): jump to this section once
+  if (html && location.hash === '#antariksa' && !state.astroJumped){ state.astroJumped = true; setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 500); }
 }
 function astroCard(){
   const a = astroInfo(), L = a.L, rows = [];
@@ -2585,6 +3107,7 @@ const safeExtra = fn => { try{ return fn(); }catch(e){ console.warn('Langit extr
 
 // countdown chips update themselves every 30 seconds
 function tickCountdowns(){
+  document.querySelectorAll('.lcd[data-to]').forEach(el => { el.textContent = launchLeft(+el.dataset.to, state.lang === 'id'); });
   document.querySelectorAll('.countdown[data-to]').forEach(el => {
     const left = Math.round((+el.dataset.to - Date.now()) / 60000);
     el.textContent = left <= 0 ? t('cdNow') : t('cd', Math.floor(left / 60), left % 60);
@@ -2593,6 +3116,8 @@ function tickCountdowns(){
 setInterval(tickCountdowns, 30000);
 
 const SHARE_EMOJI = { umum:'🌤️', jemuran:'👕', petani:'🌾', nelayan:'🎣', wisata:'🏝️', golf:'⛳' };
+const ABOUT_EN = `<p><strong>Langit.info</strong> brings you weather forecasts for all of Indonesia and what they mean for everyday life. From changing temperatures, cloud cover, rainfall, wind direction and speed to sunshine strength and the UV index, everything is explained in plain language you can act on: the best time to dry laundry, farm, go fishing, travel, play golf or hold an outdoor event.</p><p>Because the sky is so vast, Langit.info doesn't stop at the weather. It also invites you to explore what's up there, natural and human-made: the moon's phases, planets visible tonight, meteor showers, eclipses, asteroids passing close to Earth, space stations flying over your town and upcoming rocket launches. Hence our tagline: "Langit and everything up there."</p>`;
+const siteUrl = mode => (location.protocol.startsWith('http') ? location.origin + location.pathname : 'https://langit.info/') + (mode ? '#' + mode : '');
 function shareBlock(el){
   const h = el.querySelector('.verdict h2'), p = el.querySelector('.verdict p');
   if (!h) return '';
@@ -2627,6 +3152,86 @@ const OUTFIT_SVG = {
   jas:'<path d="M8 3h8l1 2 4 3v12h-3v-9l-1-1V21H7V10l-1 1v9H3V8l4-3z" fill="#F2C14E"/><path d="M9 3a3 3 0 0 0 6 0" fill="#E0A82E"/>',
   sandal:'<ellipse cx="9" cy="13" rx="3.4" ry="7" fill="#E8833A"/><ellipse cx="16" cy="13" rx="3.4" ry="7" fill="#E8833A"/><path d="M7 11l2 2 2-2M14 11l2 2 2-2" stroke="#9C4F1C" stroke-width="1.3" fill="none" stroke-linecap="round"/>'
 };
+/* ---------- Umum: outdoor event planner (workshops, shows, parties, concerts) ---------- */
+const evtCache = new Map(), evtInflight = new Map();
+function evtPlan(){
+  const D = state.data.daily.time, now = localNow();
+  let e = store.get('skyline.event', null);
+  if (!e || !D.includes(e.d)) e = { d: D[now.h >= 16 ? 1 : 0], a: 16, b: 22 };
+  e.a = clamp(+e.a || 16, 0, 23); e.b = clamp(+e.b || 22, e.a + 1, 24);
+  return e;
+}
+async function evtLoad(){
+  const p = state.place, e = evtPlan(), k = `${placeKey(p)}|${e.d}`;
+  const c = evtCache.get(k);
+  if (c && Date.now() - c.at < 20 * 60000) return c.d;
+  if (evtInflight.has(k)) return evtInflight.get(k);
+  const job = getJSON(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&timezone=auto&start_date=${e.d}&end_date=${e.d}&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,uv_index,is_day`, 12000)
+    .then(d => { evtCache.set(k, { at: Date.now(), d }); return d; }).finally(() => evtInflight.delete(k));
+  evtInflight.set(k, job);
+  return job;
+}
+function evtJudge(d, e){
+  const H = d.hourly, L = state.lang === 'id', idx = [];
+  H.time.forEach((x, i) => { const h = +x.slice(11, 13); if (h >= e.a && h < e.b) idx.push(i); });
+  if (!idx.length) return null;
+  const r = [], at = (lv, ic, txt) => r.push({ lv, ic, txt });
+  const hrs = f => idx.filter(f), span = list => list.length ? `${String(+H.time[list[0]].slice(11, 13)).padStart(2, '0')}.00–${String(+H.time[list[list.length - 1]].slice(11, 13) + 1).padStart(2, '0')}.00` : '';
+  const storm = hrs(i => wmo(H.weather_code[i])[1] === 'storm' && (H.precipitation_probability[i] ?? 0) >= 30);
+  const gMax = Math.max(...idx.map(i => H.wind_gusts_10m[i] ?? 0));
+  const heavy = hrs(i => (H.precipitation[i] ?? 0) >= 5 || ([65, 82].includes(H.weather_code[i]) && (H.precipitation_probability[i] ?? 0) >= 40));
+  const ppMax = Math.max(...idx.map(i => H.precipitation_probability[i] ?? 0)), mm = idx.reduce((s, i) => s + (H.precipitation[i] ?? 0), 0);
+  const hot = Math.max(...idx.filter(i => H.is_day[i]).map(i => H.apparent_temperature[i] ?? 0), 0), uv = Math.max(...idx.map(i => H.uv_index[i] ?? 0));
+  if (storm.length) at(3, '⚡', L ? `Hujan petir sekitar ${span(storm)}. Panggung, rangka logam dan penonton di lapangan terbuka berisiko tersambar petir. Hentikan acara saat terdengar guntur dan tunggu 30 menit setelah guntur terakhir.` : `Thunderstorms around ${span(storm)}. Stages, metal rigging and crowds in open fields are at risk of lightning. Stop the show when you hear thunder and wait 30 minutes after the last one.`);
+  if (gMax >= 60) at(3, '💨', L ? `Hembusan angin hingga ${speed(gMax)}: tenda, atap panggung, spanduk dan tower speaker bisa roboh. Jangan pasang struktur tinggi.` : `Gusts up to ${speed(gMax)}: tents, stage roofs, banners and speaker towers can come down. Do not put up tall structures.`);
+  else if (gMax >= 40) at(2, '💨', L ? `Hembusan angin hingga ${speed(gMax)}: ikat dan beri pemberat pada tenda, turunkan spanduk besar, siapkan petugas untuk menurunkan atap tenda jika angin menguat.` : `Gusts up to ${speed(gMax)}: tie down and weight tents, take down big banners, and have crew ready to lower tent roofs if it picks up.`);
+  if (heavy.length) at(2, '🌧️', L ? `Hujan lebat sekitar ${span(heavy)}: lindungi kabel, genset dan sound system dari air, siapkan alas untuk tanah becek.` : `Heavy rain around ${span(heavy)}: keep cables, generators and the sound system dry, and plan for muddy ground.`);
+  else if (ppMax >= 70 && mm >= 2) at(2, '🌧️', L ? `Hujan hampir pasti turun (peluang ${ppMax}%, sekitar ${Math.round(mm)} mm). Sebaiknya pindah ke dalam ruangan atau gunakan tenda tertutup.` : `Rain is very likely (${ppMax}% chance, about ${Math.round(mm)} mm). Better move indoors or use closed tents.`);
+  else if (ppMax >= 35) at(1, '☂️', L ? `Peluang hujan hingga ${ppMax}%. Siapkan tenda, terpal untuk peralatan dan rencana B.` : `Up to ${ppMax}% chance of rain. Have tents, tarps for equipment and a plan B ready.`);
+  if (hot >= 40) at(2, '🌡️', L ? `Sangat panas (terasa ${tFmt(hot)}): risiko pingsan di kerumunan. Sediakan banyak air minum, tempat teduh dan tim P3K.` : `Very hot (feels like ${tFmt(hot)}): fainting risk in crowds. Provide plenty of water, shade and a first-aid team.`);
+  else if (hot >= 35) at(1, '🌡️', L ? `Panas (terasa ${tFmt(hot)}): sediakan air minum, tempat teduh dan tim P3K.` : `Hot (feels like ${tFmt(hot)}): provide drinking water, shade and first aid.`);
+  if (uv >= 8) at(0, '🧴', L ? 'UV sangat tinggi: sediakan tenda peneduh dan ingatkan tamu memakai tabir surya.' : 'Very high UV: provide shade tents and remind guests about sunscreen.');
+  const lv = r.length ? Math.max(...r.map(x => x.lv)) : 0;
+  return { lv, r, ppMax };
+}
+function eventCard(){
+  const L = state.lang === 'id', e = evtPlan(), D = state.data.daily;
+  const k = D.time.indexOf(e.d);
+  const dayOpts = D.time.slice(0, 10).map((s, i) => `<option value="${s}"${s === e.d ? ' selected' : ''}>${esc(i === 0 ? t('today') : i === 1 ? t('tomorrow') : dShort(s))}</option>`).join('');
+  const hOpt = (from, to, sel) => { let o = ''; for (let h = from; h <= to; h++) o += `<option value="${h}"${h === sel ? ' selected' : ''}>${String(h % 24).padStart(2, '0')}.00</option>`; return o; };
+  const pick = `<div class="evt-pick"><label>${L ? 'Tanggal' : 'Date'}<select id="evtD">${dayOpts}</select></label><label>${L ? 'Mulai' : 'From'}<select id="evtA">${hOpt(5, 23, e.a)}</select></label><label>${L ? 'Selesai' : 'Until'}<select id="evtB">${hOpt(e.a + 1, 24, e.b)}</select></label></div>`;
+  const head = `<h3>${L ? '🎪 Acara di luar ruangan' : '🎪 Outdoor event'}</h3><p class="muted small">${L ? 'Pameran, workshop, pertunjukan, pesta, konser atau resepsi? Pilih waktunya.' : 'Exhibition, workshop, show, party, concert or reception? Pick the time.'}</p>${pick}`;
+  const c = evtCache.get(`${placeKey(state.place)}|${e.d}`);
+  if (!c) return `<div class="fact evt-card">${head}<p class="muted">${L ? 'Memeriksa cuaca…' : 'Checking the weather…'}</p></div>`;
+  const j = evtJudge(c.d, e);
+  if (!j) return `<div class="fact evt-card">${head}</div>`;
+  const names = L ? ['Aman untuk acara di luar', 'Siapkan tenda dan rencana B', 'Sebaiknya di dalam ruangan', 'Tunda atau pindahkan acara'] : ['Good to go outdoors', 'Have tents and a plan B ready', 'Better hold it indoors', 'Postpone or move the event'];
+  const cls = ['good', 'ok', 'poor', 'bad'][j.lv];
+  const conf = k <= 2 ? (L ? 'Keyakinan prakiraan: tinggi.' : 'Forecast confidence: high.') : k <= 5 ? (L ? 'Keyakinan prakiraan: sedang. Cek lagi H-1.' : 'Forecast confidence: medium. Check again the day before.') : (L ? 'Keyakinan prakiraan: rendah, masih bisa berubah. Cek lagi H-2 dan H-1.' : 'Forecast confidence: low, it can still change. Check again 2 days and 1 day before.');
+  const ssH = D.sunset[k] ? +D.sunset[k].slice(11, 13) : 99;
+  const ss = D.sunset[k] && e.b > ssH ? (L ? `Matahari terbenam ${clockStr(D.sunset[k])}: siapkan lampu sebelumnya.` : `Sunset ${clockStr(D.sunset[k])}: have lights ready before then.`) : '';
+  const list = j.r.length ? `<ul class="hol-list evt-list">${j.r.map(x => `<li><span class="hi-ic">${x.ic}</span><span>${esc(x.txt)}</span></li>`).join('')}</ul>` : `<p>${L ? 'Tidak ada hujan, petir atau angin kencang yang diperkirakan pada jam ini.' : 'No rain, lightning or strong wind expected in this window.'}</p>`;
+  const when = `${k === 0 ? t('today') : k === 1 ? t('tomorrow') : dShort(e.d)}, ${L ? 'pukul ' : ''}${clock(e.a, 0)} ${L ? 's.d.' : 'to'} ${clock(e.b % 24, 0)}`;   // written out so WhatsApp doesn't mistake it for a phone number
+  const msg = (L ? `🎪 Cek cuaca acara di ${state.place.name}\n${when}\n\n${names[j.lv]}` : `🎪 Event weather check for ${state.place.name}\n${when}\n\n${names[j.lv]}`) + (j.r.length ? '\n' + j.r.map(x => `${x.ic} ${x.txt}`).join('\n') : '') + `\n\n${conf}\n\n${t('shareMore')} ${siteUrl('')}`;
+  return `<div class="fact evt-card">${head}<p><span class="lvl-chip s-${cls}">${esc(names[j.lv])}</span></p>${list}<p class="small">${esc(conf)}${ss ? ' ' + esc(ss) : ''}</p>
+    <a class="share" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8L3.5 20.5l4.3-1.1A8.5 8.5 0 1 0 12 3.5z" fill="#fff"/><path d="M9.2 8.2c.3-.4.7-.4.9 0l.8 1.8c.1.3 0 .6-.2.8l-.5.6c.6 1.2 1.6 2.2 2.8 2.8l.6-.5c.2-.2.5-.3.8-.2l1.8.8c.4.2.4.6 0 .9-.6.7-1.5 1-2.4.7a8.4 8.4 0 0 1-5.2-5.2c-.3-.9 0-1.8.6-2.5z" fill="#1FA855"/></svg>${L ? 'Bagikan ke tim' : 'Share with the team'}</a></div>`;
+}
+function evtRefresh(){
+  const box = $('#evtBox'); if (!box) return;
+  box.innerHTML = safeExtra(eventCard);
+  const key = placeKey(state.place);
+  evtLoad().then(() => { if (placeKey(state.place) === key){ const b = $('#evtBox'); if (b) b.innerHTML = safeExtra(eventCard); } }).catch(() => {
+    const b = $('#evtBox'); if (b) b.innerHTML = `<div class="fact evt-card"><h3>${state.lang === 'id' ? '🎪 Acara di luar ruangan' : '🎪 Outdoor event'}</h3><p class="muted">${state.lang === 'id' ? 'Prakiraan acara belum bisa dimuat. Coba lagi nanti ya.' : 'The event forecast couldn’t load. Please try again later.'}</p></div>`;
+  });
+}
+document.addEventListener('change', e => {
+  if (!['evtD', 'evtA', 'evtB'].includes(e.target.id)) return;
+  const cur = evtPlan(), d = $('#evtD').value, a = +$('#evtA').value; let b = +$('#evtB').value;
+  if (b <= a) b = Math.min(24, a + 4);
+  store.set('skyline.event', { ...cur, d, a, b });
+  evtRefresh();
+});
+
 function extrasUmum(){
   const d = state.data, H = d.hourly, D = d.daily, c = d.current, i0 = state.i0, end = Math.min(H.time.length, i0 + 12);
   const kind = wmo(c.weather_code)[1], day = !!c.is_day;
@@ -2657,7 +3262,7 @@ function extrasUmum(){
     <div class="fact"><h3>${t('outfit')}</h3><div class="outfit">${items.map(([k, n]) => `<span><svg viewBox="0 0 24 24" aria-hidden="true">${OUTFIT_SVG[k]}</svg>${esc(n)}</span>`).join('')}</div><p>${esc(t('ofSay', joined))}</p></div>
     ${safeExtra(holidayCard)}
     <div class="fact"><h3>${t('mosq')}</h3><div class="val"><span class="lvl lvl${ml}">${t('mosqLv')[ml]}</span></div><p>${t('mosqNote')}</p></div>
-  </div>`;
+  </div><div id="evtBox" class="evt-wrap">${safeExtra(eventCard)}</div>`;
 }
 
 /* ---------- Jemuran: score + live countdown ---------- */
@@ -2684,6 +3289,69 @@ function extrasJemuran(){
 }
 
 /* ---------- Petani: disease risk + season hint ---------- */
+/* ---------- Petani: heat stress for livestock (THI) ---------- */
+// Temperature-Humidity Index, the standard livestock heat-stress measure: THI = (1.8T+32) − (0.55 − 0.0055·RH)(1.8T − 26)
+const thi = (t, rh) => (1.8 * t + 32) - (0.55 - 0.0055 * rh) * (1.8 * t - 26);
+const TERNAK = {
+  sapi:    { ic: '🐄', id: 'Sapi', en: 'Cattle', lv: (t, rh) => { const x = thi(t, rh); return x >= 89 ? 3 : x >= 80 ? 2 : x >= 75 ? 1 : 0; } },
+  kambing: { ic: '🐐', id: 'Kambing', en: 'Goats', lv: (t, rh) => { const x = thi(t, rh); return x >= 90 ? 3 : x >= 82 ? 2 : x >= 76 ? 1 : 0; } },
+  // chickens: rough guide from air temperature, one step worse in very humid air
+  ayam:    { ic: '🐔', id: 'Ayam', en: 'Chickens', lv: (t, rh) => { let l = t >= 35 ? 3 : t >= 32 ? 2 : t >= 29 ? 1 : 0; if (rh >= 75 && t >= 29) l = Math.min(3, l + 1); return l; } },
+};
+const TERNAK_TIP = {
+  id: [
+    'Kondisi nyaman. Tetap sediakan air minum bersih sepanjang hari.',
+    'Stres panas ringan: pastikan air minum cukup dan ada naungan. Beri pakan di pagi atau sore hari.',
+    'Stres panas sedang: tambah tempat minum, semprot atau siram atap kandang, kurangi kepadatan. Hindari menggiring atau mengangkut ternak di jam panas.',
+    'Stres panas berat: ternak bisa sakit atau mati. Air dingin dan naungan wajib, nyalakan kipas di kandang ayam, jangan pindahkan ternak siang hari, dan pantau yang terengah-engah.'
+  ],
+  en: [
+    'Comfortable. Keep clean drinking water available all day.',
+    'Mild heat stress: make sure there is enough water and shade. Feed in the morning or evening.',
+    'Moderate heat stress: add drinkers, spray or wet the shed roof, reduce crowding. Do not herd or transport animals in the hot hours.',
+    'Severe heat stress: animals can fall ill or die. Cool water and shade are a must, run fans in poultry houses, do not move animals at midday, and watch for heavy panting.'
+  ]
+};
+function ternakCard(){
+  const L = state.lang === 'id', H = state.data.hourly, i0 = state.i0, sp = store.get('skyline.ternak', 'sapi'), S = TERNAK[sp] || TERNAK.sapi;
+  const now = localNow(), day = now.h >= 18 ? 1 : 0;
+  const date = state.data.daily.time[day];
+  const idx = []; H.time.forEach((x, i) => { if (x.slice(0, 10) === date && (day || i >= i0) && H.temperature_2m[i] != null) idx.push(i); });
+  if (!idx.length) return '';
+  const lv = idx.map(i => S.lv(H.temperature_2m[i], H.relative_humidity_2m[i] ?? 70));
+  const peak = Math.max(...lv);
+  const heat = idx.map(i => thi(H.temperature_2m[i], H.relative_humidity_2m[i] ?? 70)), pk = idx[heat.indexOf(Math.max(...heat))];
+  const hot = peak ? idx.filter((_, k) => lv[k] === peak) : [];   // the hours when it is worst
+  const allDay = hot.length && hot[0] === idx[0] && hot[hot.length - 1] === idx[idx.length - 1];
+  const names = L ? ['Nyaman', 'Stres panas ringan', 'Stres panas sedang', 'Stres panas berat'] : ['Comfortable', 'Mild heat stress', 'Moderate heat stress', 'Severe heat stress'];
+  const cls = ['good', 'ok', 'poor', 'bad'][peak];
+  const range = hot.length ? `${hourStr(H.time[hot[0]])}–${endHourStr(H.time[hot[hot.length - 1]])}` : '';
+  const dayTxt = day ? t('tomorrow') : t('today');
+  const when = allDay ? (L ? `${dayTxt} sepanjang hari, terberat sekitar ${hourStr(H.time[pk])}` : `${dayTxt} all day, worst around ${hourStr(H.time[pk])}`) : hot.length ? (L ? `${dayTxt} ${range}, terberat sekitar ${hourStr(H.time[pk])}` : `${dayTxt} ${range}, worst around ${hourStr(H.time[pk])}`) : (L ? `${dayTxt} tidak ada jam yang panas bagi ${S.id.toLowerCase()}.` : `${dayTxt}: no hot hours for ${S.en.toLowerCase()}.`);
+  const best = hot.length && !allDay ? (L ? `Waktu terbaik memberi pakan dan bekerja dengan ternak: sebelum ${hourStr(H.time[hot[0]])} dan setelah ${endHourStr(H.time[hot[hot.length - 1]])}.` : `Best times to feed and handle animals: before ${hourStr(H.time[hot[0]])} and after ${endHourStr(H.time[hot[hot.length - 1]])}.`) : '';
+  // wet spell (hoof rot, flies, worms) and dry spell (grass and water), from the last and next 7 days of rain
+  const extra = [];
+  if (state.farm && state.farm.daily){
+    const P = state.farm.daily.precipitation_sum, sum = (a, b) => P.slice(a, b).reduce((x, y) => x + (y || 0), 0);
+    if (sum(4, 8) >= 30) extra.push(L ? '🌧️ Beberapa hari terakhir banyak hujan: jaga kandang tetap kering, waspada busuk kuku, lalat dan cacingan.' : '🌧️ Lots of rain in recent days: keep pens dry and watch for hoof rot, flies and worms.');
+    if (sum(8, 15) < 5 && sum(0, 7) < 10) extra.push(L ? '☀️ Seminggu ke depan diperkirakan kering: siapkan cadangan air minum dan pakan hijauan.' : '☀️ The coming week looks dry: line up spare drinking water and green fodder.');
+  }
+  const btns = Object.entries(TERNAK).map(([k, v]) => `<button type="button" class="pill${k === sp ? ' on' : ''}" data-ternak="${k}" aria-pressed="${k === sp}">${v.ic} ${L ? v.id : v.en}</button>`).join('');
+  return `<div class="fact ternak-card"><h3>${L ? '🐄 Stres panas ternak' : '🐄 Livestock heat stress'}</h3>
+    <div class="ternak-pick">${btns}</div>
+    <p><span class="lvl-chip s-${cls}">${esc(names[peak])}</span></p>
+    <p>${esc(when)}</p>
+    <p>${esc(TERNAK_TIP[L ? 'id' : 'en'][peak])}</p>
+    ${best ? `<p class="small">${esc(best)}</p>` : ''}
+    ${extra.map(x => `<p class="small">${esc(x)}</p>`).join('')}
+    <p class="muted small">${L ? 'Dihitung dari suhu dan kelembapan (indeks THI). Sapi perah (FH) lebih peka panas daripada sapi lokal. Untuk ayam, ini panduan kasar; kandang tertutup bisa lebih panas.' : 'Worked out from temperature and humidity (THI index). Dairy cattle (Holstein) feel heat sooner than local breeds. For chickens this is a rough guide; closed houses can be hotter.'}</p></div>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-ternak]'); if (!b) return;
+  store.set('skyline.ternak', b.dataset.ternak);
+  const c = $('#ternakBox'); if (c) c.innerHTML = safeExtra(ternakCard);
+});
+
 function extrasPetani(){
   const H = state.data.hourly, i0 = state.i0, end = Math.min(H.time.length, i0 + 48);
   let wetH = 0;
@@ -2697,6 +3365,7 @@ function extrasPetani(){
     season = `<div class="fact"><h3>${t('fmSeason')}</h3><p>${esc(msg)} ${esc(t('fmSeasonDays', past, next))}</p><p>${t('fmSeasonOfficial')}</p></div>`;
   }
   return safeExtra(seasonBlock) + `<div class="facts">
+    <div id="ternakBox" class="ternak-box">${safeExtra(ternakCard)}</div>
     <div class="fact"><h3>${t('fmDisease')}</h3><div class="val"><span class="lvl lvl${dl}">${t('fmDiseaseLv')[dl]}</span></div><p>${esc(t('fmDiseaseHours', wetH))} ${t('fmDiseaseTip')[dl]}</p></div>
     ${season}
   </div>`;
@@ -2735,10 +3404,10 @@ function maritimeBlock(){
   const waveAt = i => { const m = mi[H.time[i]]; return m != null ? M.hourly.wave_height[m] : null; };
   const w0 = waveAt(i0); if (w0 == null) return '';
   let wMax = 0, kMax = 0;
-  for (let i = i0; i < Math.min(H.time.length, i0 + 24); i++){ const w = waveAt(i); if (w != null) wMax = Math.max(wMax, w); kMax = Math.max(kMax, (H.wind_speed_10m[i] || 0) / 1.852, (H.wind_gusts_10m[i] || 0) / 1.852 * 0.8); }
+  for (let i = i0; i < Math.min(H.time.length, i0 + 24); i++){ const w = waveAt(i); if (w != null) wMax = Math.max(wMax, w); kMax = Math.max(kMax, (H.wind_speed_10m[i] || 0) / 1.852); }
   const k0 = (H.wind_speed_10m[i0] || 0) / 1.852;
   const SHIPS = [[15, 1.25], [16, 1.5], [21, 2.5], [27, 4]];
-  const chip = risk => `<span class="lvl-chip s-${risk ? 'bad' : 'good'}">${risk ? t('marRisk') : t('marSafe')}</span>`;
+  const chip = risk => `<span class="lvl-chip s-${risk ? 'ok' : 'good'}">${risk ? t('marRisk') : t('marSafe')}</span>`;
   const rows = SHIPS.map(([kt, m], k) => `<tr><th>${t('marShips')[k]}<small>${esc(t('marRule', kt, String(m).replace('.', state.lang === 'id' ? ',' : '.')))}</small></th><td>${chip(k0 >= kt || w0 >= m)}</td><td>${chip(kMax >= kt || wMax >= m)}</td></tr>`).join('');
   const dm = M.daily && M.daily.wave_height_max ? M.daily.wave_height_max.slice(0, 3) : [];
   const days = dm.map((v, k) => v == null ? '' : `<div class="wday"><b>${esc(k === 0 ? t('today') : k === 1 ? t('tomorrow') : (M.daily.time && M.daily.time[k] ? weekday(M.daily.time[k], true) : d.daily.time[k] ? weekday(d.daily.time[k], true) : ''))}</b><span class="val">${meters(v)}</span><span class="lvl-chip s-${['good','good','ok','poor','bad','bad'][waveCat(v)]}">${t('waveCats')[waveCat(v)]}</span></div>`).join('');
@@ -2748,8 +3417,9 @@ function maritimeBlock(){
     const j = S.hourly.time.findIndex(x => x.slice(0, 13) === H.time[i0].slice(0, 13)), k = j < 0 ? 0 : j;
     const cv = S.hourly.ocean_current_velocity ? S.hourly.ocean_current_velocity[k] : null, cd = S.hourly.ocean_current_direction ? S.hourly.ocean_current_direction[k] : null;
     const sst = S.hourly.sea_surface_temperature ? S.hourly.sea_surface_temperature[k] : null;
-    if (cv != null && cd != null) sea += fact(t('marCur'), esc(t('marCurV', speed(cv), dir8(cd))), '');
-    if (sst != null) sea += fact(t('marSst'), tFmt(sst), '');
+    const L = state.lang === 'id';
+    if (cv != null && cd != null) sea += fact(t('marCur'), esc(t('marCurV', speed(cv), dir8(cd))), esc(cv >= 2 ? (L ? 'Arus cukup kuat: pakai pemberat lebih berat dan perhatikan perahu yang hanyut.' : 'Fairly strong current: use heavier sinkers and watch your drift.') : cv < 0.7 ? (L ? 'Arus lemah, umpan mudah dijaga di tempat.' : 'Weak current, bait stays in place easily.') : (L ? 'Arus sedang.' : 'Moderate current.')));
+    if (sst != null) sea += fact(t('marSst'), tFmt(sst), esc(sst < 27 ? (L ? 'Air relatif sejuk, sering tanda arus naik (upwelling) yang kaya makanan. Ikan pelagis seperti cakalang dan tongkol cenderung lebih aktif.' : 'Relatively cool water, often a sign of nutrient-rich upwelling. Pelagic fish such as skipjack and tuna tend to be more active.') : sst > 29.5 ? (L ? 'Air hangat: siang hari ikan cenderung turun lebih dalam. Coba subuh atau sore, atau umpan lebih dalam.' : 'Warm water: fish tend to go deeper in the middle of the day. Try dawn or late afternoon, or fish deeper.') : (L ? 'Suhu normal untuk perairan tropis.' : 'Normal temperature for tropical waters.')));
   }
   return `<div class="maritime"><h3>${t('mar')}</h3>
     <div class="ship-wrap"><table class="ships"><thead><tr><th>${t('marShip')}</th><th>${t('marNow')}</th><th>${t('mar24')}</th></tr></thead><tbody>${rows}</tbody></table></div>
@@ -2816,6 +3486,318 @@ function extrasNelayan(){
 }
 
 /* ---------- Wisata: golden hour, stars, rainbow ---------- */
+/* ---------- Wisata: trip-planning extras (crossings, sunrise peaks, weekends, compare, snorkel, rivers, best months) ---------- */
+// boat crossings: [name, mid-channel lat, lon, 'fast' speedboat | 'ferry']
+const CROSSINGS = [
+  ['Sanur – Nusa Penida/Lembongan', -8.70, 115.37, 'fast'], ['Padangbai – Gili/Lombok', -8.55, 115.80, 'fast'],
+  ['Ketapang – Gilimanuk', -8.15, 114.41, 'ferry'], ['Bangsal – Gili Trawangan', -8.36, 116.06, 'fast'],
+  ['Kayangan – Pototano', -8.55, 116.85, 'ferry'], ['Labuan Bajo – Komodo/Padar', -8.55, 119.65, 'fast'],
+  ['Merak – Bakauheni', -5.88, 105.85, 'ferry'], ['Jakarta – Kepulauan Seribu', -5.85, 106.70, 'fast'],
+  ['Jepara – Karimunjawa', -6.25, 110.58, 'fast'], ['Manado – Bunaken', 1.60, 124.76, 'fast'],
+  ['Bitung – Lembeh', 1.45, 125.22, 'fast'], ['Ternate – Tidore/Sofifi', 0.74, 127.45, 'fast'],
+  ['Sorong – Waisai (Raja Ampat)', -0.65, 130.95, 'fast'], ['Batam – Bintan', 1.12, 104.25, 'fast'],
+  ['Ambon – Saparua', -3.62, 128.40, 'fast'], ['Makassar – Pulau Samalona', -5.12, 119.36, 'fast'],
+  ['Banyuwangi – Bali (Selat Bali)', -8.25, 114.45, 'ferry'], ['Tanjung Kalian – Bangka', -2.05, 105.10, 'ferry']
+];
+// sunrise viewpoints: [name, lat, lon, elevation m]
+const PEAKS = [
+  ['Bromo (Penanjakan)', -7.92, 112.96, 2770], ['Kawah Ijen', -8.058, 114.242, 2386], ['Gunung Batur', -8.242, 115.375, 1717],
+  ['Gunung Agung', -8.343, 115.508, 3031], ['Rinjani (Plawangan)', -8.39, 116.45, 2639], ['Gunung Prau', -7.187, 109.922, 2565],
+  ['Bukit Sikunir', -7.236, 109.928, 2263], ['Papandayan', -7.32, 107.73, 2665], ['Tangkuban Perahu', -6.76, 107.60, 2084],
+  ['Kawah Putih', -7.166, 107.402, 2430], ['Gede Pangrango', -6.79, 106.98, 2958], ['Merbabu', -7.455, 110.44, 3145],
+  ['Gunung Andong', -7.39, 110.37, 1726], ['Gunung Lawu', -7.627, 111.194, 3265], ['Semeru', -8.108, 112.922, 3676],
+  ['Danau Kelimutu', -8.77, 121.82, 1639], ['Kerinci', -1.697, 101.264, 3805], ['Sibayak', 3.24, 98.50, 2212],
+  ['Gunung Klabat', 1.47, 125.03, 1995], ['Gunung Mahawu', 1.358, 124.858, 1324]
+];
+const CMP_DEFAULT = [
+  { name:'Bali', lat:-8.65, lon:115.22 }, { name:'Lombok', lat:-8.583, lon:116.116 }, { name:'Labuan Bajo', lat:-8.49, lon:119.88 },
+  { name:'Yogyakarta', lat:-7.80, lon:110.36 }, { name:'Bandung', lat:-6.91, lon:107.61 }, { name:'Danau Toba', lat:2.66, lon:98.94 }
+];
+const wisCache = new Map();
+const asArr = r => Array.isArray(r) ? r : [r];
+const rMs = (r, s) => Date.parse(s.slice(0, 16) + ':00Z') - (r.utc_offset_seconds || 0) * 1000;
+const rNow = r => { const n = Date.now() - 3600000; const i = r.hourly.time.findIndex(x => rMs(r, x) > n); return i < 0 ? 0 : i; };
+const dShort = s => new Date(s.slice(0, 10) + 'T12:00:00Z').toLocaleDateString(locale(), { weekday:'short', day:'numeric', month:'short', timeZone:'UTC' });
+const near = (list, la, lo, km, n) => list.map(x => ({ x, km: haversine(state.place.lat, state.place.lon, x[la], x[lo]) })).filter(o => o.km <= km).sort((a, b) => a.km - b.km).slice(0, n).map(o => o.x);
+
+async function loadWisata(){
+  const p = state.place, key = placeKey(p);
+  const c = wisCache.get(key);
+  if (c && Date.now() - c.at < 20 * 60 * 1000){ state.wis = c.wis; return; }
+  const wis = state.wis = { at: Date.now() };
+  const done = () => { if (placeKey(state.place) !== key) return; if (wis.cmp !== null && wis.ring !== null) wisCache.set(key, { at: wis.at, wis }); else wisCache.delete(key); const el = $('#wisX'); if (el && state.mode === 'wisata') el.innerHTML = safeExtra(wisCards); };
+  const q = arr => arr.join(',');
+  const jobs = [];
+  // 1. crossings
+  const cr = near(CROSSINGS, 1, 2, 150, 3);
+  if (cr.length) jobs.push(getJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${q(cr.map(x => x[1]))}&longitude=${q(cr.map(x => x[2]))}&hourly=wave_height&forecast_days=3&timezone=auto`, 15000)
+    .then(r => { wis.cross = asArr(r).map((d, k) => ({ c: cr[k], d })).filter(o => o.d.hourly && o.d.hourly.wave_height.some(v => v != null)); }).catch(() => { wis.cross = []; }).then(done));
+  else wis.cross = [];
+  // 2. sunrise peaks
+  const pk = near(PEAKS, 1, 2, 130, 3);
+  if (pk.length) jobs.push(getJSON(`https://api.open-meteo.com/v1/forecast?latitude=${q(pk.map(x => x[1]))}&longitude=${q(pk.map(x => x[2]))}&elevation=${q(pk.map(x => x[3]))}&hourly=temperature_2m,cloud_cover_low,cloud_cover_mid,cloud_cover_high,precipitation_probability,wind_speed_10m&daily=sunrise&forecast_days=3&timezone=auto`, 15000)
+    .then(r => { wis.peaks = asArr(r).map((d, k) => ({ pk: pk[k], d })); }).catch(() => { wis.peaks = []; }).then(done));
+  else wis.peaks = [];
+  // 4. compare destinations (favourites, or popular ones)
+  jobs.push(fetchCompare(wis).then(done));
+  // 5 + 6. rain around the place (centre + 6 points ~20 km away), last 24 h and next 24 h
+  const ring = [[p.lat, p.lon]];
+  for (let k = 0; k < 6; k++){ const a = k * Math.PI / 3; ring.push([+(p.lat + 0.18 * Math.cos(a)).toFixed(3), +(p.lon + 0.18 * Math.sin(a) / Math.cos(p.lat * Math.PI / 180)).toFixed(3)]); }
+  jobs.push(getJSON(`https://api.open-meteo.com/v1/forecast?latitude=${q(ring.map(x => x[0]))}&longitude=${q(ring.map(x => x[1]))}&hourly=precipitation&past_days=2&forecast_days=2&timezone=auto`, 15000)
+    .then(r => { wis.ring = asArr(r); }).catch(() => { wis.ring = null; }).then(done));
+  // 7. best months: 10 years of daily history, summarised once and kept on the device
+  const ck = `skyline.clim.${(Math.round(p.lat * 4) / 4).toFixed(2)}_${(Math.round(p.lon * 4) / 4).toFixed(2)}`;
+  const saved = store.get(ck, null);
+  if (saved && saved.mm) wis.clim = saved;
+  else jobs.push(getJSON(`https://archive-api.open-meteo.com/v1/archive?latitude=${p.lat}&longitude=${p.lon}&start_date=2016-01-01&end_date=2025-12-31&daily=precipitation_sum,temperature_2m_max&timezone=auto`, 25000)
+    .then(r => {
+      const mm = Array(12).fill(0), days = Array(12).fill(0), tx = Array(12).fill(0), n = Array(12).fill(0);
+      r.daily.time.forEach((s, i) => { const m = +s.slice(5, 7) - 1, v = r.daily.precipitation_sum[i], t2 = r.daily.temperature_2m_max[i]; if (v == null) return; mm[m] += v; if (v >= 1) days[m]++; if (t2 != null) tx[m] += t2; n[m]++; });
+      const yrs = m => n[m] / (new Date(Date.UTC(2021, m + 1, 0)).getUTCDate());
+      wis.clim = { mm: mm.map((v, m) => n[m] ? Math.round(v / yrs(m)) : null), days: days.map((v, m) => n[m] ? Math.round(v / yrs(m)) : null), tx: tx.map((v, m) => n[m] ? Math.round(v / n[m] * 10) / 10 : null) };
+      store.set(ck, wis.clim);
+    }).catch(() => { wis.clim = null; }).then(done));
+  await Promise.allSettled(jobs);
+}
+
+// destinations to compare: the visitor's own list (＋/✕ in the card), else ★ saved places, else popular ones
+function cmpOthers(){
+  const p = state.place, key = placeKey(p), custom = store.get('skyline.cmp', null);
+  if (Array.isArray(custom)) return { kind: 'custom', list: custom.filter(f => placeKey(f) !== key).slice(0, 8) };
+  const favs = state.favs.filter(f => placeKey(f) !== key);
+  if (favs.length >= 2) return { kind: 'fav', list: favs.slice(0, 8) };
+  return { kind: 'default', list: CMP_DEFAULT.filter(f => haversine(f.lat, f.lon, p.lat, p.lon) > 25).slice(0, 6) };
+}
+function fetchCompare(wis){
+  const p = state.place, o = cmpOthers(), list = [{ name: p.name, lat: p.lat, lon: p.lon, here: true }, ...o.list];
+  wis.cmpKind = o.kind; wis.cmpFav = o.kind !== 'default';
+  return getJSON(`https://api.open-meteo.com/v1/forecast?latitude=${list.map(x => x.lat).join(',')}&longitude=${list.map(x => x.lon).join(',')}&daily=weather_code,temperature_2m_max,precipitation_probability_max,precipitation_sum&forecast_days=10&timezone=auto`, 15000)
+    .then(r => { wis.cmp = asArr(r).map((d, k) => ({ pl: list[k], d })); }).catch(() => { wis.cmp = null; });
+}
+function cmpSave(list){
+  store.set('skyline.cmp', list.map(({ name, region, lat, lon }) => ({ name, region: region || '', lat, lon })));
+  const wis = state.wis; if (!wis) return;
+  wis.cmp = undefined; const el = $('#wisX'); if (el) el.innerHTML = safeExtra(wisCards);
+  fetchCompare(wis).then(() => { wisCache.set(placeKey(state.place), { at: wis.at, wis }); const e2 = $('#wisX'); if (e2 && state.mode === 'wisata') e2.innerHTML = safeExtra(wisCards); });
+}
+// small place lookup for the "add destination" box: popular places, Photon and the Open-Meteo list
+let cmpReq = 0, cmpRes = [];
+async function cmpLookup(term){
+  const id = ++cmpReq, box = $('#cmpRes'); if (!box) return;
+  if (term.length < 2){ box.innerHTML = ''; return; }
+  const [a, b] = await Promise.all([
+    getJSON(`https://photon.komoot.io/api/?q=${encodeURIComponent(term)}&limit=12&lang=${state.lang === 'en' ? 'en' : 'default'}&lat=-2.5&lon=118&zoom=5`, 6000).then(j => tidyPhoton(j.features || [], term)).catch(() => []),
+    getJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(term)}&count=15&language=${state.lang}&format=json`, 8000).then(j => tidyPlaces(j.results || [], term)).catch(() => [])
+  ]);
+  if (id !== cmpReq) return;
+  const out = popularMatches(term), same = (x, y) => haversine(x.lat, x.lon, y.lat, y.lon) < 3;
+  [...a.filter(r => r.cc === 'ID'), ...b.filter(r => r.cc === 'ID'), ...a, ...b].forEach(r => { if (out.length < 5 && !out.some(m => same(m, r))) out.push(r); });
+  cmpRes = out;
+  const L = state.lang === 'id';
+  box.innerHTML = out.length ? out.map((r, i) => `<button type="button" class="cmp-pick" data-cmp-pick="${i}"><b>${esc(r.name)}</b> <small class="muted">${esc(r.region || '')}</small></button>`).join('') : `<p class="muted small">${L ? 'Tidak ditemukan.' : 'Nothing found.'}</p>`;
+}
+let cmpTimer;
+document.addEventListener('input', e => { if (e.target.id === 'cmpQ'){ clearTimeout(cmpTimer); const v = e.target.value.trim(); cmpTimer = setTimeout(() => cmpLookup(v), 250); } });
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest('[data-cmp-del],[data-cmp-pick],#cmpAdd,#cmpReset,#cmpCancel'); if (!t) return;
+  const cur = cmpOthers().list;
+  if (t.id === 'cmpAdd'){ const f = $('#cmpForm'); if (f){ f.hidden = false; t.hidden = true; const i = $('#cmpQ'); if (i) i.focus(); } return; }
+  if (t.id === 'cmpCancel'){ const f = $('#cmpForm'), a = $('#cmpAdd'); if (f) f.hidden = true; if (a) a.hidden = false; return; }
+  if (t.id === 'cmpReset'){ try{ localStorage.removeItem('skyline.cmp'); }catch(_){} const wis = state.wis; if (wis){ wis.cmp = undefined; const el = $('#wisX'); if (el) el.innerHTML = safeExtra(wisCards); fetchCompare(wis).then(() => { const e2 = $('#wisX'); if (e2) e2.innerHTML = safeExtra(wisCards); }); } return; }
+  if (t.dataset.cmpDel != null){ cmpSave(cur.filter(f => placeKey(f) !== t.dataset.cmpDel)); return; }
+  if (t.dataset.cmpPick != null){ const r = cmpRes[+t.dataset.cmpPick]; if (!r) return; if (placeKey(r) === placeKey(state.place) || cur.some(f => haversine(f.lat, f.lon, r.lat, r.lon) < 3)){ const f = $('#cmpForm'); if (f) f.hidden = true; return; } cmpSave([...cur, r].slice(-8)); }
+});
+
+const lvlChip = (cls, txt) => `<span class="lvl-chip s-${cls}">${esc(txt)}</span>`;
+
+// 3. long weekend + this weekend
+function weekendIdx(){
+  const D = state.data.daily.time, out = [];
+  for (let k = 0; k < D.length; k++){
+    const wd = new Date(D[k] + 'T12:00:00Z').getUTCDay();
+    if (wd === 6){ out.push(k); if (k + 1 < D.length) out.push(k + 1); break; }
+    if (wd === 0){ out.push(k); break; }
+  }
+  return out;
+}
+function longWeekend(){
+  const base = Date.parse(state.data.daily.time[0] + 'T12:00:00Z'), ds = k => new Date(base + k * 864e5).toISOString().slice(0, 10);
+  const off = s => { const wd = new Date(s + 'T12:00:00Z').getUTCDay(); return wd === 0 || wd === 6 || HOLIDAYS.some(h => h[0] === s); };
+  for (let k = 0; k < 60; k++){
+    if (!off(ds(k))) continue;
+    let a = k; while (a > k - 4 && off(ds(a - 1))) a--;
+    let b = k; while (off(ds(b + 1))) b++;
+    const hol = []; for (let j = a; j <= b; j++) HOLIDAYS.filter(h => h[0] === ds(j)).forEach(h => { if (!hol.includes(h[1])) hol.push(h[1]); });
+    if (b - a + 1 >= 3 && hol.length) return { a: ds(a), b: ds(b), len: b - a + 1, inDays: a, hol };
+    k = b;
+  }
+  return null;
+}
+function weekendCard(){
+  const L = state.lang === 'id', D = state.data.daily, idx = weekendIdx(), lw = longWeekend();
+  let lwHtml = '';
+  if (lw){
+    const names = lw.hol.map(k => HOL_KIND[k] ? HOL_KIND[k][L ? 0 : 2] : k).join(', ');
+    const when = lw.inDays <= 0 ? (L ? 'Sedang libur panjang' : 'Long weekend now') : lw.inDays === 1 ? (L ? 'Libur panjang mulai besok' : 'Long weekend starts tomorrow') : (L ? `Libur panjang ${lw.inDays} hari lagi` : `Long weekend in ${lw.inDays} days`);
+    lwHtml = `<p class="lw"><b>🏖️ ${esc(when)}:</b> ${esc(dShort(lw.a))} – ${esc(dShort(lw.b))} (${lw.len} ${L ? 'hari' : 'days'}) · ${esc(names)}<br><small class="muted">${L ? 'Tempat wisata, jalan tol dan penyeberangan biasanya ramai. Pesan penginapan dan tiket lebih awal.' : 'Attractions, toll roads and ferries are usually busy. Book rooms and tickets early.'}</small></p>`;
+  }
+  const days = idx.map(k => {
+    const pp = D.precipitation_probability_max[k] ?? 0, kind = wmo(D.weather_code[k]);
+    const tip = pp >= 60 ? (L ? 'Sering hujan, siapkan rencana dalam ruangan' : 'Rainy, have an indoor plan') : pp >= 30 ? (L ? 'Bawa payung' : 'Take an umbrella') : (L ? 'Cocok jalan-jalan' : 'Good for getting out');
+    return `<div class="wday"><b>${esc(k === 0 ? t('today') : k === 1 ? t('tomorrow') : weekday(D.time[k], true))}</b>${icon(kind[1], true, { size: 30 })}<span class="val">${tFmt(D.temperature_2m_max[k])} <small class="muted">${tFmt(D.temperature_2m_min[k])}</small></span><small>${esc(kind[0])}${pp >= 20 ? ` · <span class="pop">${pp}%</span>` : ''}</small><small class="muted">${esc(tip)}</small></div>`;
+  }).join('');
+  if (!days && !lwHtml) return '';
+  return `<div class="wis-card"><h3>${L ? '📅 Akhir pekan' : '📅 The weekend'}</h3>${lwHtml}${days ? `<div class="wdays">${days}</div>` : ''}</div>`;
+}
+
+// 4. compare destinations for the weekend
+function compareCard(){
+  const W = state.wis, L = state.lang === 'id';
+  if (!W || W.cmp === undefined) return `<div class="wis-card"><h3>${L ? '⚖️ Bandingkan tujuan' : '⚖️ Compare destinations'}</h3><p class="muted small">${L ? 'Memuat…' : 'Loading…'}</p></div>`;
+  if (!W.cmp || W.cmp.length < 2) return '';
+  const dates = weekendIdx().map(k => state.data.daily.time[k]);
+  if (!dates.length) return '';
+  const rows = W.cmp.map(o => {
+    const D = o.d.daily; if (!D) return null;
+    const ks = dates.map(s => D.time.indexOf(s)).filter(k => k >= 0); if (!ks.length) return null;
+    const pp = ks.reduce((s, k) => s + (D.precipitation_probability_max[k] ?? 50), 0) / ks.length, mm = ks.reduce((s, k) => s + (D.precipitation_sum[k] ?? 0), 0);
+    return { o, ks, D, score: pp + mm * 2 };
+  }).filter(Boolean);
+  if (rows.length < 2) return '';
+  const best = rows.slice().sort((a, b) => a.score - b.score)[0];
+  const head = dates.map(s => `<th>${esc(weekday(s))}</th>`).join('');
+  const body = rows.sort((a, b) => a.score - b.score).map(r => `<tr class="${r === best ? 'cmp-best' : ''}"><th>${esc(r.o.pl.name)}${r.o.pl.here ? ` <small class="muted">(${L ? 'di sini' : 'here'})</small>` : ''}${r === best ? `<small>★ ${L ? 'paling kering' : 'driest'}</small>` : ''}</th>${r.ks.map(k => `<td>${icon(wmo(r.D.weather_code[k])[1], true, { size: 24 })}<span>${tFmt(r.D.temperature_2m_max[k])}</span><small class="pop">${r.D.precipitation_probability_max[k] ?? 0}%</small></td>`).join('')}<td class="cmp-x">${r.o.pl.here ? '' : `<button type="button" class="cmp-del" data-cmp-del="${placeKey(r.o.pl)}" aria-label="${L ? 'Hapus' : 'Remove'} ${esc(r.o.pl.name)}">✕</button>`}</td></tr>`).join('');
+  return `<div class="wis-card"><h3>${L ? '⚖️ Bandingkan tujuan akhir pekan ini' : '⚖️ Compare destinations this weekend'}</h3>
+    <table class="cmp"><thead><tr><th></th>${head}<th></th></tr></thead><tbody>${body}</tbody></table>
+    <p class="cmp-tools"><button type="button" class="pill sos-btn" id="cmpAdd">＋ ${L ? 'Tambah tujuan' : 'Add destination'}</button>${W.cmpKind === 'custom' ? ` <button type="button" class="linkish" id="cmpReset">${L ? 'Kembalikan ke awal' : 'Reset list'}</button>` : ''}</p>
+    <div id="cmpForm" class="cmp-form" hidden><input id="cmpQ" type="search" autocomplete="off" placeholder="${L ? 'Ketik nama kota atau tempat…' : 'Type a town or place…'}"><div id="cmpRes" class="cmp-res"></div><button type="button" class="linkish" id="cmpCancel">${L ? 'Batal' : 'Cancel'}</button></div>
+    <p class="muted small">${W.cmpKind === 'custom' ? (L ? 'Daftar tujuanmu sendiri, tersimpan di perangkat ini. Persentase = peluang hujan.' : 'Your own list, saved on this device. Percentage = chance of rain.') : W.cmpKind === 'fav' ? (L ? 'Membandingkan tempat favoritmu (★). Ketuk ＋ atau ✕ untuk mengubah. Persentase = peluang hujan.' : 'Comparing your saved places (★). Tap ＋ or ✕ to change. Percentage = chance of rain.') : (L ? 'Ketuk ＋ untuk menambah tujuanmu sendiri, atau ✕ untuk menghapus. Persentase = peluang hujan.' : 'Tap ＋ to add your own destinations, or ✕ to remove one. Percentage = chance of rain.')}</p></div>`;
+}
+
+// 1. boat crossings
+function crossingCard(){
+  const W = state.wis, L = state.lang === 'id';
+  if (!W || !W.cross || !W.cross.length) return '';
+  let calmAm = false;
+  const rows = W.cross.map(({ c, d }) => {
+    const H = d.hourly, i0 = rNow(d), h0 = +H.time[i0].slice(11, 13), day = h0 >= 15 ? 1 : 0;
+    const date = new Date(Date.parse(H.time[i0].slice(0, 10) + 'T12:00:00Z') + day * 864e5).toISOString().slice(0, 10);
+    const per = (a, b) => { let m = null; H.time.forEach((x, i) => { const h = +x.slice(11, 13); if (x.slice(0, 10) === date && h >= a && h <= b && (day || i >= i0) && H.wave_height[i] != null) m = Math.max(m ?? 0, H.wave_height[i]); }); return m; };
+    const fast = c[3] === 'fast';
+    const lv = w => w == null ? null : fast ? (w < 0.8 ? ['good', L ? 'Tenang' : 'Calm'] : w < 1.25 ? ['ok', L ? 'Agak berombak' : 'A bit choppy'] : w < 2 ? ['poor', L ? 'Bisa batal' : 'May be cancelled'] : ['bad', L ? 'Biasanya batal' : 'Often cancelled'])
+      : (w < 1.25 ? ['good', L ? 'Tenang' : 'Calm'] : w < 2.5 ? ['ok', L ? 'Berombak' : 'Choppy'] : w < 4 ? ['poor', L ? 'Bisa tertunda' : 'May be delayed'] : ['bad', L ? 'Sering ditutup' : 'Often suspended']);
+    const cell = (lab, w) => { const v = lv(w); return v ? `<div class="xc"><small class="muted">${lab}</small><b>${meters(w)}</b>${lvlChip(v[0], v[1])}</div>` : ''; };
+    const am = per(6, 11), pm = per(12, 17);
+    if (am != null && pm != null && pm - am >= 0.3) calmAm = true;
+    const cells = cell(L ? 'Pagi' : 'Morning', am) + cell(L ? 'Siang–sore' : 'Afternoon', pm);
+    if (!cells) return '';
+    return `<li><div><b>${esc(c[0])}</b><small class="muted"> · ${fast ? (L ? 'speedboat' : 'fast boat') : (L ? 'kapal feri' : 'ferry')} · ${esc(day ? t('tomorrow') : t('today'))}</small></div><div class="xcells">${cells}</div></li>`;
+  }).filter(Boolean).join('');
+  if (!rows) return '';
+  return `<div class="wis-card"><h3>${L ? '⛴️ Penyeberangan & speedboat' : '⛴️ Boat crossings'}</h3><ul class="xing">${rows}</ul>${calmAm ? `<p class="small">${L ? '💡 Laut biasanya lebih tenang pagi hari, pilih jadwal berangkat pagi.' : '💡 The sea is usually calmer in the morning, so pick an early departure.'}</p>` : ''}
+    <p class="muted small">${L ? 'Perkiraan gelombang di tengah selat. Keputusan berlayar tetap dari operator dan syahbandar.' : 'Forecast waves mid-channel. Sailing decisions are made by the operator and harbour master.'}</p></div>`;
+}
+
+// 2. mountain sunrise and sea of clouds
+function peakCard(){
+  const W = state.wis, L = state.lang === 'id';
+  if (!W || !W.peaks || !W.peaks.length) return '';
+  const rows = W.peaks.map(({ pk, d }) => {
+    if (!d.hourly || !d.daily) return '';
+    const now = Date.now(), k = d.daily.sunrise.findIndex(s => rMs(d, s) > now - 1800000); if (k < 0) return '';
+    const sr = d.daily.sunrise[k], i = d.hourly.time.findIndex(x => x.slice(0, 13) === sr.slice(0, 13)); if (i < 0) return '';
+    const H = d.hourly, lo = H.cloud_cover_low[i] ?? 50, up = Math.max(H.cloud_cover_mid[i] ?? 50, (H.cloud_cover_high[i] ?? 50) * 0.8), pp = H.precipitation_probability[i] ?? 0;
+    const tmin = Math.min(...[i - 2, i - 1, i].filter(j => j >= 0).map(j => H.temperature_2m[j]));
+    const high = pk[3] >= 2000;
+    const sea = high && lo >= 50 && up < 50 && pp < 40;
+    const clear = up < 30 && pp < 30 && (high || lo < 40), part = up < 65 && pp < 50 && (high || lo < 70);
+    const v = clear ? ['good', L ? 'Peluang sunrise bagus' : 'Good sunrise chance'] : part ? ['ok', L ? 'Sebagian berawan' : 'Partly cloudy'] : ['bad', L ? 'Kemungkinan tertutup awan' : 'Likely clouded out'];
+    const cold = tmin < 5 ? (L ? 'Sangat dingin, bawa jaket tebal, sarung tangan dan kupluk.' : 'Very cold: bring a thick jacket, gloves and a beanie.') : tmin < 12 ? (L ? 'Dingin, bawa jaket tebal.' : 'Cold, bring a warm jacket.') : (L ? 'Sejuk, bawa jaket tipis.' : 'Cool, a light jacket is enough.');
+    const dayLab = sr.slice(0, 10) === state.data.daily.time[0] ? t('today') : t('tomorrow');
+    return `<li><span class="hi-ic">⛰️</span><span><b>${esc(pk[0])}</b> <small class="muted">${pk[3].toLocaleString(locale())} m</small><br>${lvlChip(v[0], v[1])}${sea ? ' ' + lvlChip('good', L ? '☁️ Negeri di atas awan' : '☁️ Sea of clouds') : ''}<br><small>${esc(`${L ? 'Matahari terbit' : 'Sunrise'} ${dayLab.toLowerCase()} ${clockStr(sr)} · ${L ? 'suhu subuh' : 'pre-dawn'} ${tFmt(tmin)}. ${cold}`)}</small></span></li>`;
+  }).filter(Boolean).join('');
+  if (!rows) return '';
+  return `<div class="wis-card"><h3>${L ? '🌄 Sunrise di gunung' : '🌄 Mountain sunrise'}</h3><ul class="hol-list">${rows}</ul>
+    <p class="muted small">${L ? 'Prakiraan awan dan suhu untuk ketinggian puncak. Sebelum mendaki gunung api, cek status aktivitasnya dari PVMBG (MAGMA Indonesia) dan aturan pendakian setempat.' : 'Cloud and temperature forecast for the summit height. Before climbing a volcano, check its activity level from PVMBG (MAGMA Indonesia) and local climbing rules.'}</p></div>`;
+}
+
+// rain around the place: { past24, next12, burst3 } maxima over the ring
+function ringRain(){
+  const R = state.wis && state.wis.ring; if (!R) return null;
+  let past24 = 0, past48c = 0, next12 = 0, burst3 = 0;
+  R.forEach((d, k) => {
+    if (!d.hourly) return; const P = d.hourly.precipitation, i = rNow(d), s = (a, b) => P.slice(Math.max(0, a), Math.max(0, b)).reduce((x, y) => x + (y || 0), 0);
+    past24 = Math.max(past24, s(i - 24, i)); next12 = Math.max(next12, s(i, i + 12));
+    for (let j = i; j < i + 12; j++) burst3 = Math.max(burst3, s(j, j + 3));
+    if (k === 0) past48c = s(i - 48, i);
+  });
+  return { past24, next12, burst3, past48c };
+}
+const mmStr = v => `${Math.round(v)} mm`;
+
+// 5. snorkelling / diving visibility
+function snorkelCard(){
+  const L = state.lang === 'id', mi = marineIndex(), H = state.data.hourly, i0 = state.i0;
+  if (!mi || mi[H.time[i0]] == null || state.marine.hourly.wave_height[mi[H.time[i0]]] == null) return '';
+  const M = state.marine.hourly, day = H.time[i0].slice(0, 10), rr = ringRain();
+  let wMax = 0, wind = 0, windAm = 0, windPm = 0;
+  H.time.forEach((x, i) => { if (x.slice(0, 10) !== day) return; const h = +x.slice(11, 13); if (h < 7 || h > 16) return; const m = mi[x]; if (m != null && M.wave_height[m] != null) wMax = Math.max(wMax, M.wave_height[m]); wind = Math.max(wind, H.wind_speed_10m[i]); if (h <= 10) windAm = Math.max(windAm, H.wind_speed_10m[i]); else windPm = Math.max(windPm, H.wind_speed_10m[i]); });
+  let sc = 10;
+  sc -= wMax < 0.5 ? 0 : wMax < 0.8 ? 2 : wMax < 1.25 ? 4 : 7;
+  sc -= wind >= 25 ? 2 : wind >= 15 ? 1 : 0;
+  const pr = rr ? rr.past48c : 0;
+  sc -= pr >= 40 ? 4 : pr >= 15 ? 2 : pr >= 5 ? 1 : 0;
+  sc = Math.round(clamp(sc, 0, 10));
+  const v = sc >= 7 ? ['good', L ? 'Jernih, bagus untuk snorkeling' : 'Clear, good for snorkelling'] : sc >= 4 ? ['ok', L ? 'Cukup, jarak pandang sedang' : 'Fair, moderate visibility'] : ['bad', L ? 'Keruh atau berombak' : 'Murky or rough'];
+  const notes = [];
+  if (pr >= 15) notes.push(L ? `Hujan ${mmStr(pr)} dalam 2 hari terakhir: air dekat muara dan pantai berpasir biasanya lebih keruh.` : `${mmStr(pr)} of rain in the last 2 days: water near river mouths and sandy beaches is usually murkier.`);
+  if (wMax >= 0.8) notes.push(L ? 'Ombak bisa mengaduk pasir; pilih teluk atau sisi pulau yang terlindung.' : 'Waves stir up sand; pick a sheltered bay or the lee side of an island.');
+  if (windPm - windAm >= 6) notes.push(L ? 'Angin menguat siang hari, pagi biasanya paling tenang dan jernih.' : 'Wind picks up after midday; mornings are usually calmest and clearest.');
+  if (!notes.length) notes.push(L ? 'Pagi biasanya paling tenang. Pakai sunscreen ramah terumbu karang.' : 'Mornings are usually calmest. Use reef-safe sunscreen.');
+  return `<div class="fact"><h3>${L ? '🤿 Snorkeling & menyelam' : '🤿 Snorkelling & diving'}</h3><div class="val score">${sc}<small>/10</small></div><div class="meter stars"><i style="width:${sc * 10}%"></i></div><p>${lvlChip(v[0], v[1])}</p><p>${esc(notes.join(' '))}</p></div>`;
+}
+
+// 6. waterfalls, rivers, tubing: flash-flood risk from rain upstream
+function riverCard(){
+  const L = state.lang === 'id', rr = ringRain();
+  if (!rr) return state.wis && state.wis.ring === undefined ? `<div class="fact"><h3>${L ? '💧 Air terjun & sungai' : '💧 Waterfalls & rivers'}</h3><p class="muted small">${L ? 'Memuat…' : 'Loading…'}</p></div>` : '';
+  const big = Math.max(rr.past24, rr.next12);
+  const lv = big >= 50 || rr.burst3 >= 30 ? 2 : big >= 20 || rr.burst3 >= 15 ? 1 : 0;
+  const v = [['good', L ? 'Risiko rendah' : 'Low risk'], ['ok', L ? 'Waspada' : 'Caution'], ['bad', L ? 'Bahaya banjir bandang' : 'Flash flood danger']][lv];
+  const msg = [
+    L ? 'Tetap waspada: jika air tiba-tiba keruh, naik, membawa ranting, atau terdengar gemuruh, segera naik ke tempat tinggi.' : 'Stay alert: if the water suddenly turns muddy, rises, carries branches or you hear a roar, get to high ground at once.',
+    L ? 'Hujan lebat di sekitar. Hindari berenang di air terjun dan sungai, pilih pagi, dan segera menjauh jika air berubah keruh atau bertambah deras.' : 'Heavy rain nearby. Avoid swimming at waterfalls and in rivers, go early, and move away if the water turns muddy or faster.',
+    L ? 'Hujan sangat lebat di sekitar dan hulu. Jangan ke air terjun, river tubing atau rafting. Banjir bandang bisa datang walau di lokasi tidak hujan.' : 'Very heavy rain around and upstream. Skip waterfalls, river tubing and rafting. Flash floods can arrive even when it is dry where you are.'
+  ][lv];
+  return `<div class="fact"><h3>${L ? '💧 Air terjun & sungai' : '💧 Waterfalls & rivers'}</h3><p>${lvlChip(v[0], v[1])}</p><p>${esc(msg)}</p><p class="muted small">${esc(L ? `Hujan di sekitar (±20 km): 24 jam terakhir hingga ${mmStr(rr.past24)}, 12 jam ke depan hingga ${mmStr(rr.next12)}.` : `Rain around (±20 km): up to ${mmStr(rr.past24)} in the last 24 h, up to ${mmStr(rr.next12)} in the next 12 h.`)}</p></div>`;
+}
+
+// 7. best months to visit
+function climateCard(){
+  const L = state.lang === 'id', C = state.wis && state.wis.clim;
+  if (!C){ return state.wis && state.wis.clim === undefined ? `<div class="wis-card"><h3>${L ? '🗓️ Bulan terbaik berkunjung' : '🗓️ Best months to visit'}</h3><p class="muted small">${L ? 'Memuat data 10 tahun…' : 'Loading 10 years of data…'}</p></div>` : ''; }
+  const mm = C.mm; if (mm.some(v => v == null)) return '';
+  const cls = v => v < 100 ? 'good' : v < 200 ? 'ok' : v < 300 ? 'poor' : 'bad';
+  const max = Math.max(...mm, 1), cur = new Date(Date.now() + offsetMs()).getUTCMonth();
+  const mName = (m, f) => new Date(Date.UTC(2021, m, 15)).toLocaleDateString(locale(), { month: f, timeZone: 'UTC' });
+  const lo = Math.min(...mm), good = mm.map((v, m) => v <= Math.max(100, lo * 1.25) ? m : -1).filter(m => m >= 0);
+  const ranges = []; good.forEach(m => { const r = ranges[ranges.length - 1]; if (r && (r[1] + 1) % 12 === m) r[1] = m; else ranges.push([m, m]); });
+  if (ranges.length > 1 && ranges[0][0] === 0 && ranges[ranges.length - 1][1] === 11){ ranges[0][0] = ranges[ranges.length - 1][0]; ranges.pop(); }
+  const rTxt = ranges.map(([a, b]) => a === b ? mName(a, 'long') : `${mName(a, 'short')}–${mName(b, 'short')}`).join(', ');
+  const wet = mm.indexOf(Math.max(...mm));
+  const bars = mm.map((v, m) => `<div class="cb${m === cur ? ' now' : ''}" title="${esc(mName(m, 'long'))}: ${v} mm, ${C.days[m]} ${L ? 'hari hujan' : 'rain days'}"><i class="s-${cls(v)}" style="height:${Math.max(4, Math.round(v / max * 64))}px"></i><small>${esc(mName(m, 'narrow'))}</small></div>`).join('');
+  const nowTxt = L ? `Bulan ini (${mName(cur, 'long')}): rata-rata ${mm[cur]} mm, ${C.days[cur]} hari hujan, suhu maksimum ${tFmt(C.tx[cur])}.` : `This month (${mName(cur, 'long')}): ${mm[cur]} mm on average, ${C.days[cur]} rain days, highs around ${tFmt(C.tx[cur])}.`;
+  return `<div class="wis-card"><h3>${L ? '🗓️ Bulan terbaik berkunjung' : '🗓️ Best months to visit'}</h3>
+    <p><b>${L ? 'Paling kering' : 'Driest'}:</b> ${esc(rTxt)} · <b>${L ? 'paling basah' : 'wettest'}:</b> ${esc(mName(wet, 'long'))} (${mm[wet]} mm)</p>
+    <div class="clim">${bars}</div>
+    <p class="small">${esc(nowTxt)}</p>
+    <p class="muted small">${L ? 'Rata-rata curah hujan per bulan 2016–2025 untuk titik ini.' : 'Average monthly rainfall 2016–2025 for this spot.'}</p></div>`;
+}
+
+function wisCards(){
+  return `${weekendCard()}${compareCard()}${crossingCard()}${peakCard()}<div class="facts">${safeExtra(snorkelCard)}${safeExtra(riverCard)}</div>${climateCard()}`;
+}
+
 function extrasWisata(){
   const d = state.data, H = d.hourly, D = d.daily, i0 = state.i0, end = Math.min(H.time.length, i0 + 48);
   const add = (sv, min) => clockStr(msToLocal(localToMs(sv) + min * 60000));
@@ -2844,7 +3826,7 @@ function extrasWisata(){
     ${fact(t('golden'), esc(golden), esc(t('goldenNote', blue[0], blue[1])))}
     <div class="fact"><h3>${t('stars')}</h3><div class="val score">${st}<small>/10</small></div><div class="meter stars"><i style="width:${st * 10}%"></i></div><p>${t('starsLv')[sl]}. ${esc(t('starsNote', bestH ? hourStr(bestH) : ''))}${lit > 60 ? ' ' + t('starsMoon') : ''}</p></div>
     <div class="fact"><h3>${t('rainbow')}</h3><div class="val"><span class="lvl lvl${rbScore}">${t('rainbowLv')[rbScore]}</span></div><p>${esc(rb ? t('rainbowAt', hourStr(rb)) : t('rainbowNone'))}</p></div>
-  </div>`;
+  </div><div id="wisX">${safeExtra(wisCards)}</div>`;
 }
 
 /* ---------- Golf: caddie tip ---------- */
@@ -2872,7 +3854,7 @@ function renderFavs(){
   const el = $('#favs');
   el.innerHTML = state.favs.filter(f => !state.place || placeKey(f) !== placeKey(state.place))
     .map(f => `<button class="pill" type="button" data-k="${placeKey(f)}">${esc(f.name)}</button>`).join('');
-  el.querySelectorAll('button').forEach(b => b.onclick = () => { const f = state.favs.find(x => placeKey(x) === b.dataset.k); if (f) loadPlace(f); });
+  el.querySelectorAll('button').forEach(b => { const f = state.favs.find(x => placeKey(x) === b.dataset.k); if (!f) return; b.onclick = () => loadPlace(f); b.addEventListener('pointerdown', () => prefetchPlace(f), { passive: true }); });
 }
 
 /* ================= Search ================= */
@@ -2885,15 +3867,106 @@ function drawList(){
   list.hidden = false; combo.setAttribute('aria-expanded', 'true');
   if (active >= 0) q.setAttribute('aria-activedescendant', 'opt' + active);
 }
+// Clean up raw place-name results: drop look-alike spellings, rank Indonesia and real towns first,
+// add the kabupaten/kota so same-named villages can be told apart, and remove duplicates
+const fold = v => String(v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const stripPrefix = v => String(v || '').replace(/^(Kota|Kabupaten|Kotamadya|Provinsi|Propinsi|Daerah Tingkat I{1,2}|Daerah Istimewa|Daerah Khusus Ibukota|Region|Oblast)\s+/i, '').trim();
+const shortAdm = v => String(v || '').replace(/^Kabupaten\s+/i, 'Kab. ').replace(/^Kotamadya\s+/i, 'Kota ').replace(/^(Provinsi|Propinsi|Daerah Tingkat I{1,2})\s+/i, '').replace(/^Daerah Istimewa\s+/i, 'DI ').replace(/^Daerah Khusus( Ibu ?kota)?\s+/i, 'DKI ').trim();
+const FEAT_RANK = { PPLC: 600, PPLA: 500, PPLA2: 400, PPLA3: 300, PPLA4: 200, PPLX: 150, PPL: 100 };
+// Famous islands and destinations that the place database lists poorly (or only as a region),
+// shown first when they match what is typed
+const POPULAR = [
+  ['Bali', 'Pulau Bali (Denpasar)', -8.65, 115.22], ['Ubud', 'Kab. Gianyar, Bali', -8.507, 115.263],
+  ['Canggu', 'Kab. Badung, Bali', -8.648, 115.138], ['Seminyak', 'Kab. Badung, Bali', -8.69, 115.165],
+  ['Nusa Dua', 'Kab. Badung, Bali', -8.80, 115.23], ['Uluwatu', 'Kab. Badung, Bali', -8.829, 115.085],
+  ['Nusa Penida', 'Kab. Klungkung, Bali', -8.727, 115.544], ['Lombok', 'Pulau Lombok (Mataram)', -8.583, 116.116],
+  ['Gili Trawangan', 'Kab. Lombok Utara, NTB', -8.351, 116.038], ['Mandalika', 'Kab. Lombok Tengah, NTB', -8.895, 116.29],
+  ['Labuan Bajo', 'Kab. Manggarai Barat, NTT', -8.496, 119.888], ['Pulau Komodo', 'Kab. Manggarai Barat, NTT', -8.55, 119.45],
+  ['Raja Ampat', 'Papua Barat Daya (Waisai)', -0.43, 130.82], ['Gunung Bromo', 'Jawa Timur', -7.942, 112.953],
+  ['Kawah Ijen', 'Kab. Banyuwangi, Jawa Timur', -8.058, 114.242], ['Danau Toba', 'Sumatera Utara (Parapat)', 2.663, 98.937],
+  ['Belitung', 'Pulau Belitung (Tanjung Pandan)', -2.74, 107.63], ['Bunaken', 'Kota Manado, Sulawesi Utara', 1.62, 124.76],
+  ['Wakatobi', 'Sulawesi Tenggara', -5.32, 123.54], ['Karimunjawa', 'Kab. Jepara, Jawa Tengah', -5.84, 110.46],
+  ['Dieng', 'Kab. Wonosobo, Jawa Tengah', -7.21, 109.91], ['Borobudur', 'Kab. Magelang, Jawa Tengah', -7.608, 110.204],
+  ['Puncak Bogor', 'Kab. Bogor, Jawa Barat', -6.70, 106.99], ['Lembang', 'Kab. Bandung Barat, Jawa Barat', -6.81, 107.62],
+  ['Kepulauan Seribu', 'DKI Jakarta (Pulau Pramuka)', -5.745, 106.614], ['Derawan', 'Kab. Berau, Kalimantan Timur', 2.29, 118.25],
+  ['Yogyakarta', 'DI Yogyakarta', -7.797, 110.370, 'jogja jogjakarta yogya djogja jogya ngayogyakarta diy'],
+  ['Parangtritis', 'Kab. Bantul, DI Yogyakarta', -8.025, 110.330], ['Malioboro', 'Kota Yogyakarta, DI Yogyakarta', -7.793, 110.366],
+  ['Prambanan', 'Kab. Sleman, DI Yogyakarta', -7.752, 110.491], ['Gunungkidul', 'DI Yogyakarta (Pantai Baron)', -8.130, 110.550, 'gunung kidul'],
+  ['Surakarta', 'Jawa Tengah (Solo)', -7.566, 110.817, 'solo'], ['Pangandaran', 'Kab. Pangandaran, Jawa Barat', -7.700, 108.650],
+  ['Makassar', 'Sulawesi Selatan', -5.147, 119.432, 'ujung pandang'], ['Kuta', 'Kab. Badung, Bali', -8.718, 115.169],
+  ['Sanur', 'Kota Denpasar, Bali', -8.688, 115.262], ['Tanah Lot', 'Kab. Tabanan, Bali', -8.621, 115.087],
+].map(([name, region, lat, lon, aka]) => ({ name, region, lat, lon, aka: aka || '' }));
+const popularMatches = term => { const w = fold(term); return w.length < 2 ? [] : POPULAR.filter(p => fold(p.name).startsWith(w) || fold(p.name).split(' ').some(x => x.startsWith(w)) || (p.aka && fold(p.aka).split(' ').some(x => x.startsWith(w)))).map(({ aka, ...p }) => p); };
+function tidyPlaces(raw, term){
+  const want = fold(term);
+  const named = r => fold(stripPrefix(r.name));
+  let list = raw.filter(r => named(r).startsWith(want) || fold(r.name).startsWith(want));
+  if (!list.length) list = raw;                       // nothing starts with what was typed: keep the closest matches
+  // when Indonesian matches exist, tiny foreign villages of the same name are just clutter
+  if (list.some(r => r.country_code === 'ID')) list = list.filter(r => r.country_code === 'ID' || r.population >= 100000 || (FEAT_RANK[r.feature_code] ?? 0) >= 400);
+  const score = r => (r.country_code === 'ID' ? 400 : 0) + (FEAT_RANK[r.feature_code] ?? 50) + (r.population > 0 ? Math.log10(r.population) * 30 : 0) + (named(r) === want ? 40 : 0);
+  list = list.map((r, i) => ({ r, s: score(r), i })).sort((a, b) => b.s - a.s || a.i - b.i).map(x => x.r);
+  const out = [];
+  for (const r of list){
+    const name = stripPrefix(r.name) || r.name;
+    const adm2 = r.admin2 && fold(stripPrefix(r.admin2)) !== fold(name) ? shortAdm(r.admin2) : '';
+    const adm1 = fold(stripPrefix(r.admin1)) === fold(name) ? '' : shortAdm(r.admin1);
+    const region = [adm2, adm1, r.country_code === 'ID' ? '' : r.country].filter(Boolean).join(', ') || r.country || '';
+    const dup = out.some(o => (fold(o.name) === fold(name) && fold(o.region) === fold(region)) ||
+                              (fold(o.name) === fold(name) && Math.abs(o.lat - r.latitude) < 0.05 && Math.abs(o.lon - r.longitude) < 0.05));
+    if (dup) continue;
+    out.push({ name, region, lat: r.latitude, lon: r.longitude, cc: r.country_code });
+    if (out.length === 6) break;
+  }
+  return out;
+}
+// Photon (OpenStreetMap) results: towns, villages, islands, beaches, mountains and landmarks, with tidy names
+const PH_KEEP = /^(place|boundary|natural|tourism|leisure|aeroway|historic)$/;
+const PH_SKIP = /^(hotel|guest_house|hostel|motel|apartment|chalet|camp_site|caravan_site|picnic_site|information|artwork|yes|house|tree|stone|wetland|scrub|wood|grassland)$/;
+const PH_ISLAND = /^(java|jawa|sumatra|sumatera|borneo|kalimantan|sulawesi|celebes|lesser sunda islands|kepulauan sunda kecil|nusa tenggara|moluccas|kepulauan maluku|maluku islands|new guinea|papua island)$/i;
+const PH_RANK = { city:300, town:260, municipality:250, island:240, state:220, administrative:200, county:200, volcano:200, beach:200, peak:180, national_park:180, village:140, suburb:120, region:120, attraction:150, aerodrome:150, bay:120, islet:120, quarter:90, neighbourhood:60, hamlet:50 };
+function tidyPhoton(feats, term){
+  const want = fold(term), out = [];
+  const ok = f => f && f.properties && f.properties.name && f.geometry && PH_KEEP.test(f.properties.osm_key) && !PH_SKIP.test(f.properties.osm_value) && (f.properties.osm_key !== 'boundary' || f.properties.osm_value === 'administrative');
+  const score = (f, i) => { const p = f.properties; return (p.countrycode === 'ID' ? 400 : 0) + (PH_RANK[p.osm_value] ?? 40) + (fold(stripPrefix(p.name)).startsWith(want) || fold(p.name).startsWith(want) ? 60 : 0) - i * 4; };
+  const list = feats.filter(ok).map((f, i) => ({ f, s: score(f, i) })).sort((a, b) => b.s - a.s).map(x => x.f);
+  for (const f of list){
+    const p = f.properties, lon = f.geometry.coordinates[0], lat = f.geometry.coordinates[1];
+    const name = stripPrefix(p.name) || p.name;
+    const parts = [];
+    [p.city, p.county, p.state].forEach(x => { if (!x || PH_ISLAND.test(x)) return; const v = shortAdm(x); if (fold(stripPrefix(v)) !== fold(name) && !parts.some(u => fold(stripPrefix(u)) === fold(stripPrefix(v)))) parts.push(v); });
+    const region = [...parts.slice(-2), p.countrycode === 'ID' ? '' : p.country].filter(Boolean).join(', ') || p.country || '';
+    if (out.some(o => fold(o.name) === fold(name) && (fold(o.region) === fold(region) || haversine(o.lat, o.lon, lat, lon) < 8))) continue;
+    out.push({ name, region, lat: +lat.toFixed(4), lon: +lon.toFixed(4), cc: p.countrycode });
+    if (out.length === 6) break;
+  }
+  return out;
+}
 async function search(term){
   const id = ++reqId;
-  try{
-    const j = await getJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(term)}&count=6&language=${state.lang}&format=json`);
+  // popular places show at once; Photon (main) and the Open-Meteo list (backup) are added as each answers
+  const pop = popularMatches(term);
+  let A = null, B = null, doneA = false, doneB = false, drawn = false;
+  const same = (x, y) => (fold(x.name) === fold(y.name) && haversine(x.lat, x.lon, y.lat, y.lon) < 15) || haversine(x.lat, x.lon, y.lat, y.lon) < 1.5;
+  const update = () => {
     if (id !== reqId) return;
-    results = (j.results || []).map(x => ({ name: x.name, region: [x.admin1, x.country].filter(Boolean).join(', '), lat: x.latitude, lon: x.longitude }));
-    active = results.length ? 0 : -1;
-    drawList();
-  }catch(e){ if (id === reqId){ results = []; list.innerHTML = `<li class="empty">${esc(t('searchDown'))}</li>`; list.hidden = false; } }
+    const base = drawn ? results.slice() : pop.slice();
+    const add = r => { if (base.length < 6 && !base.some(m => same(m, r))) base.push(r); };
+    const a = A || [], b = B || [];
+    a.filter(r => r.cc === 'ID').forEach(add); b.filter(r => r.cc === 'ID').forEach(add);
+    a.filter(r => r.cc !== 'ID').forEach(add); b.filter(r => r.cc !== 'ID').forEach(add);
+    if (!base.length){
+      if (!(doneA && doneB)) return;                 // still waiting for the other search
+      if (!A && !B){ list.innerHTML = `<li class="empty">${esc(t('searchDown'))}</li>`; list.hidden = false; return; }
+    }
+    results = base; if (active < 0 || active >= results.length) active = results.length ? 0 : -1;
+    drawn = results.length > 0; drawList();
+  };
+  if (pop.length){ results = pop.slice(0, 6); active = 0; drawn = true; drawList(); }
+  getJSON(`https://photon.komoot.io/api/?q=${encodeURIComponent(term)}&limit=15&lang=${state.lang === 'en' ? 'en' : 'default'}&lat=-2.5&lon=118&zoom=5`, 6000)
+    .then(j => { A = tidyPhoton(j.features || [], term); }).catch(() => {}).then(() => { doneA = true; update(); });
+  getJSON(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(term)}&count=25&language=${state.lang}&format=json`, 8000)
+    .then(j => { B = tidyPlaces(j.results || [], term); }).catch(() => {}).then(() => { doneB = true; update(); });
 }
 function choose(i){ const r = results[i]; if (!r) return; q.value = ''; closeList(); q.blur(); loadPlace(r); }
 q.addEventListener('input', () => {
@@ -2909,8 +3982,11 @@ q.addEventListener('keydown', e => {
   else if (e.key === 'Enter'){ e.preventDefault(); choose(active < 0 ? 0 : active); }
   else if (e.key === 'Escape') closeList();
 });
-list.addEventListener('mousedown', e => { const li = e.target.closest('li[data-i]'); if (li){ e.preventDefault(); choose(+li.dataset.i); } });
-q.addEventListener('blur', () => setTimeout(closeList, 120));
+// pick a result: start loading on first touch, keep the keyboard from stealing the tap
+list.addEventListener('pointerdown', e => { const li = e.target.closest('li[data-i]'); if (li && results[+li.dataset.i]) prefetchPlace(results[+li.dataset.i]); });
+list.addEventListener('mousedown', e => { if (e.target.closest('li[data-i]')) e.preventDefault(); });
+list.addEventListener('click', e => { const li = e.target.closest('li[data-i]'); if (li) choose(+li.dataset.i); });
+q.addEventListener('blur', () => setTimeout(closeList, 300));
 
 /* ================= Location ================= */
 function toast(msg, ms = 5000){
@@ -2951,10 +4027,11 @@ function applyStatic(){
   document.documentElement.lang = state.lang;
   if ($('#brandTag')) $('#brandTag').textContent = state.lang === 'id' ? 'dan semua yang di atas sana' : 'and everything up there';
   q.placeholder = t('search'); q.setAttribute('aria-label', t('search'));
-  $('#locate span').textContent = t('locate'); $('#locate').setAttribute('aria-label', t('locate'));
+  $('#locate span').textContent = t('locate'); $('#locate').setAttribute('aria-label', t('locate')); try{ applyTheme(store.get('skyline.theme', 'auto'), false); }catch(e){ /* theme button not ready yet */ }
   $('#h-hourly').textContent = t('h48'); $('#h-daily').textContent = t('d10'); $('#h-now').textContent = t('cond');
   $('#hourly').setAttribute('aria-label', t('hourlyLabel'));
-  $('#footer').innerHTML = `<p class="tagline">${state.lang === 'id' ? '☁️ Langit dan semua yang di atas sana' : '☁️ Langit and everything up there'}</p><p class="credits">${t('footer')}</p><p class="copy">&copy; ${new Date().getFullYear()} BMT | Berkat Maha Tinggi</p>`;
+  { const ab = $('#aboutText'), ah = $('#h-about'); if (ab && ah){ if (!ab.dataset.id) ab.dataset.id = ab.innerHTML; ah.textContent = state.lang === 'id' ? 'Tentang Langit' : 'About Langit'; ab.innerHTML = state.lang === 'id' ? ab.dataset.id : ABOUT_EN; } }
+  $('#footer').innerHTML = `<p class="tagline">${state.lang === 'id' ? '☁️ Langit dan semua yang di atas sana' : '☁️ Langit and everything up there'}</p><p class="credits">${t('footer')}</p><p class="copy">&copy; ${new Date().getFullYear()} BMT | Berkat Maha Tinggi${ADS.client ? ` · <a href="privacy.html">${state.lang === 'id' ? 'Kebijakan Privasi' : 'Privacy Policy'}</a>` : ''}</p>`;
   if (typeof renderInstallLink === 'function') renderInstallLink();
   document.querySelectorAll('#langSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === state.lang));
   document.querySelectorAll('#unitSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.u === state.units));
@@ -2972,21 +4049,65 @@ document.querySelectorAll('#unitSeg button').forEach(b => b.onclick = () => {
 window.addEventListener('hashchange', () => { const m = location.hash.slice(1); if (MODES.includes(m) && m !== state.mode) setMode(m); });
 
 
+
+
+/* ================= Light / dark theme (Otomatis → Terang → Gelap) ================= */
+const THEME_ICONS = {
+  auto:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg>',
+  light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>',
+  dark:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>',
+};
+const THEME_NAMES = { id: { auto: 'Otomatis (terang siang, gelap malam)', light: 'Selalu terang', dark: 'Selalu gelap' }, en: { auto: 'Automatic (light by day, dark at night)', light: 'Always light', dark: 'Always dark' } };
+function applyTheme(th, announce){
+  document.documentElement.dataset.theme = th === 'light' || th === 'dark' ? th : (skyTime ? (skyTime === 'day' ? 'light' : 'dark') : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  const b = $('#themeBtn'); if (!b) return;
+  const nm = (THEME_NAMES[state.lang] || THEME_NAMES.id)[th];
+  b.innerHTML = THEME_ICONS[th];
+  const lbl = (state.lang === 'id' ? 'Tema: ' : 'Theme: ') + nm;
+  b.setAttribute('aria-label', lbl); b.title = lbl;
+  if (announce) toast(lbl, 2500);
+}
+$('#themeBtn').onclick = () => {
+  const order = ['auto', 'light', 'dark'], cur = store.get('skyline.theme', 'auto');
+  const next = order[(order.indexOf(cur) + 1) % order.length];
+  store.set('skyline.theme', next); applyTheme(next, true);
+};
+applyTheme(store.get('skyline.theme', 'auto'), false);
+/* ================= Google AdSense (only when ADS.client is set) ================= */
+let adsStarted = false;
+function initAds(){
+  if (adsStarted || !ADS.client || !/^ca-pub-\d{10,20}$/.test(ADS.client) || location.protocol !== 'https:') return;
+  adsStarted = true;
+  const sc = document.createElement('script');
+  sc.async = true; sc.crossOrigin = 'anonymous';
+  sc.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADS.client;
+  document.head.appendChild(sc);
+  [['adMid', ADS.slotMid], ['adEnd', ADS.slotEnd]].forEach(([id, slot]) => {
+    const box = document.getElementById(id); if (!box || !/^\d{6,}$/.test(String(slot))) return;
+    box.innerHTML = `<span class="ad-label">${state.lang === 'id' ? 'Iklan' : 'Advertisement'}</span><ins class="adsbygoogle" style="display:block" data-ad-client="${ADS.client}" data-ad-slot="${slot}" data-ad-format="auto" data-full-width-responsive="true"></ins>`;
+    box.hidden = false;
+    try{ (window.adsbygoogle = window.adsbygoogle || []).push({}); }catch(e){}
+  });
+}
 /* ================= Installable app (PWA) ================= */
 let installEvt = null;
 const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const isPhone = () => /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent) || (window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 1024);
+// Safari on a Mac (Safari 17+ can "Add to Dock"); Chrome/Edge on Mac use the normal install button instead
+// iPhone in-app browsers (WhatsApp, Instagram, Facebook…) can't add to the home screen themselves
+const isIOSInApp = () => isIOS() && !/Safari\//.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+const isMacSafari = () => /Macintosh/.test(navigator.userAgent) && /Safari\//.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|Edg|OPR|Firefox|FxiOS/.test(navigator.userAgent) && navigator.maxTouchPoints === 0;
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 function showInstall(force){
   if (isStandalone()) return;
   if (!force && (store.get('skyline.installLater', 0) > Date.now())) return;
-  const ios = isIOS() && !installEvt;
-  if (!installEvt && !ios) return;
+  const ios = isIOS() && !installEvt, mac = !installEvt && isMacSafari();
+  if (!installEvt && !ios && !mac) return;
   $('#installTitle').textContent = isPhone() ? t('instTitle') : t('instTitlePc');
-  $('#installSub').textContent = ios ? t('instIos') : isPhone() ? t('instSub') : t('instSubPc');
-  $('#installGo').textContent = ios ? t('instIosGo') : t('instGo');
+  $('#installSub').textContent = ios ? (isIOSInApp() ? t('instIosApp') : t('instIos')) : mac ? t('instMac') : isPhone() ? t('instSub') : t('instSubPc');
+  $('#installGo').textContent = ios || mac ? t('instIosGo') : t('instGo');
   $('#installLater').textContent = t('instLater');
-  $('#installLater').hidden = ios;
+  $('#installLater').hidden = ios || mac;
   $('#install').hidden = false;
 }
 function hideInstall(snoozeDays){
@@ -2996,23 +4117,44 @@ function hideInstall(snoozeDays){
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault(); installEvt = e;
   renderInstallLink();
-  if (isPhone()) setTimeout(() => showInstall(false), 15000);
+  if (isPhone()) setTimeout(() => showInstall(false), 2000); // shortly after the weather appears
 });
 window.addEventListener('appinstalled', () => { installEvt = null; hideInstall(0); renderInstallLink(); });
+// when the browser can't show its own install window, explain how to install from the browser menu
+let installManual = false;
+function showManualInstall(){
+  installManual = true;
+  $('#installSub').textContent = t('instManual');
+  $('#installGo').textContent = t('instIosGo');
+  $('#installLater').hidden = true;
+  $('#install').hidden = false;
+}
 $('#installGo').onclick = async () => {
-  if (installEvt){ installEvt.prompt(); const r = await installEvt.userChoice.catch(() => null); installEvt = null; hideInstall(r && r.outcome === 'accepted' ? 0 : 7); renderInstallLink(); }
-  else hideInstall(30);
+  if (installManual){ installManual = false; hideInstall(7); return; }
+  if (installEvt){
+    const ev = installEvt; installEvt = null;
+    try{
+      await ev.prompt();
+      const r = await ev.userChoice;
+      hideInstall(r && r.outcome === 'accepted' ? 0 : 7);
+    }catch(e){ showManualInstall(); }
+    renderInstallLink();
+  }
+  else if (isIOS() || isMacSafari()) hideInstall(30);
+  else showManualInstall();
 };
 $('#installLater').onclick = () => hideInstall(7);
 function renderInstallLink(){
   const f = $('#footer'); if (!f) return;
   let a = f.querySelector('.install-link');
-  const can = !isStandalone() && (installEvt || isIOS());
+  const can = !isStandalone() && (installEvt || isIOS() || isMacSafari());
   if (!can){ if (a) a.remove(); return; }
   if (!a){ a = document.createElement('button'); a.type = 'button'; a.className = 'install-link'; a.onclick = () => showInstall(true); f.appendChild(a); }
   a.textContent = (isPhone() ? '📲 ' : '💻 ') + t('instFooter');
 }
-if (isIOS() && !isStandalone()) setTimeout(() => showInstall(false), 20000);
+if (isIOS() && !isStandalone()) setTimeout(() => showInstall(false), 2000);
+if (isMacSafari() && !isStandalone()) setTimeout(() => showInstall(false), 4000);
+renderInstallLink();
 if ('serviceWorker' in navigator && location.protocol === 'https:'){
   window.addEventListener('load', () => {
     const hadController = !!navigator.serviceWorker.controller;
@@ -3029,7 +4171,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:'){
   });
 }
 window.addEventListener('offline', () => toast(t('offline'), 6000));
-window.addEventListener('online', () => { toast(t('online'), 3000); if (state.place) loadPlace(state.place, { quiet:true }); });
+window.addEventListener('online', () => { toast(t('online'), 3000); if (state.place) loadPlace(state.place, { quiet:true, force:true }); });
 
 /* ================= Boot ================= */
 applyStatic();
@@ -3042,10 +4184,10 @@ applyStatic();
 })();
 renderModes();
 loadPlace(store.get('skyline.last', null) || DEFAULT_PLACE);
-setInterval(() => { if (!document.hidden && state.place) loadPlace(state.place, { quiet:true }); }, 15 * 60 * 1000);
+setInterval(() => { if (!document.hidden && state.place) loadPlace(state.place, { quiet:true, force:true }); }, 15 * 60 * 1000);
 setInterval(() => { const g = $('#greet'); if (g) g.innerHTML = greetHtml(); const z = $('#zodiac'); if (z) z.innerHTML = zodiacHtml(); }, 60 * 1000);
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && state.data && Date.now() - (state.lastRefresh || 0) > 10 * 60 * 1000) loadPlace(state.place, { quiet:true });
+  if (!document.hidden && state.data && Date.now() - (state.lastRefresh || 0) > 10 * 60 * 1000) loadPlace(state.place, { quiet:true, force:true });
 });
 })();
 </script>
