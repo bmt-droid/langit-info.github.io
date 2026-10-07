@@ -1977,8 +1977,8 @@ function familyShare(st, ret){
   const cond = { good: L ? 'aman' : 'safe', ok: L ? 'hati-hati' : 'caution', bad: L ? 'berbahaya' : 'dangerous' }[st] || '';
   const n = localNow();
   const msg = L
-    ? `🛶 Saya melaut dari ${state.place.name}, berangkat pukul ${clock(n.h, n.m)}.\nRencana pulang: sekitar pukul ${planStr}.\nKondisi menurut Langit: ${cond}${wave != null ? `, gelombang ${meters(wave)}` : ''}, angin ${speed(H.wind_speed_10m[i0])}.\n\nKalau sampai pukul ${alarm} belum ada kabar, tolong hubungi Basarnas 115.`
-    : `🛶 I'm going out to sea from ${state.place.name}, leaving at ${clock(n.h, n.m)}.\nPlanned return: around ${planStr}.\nConditions according to Langit: ${cond}${wave != null ? `, waves ${meters(wave)}` : ''}, wind ${speed(H.wind_speed_10m[i0])}.\n\nIf you haven't heard from me by ${alarm}, please call Basarnas (Indonesian search and rescue) on 115.`;
+    ? `🛶 Saya melaut dari ${state.place.name}, berangkat pukul ${clock(n.h, n.m)}.\nRencana pulang: sekitar pukul ${planStr}.\nKondisi menurut Langit: ${cond}${wave != null ? `, gelombang ${meters(wave)}` : ''}, angin ${speed(H.wind_speed_10m[i0])}.\n\nKalau sampai pukul ${alarm} belum ada kabar, tolong hubungi Basarnas 115.\n\nPantau kondisi laut: ${siteUrl('nelayan')}`
+    : `🛶 I'm going out to sea from ${state.place.name}, leaving at ${clock(n.h, n.m)}.\nPlanned return: around ${planStr}.\nConditions according to Langit: ${cond}${wave != null ? `, waves ${meters(wave)}` : ''}, wind ${speed(H.wind_speed_10m[i0])}.\n\nIf you haven't heard from me by ${alarm}, please call Basarnas (Indonesian search and rescue) on 115.\n\nFollow the sea conditions: ${siteUrl('nelayan')}`;
   return `<a class="share" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8L3.5 20.5l4.3-1.1A8.5 8.5 0 1 0 12 3.5z" fill="#fff"/><path d="M9.2 8.2c.3-.4.7-.4.9 0l.8 1.8c.1.3 0 .6-.2.8l-.5.6c.6 1.2 1.6 2.2 2.8 2.8l.6-.5c.2-.2.5-.3.8-.2l1.8.8c.4.2.4.6 0 .9-.6.7-1.5 1-2.4.7a8.4 8.4 0 0 1-5.2-5.2c-.3-.9 0-1.8.6-2.5z" fill="#1FA855"/></svg>
     ${L ? 'Kabari keluarga sebelum melaut' : 'Tell your family before you go'}</a>`;
@@ -3064,6 +3064,7 @@ function tickCountdowns(){
 setInterval(tickCountdowns, 30000);
 
 const SHARE_EMOJI = { umum:'🌤️', jemuran:'👕', petani:'🌾', nelayan:'🎣', wisata:'🏝️', golf:'⛳' };
+const siteUrl = mode => (location.protocol.startsWith('http') ? location.origin + location.pathname : 'https://langit.info/') + (mode ? '#' + mode : '');
 function shareBlock(el){
   const h = el.querySelector('.verdict h2'), p = el.querySelector('.verdict p');
   if (!h) return '';
@@ -3158,7 +3159,7 @@ function eventCard(){
   const ss = D.sunset[k] && e.b > ssH ? (L ? `Matahari terbenam ${clockStr(D.sunset[k])}: siapkan lampu sebelumnya.` : `Sunset ${clockStr(D.sunset[k])}: have lights ready before then.`) : '';
   const list = j.r.length ? `<ul class="hol-list evt-list">${j.r.map(x => `<li><span class="hi-ic">${x.ic}</span><span>${esc(x.txt)}</span></li>`).join('')}</ul>` : `<p>${L ? 'Tidak ada hujan, petir atau angin kencang yang diperkirakan pada jam ini.' : 'No rain, lightning or strong wind expected in this window.'}</p>`;
   const when = `${k === 0 ? t('today') : k === 1 ? t('tomorrow') : dShort(e.d)}, ${L ? 'pukul ' : ''}${clock(e.a, 0)} ${L ? 's.d.' : 'to'} ${clock(e.b % 24, 0)}`;   // written out so WhatsApp doesn't mistake it for a phone number
-  const msg = (L ? `🎪 Cek cuaca acara di ${state.place.name}\n${when}\n\n${names[j.lv]}` : `🎪 Event weather check for ${state.place.name}\n${when}\n\n${names[j.lv]}`) + (j.r.length ? '\n' + j.r.map(x => `${x.ic} ${x.txt}`).join('\n') : '') + `\n\n${conf}\n${L ? 'Sumber' : 'Source'}: langit.info`;
+  const msg = (L ? `🎪 Cek cuaca acara di ${state.place.name}\n${when}\n\n${names[j.lv]}` : `🎪 Event weather check for ${state.place.name}\n${when}\n\n${names[j.lv]}`) + (j.r.length ? '\n' + j.r.map(x => `${x.ic} ${x.txt}`).join('\n') : '') + `\n\n${conf}\n\n${t('shareMore')} ${siteUrl('')}`;
   return `<div class="fact evt-card">${head}<p><span class="lvl-chip s-${cls}">${esc(names[j.lv])}</span></p>${list}<p class="small">${esc(conf)}${ss ? ' ' + esc(ss) : ''}</p>
     <a class="share" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8L3.5 20.5l4.3-1.1A8.5 8.5 0 1 0 12 3.5z" fill="#fff"/><path d="M9.2 8.2c.3-.4.7-.4.9 0l.8 1.8c.1.3 0 .6-.2.8l-.5.6c.6 1.2 1.6 2.2 2.8 2.8l.6-.5c.2-.2.5-.3.8-.2l1.8.8c.4.2.4.6 0 .9-.6.7-1.5 1-2.4.7a8.4 8.4 0 0 1-5.2-5.2c-.3-.9 0-1.8.6-2.5z" fill="#1FA855"/></svg>${L ? 'Bagikan ke tim' : 'Share with the team'}</a></div>`;
 }
